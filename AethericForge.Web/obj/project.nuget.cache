@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "ol1zKyvRA8s=",
+  "success": true,
+  "projectFilePath": "/home/valkyr/Code/website/AethericForge.Web/AethericForge.Web.csproj",
+  "expectedPackageFiles": [
+    "/home/valkyr/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.9/microsoft.aspnetcore.app.internal.assets.10.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}
