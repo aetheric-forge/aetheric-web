@@ -24,4 +24,6 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+builder.Services.AddSingleton<ProjectService>();
+
 app.Run();
