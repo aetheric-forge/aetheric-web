@@ -1,7 +1,21 @@
 ﻿@page "/"
+@inject IHomePageService HomePageService
 
-<PageTitle>Home</PageTitle>
+@if (_model is null)
+{
+    return;
+}
 
-<h1>Hello, world!</h1>
+<div class="home-page">
+    <Hero Model="_model.Hero" />
+</div>
 
-Welcome to your new app.
+@code
+{
+    private HomePageModel? _model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await HomePageService.GetAsync();
+    }
+}
