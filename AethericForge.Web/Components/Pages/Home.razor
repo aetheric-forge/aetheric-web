@@ -10,13 +10,15 @@
 }
 
 <div class="home-page">
-    <Hero Model="_model.Hero" />
+    <div class="home-page__container">
+        <Hero Model="_model.Hero" />
 
-    <MissionSection Model="_model.Mission" />
+        <MissionSection Model="_model.Mission" />
 
-    <SectionHeader Model="_model.ProjectsHeader" />
+        <ProjectsSection Model="_model.Projects" />
 
-    <SectionHeader Model="_model.CommunityHeader" />
+        <CommunitySection Model="_model.Community" />
+    </div>
 </div>
 
 @code
