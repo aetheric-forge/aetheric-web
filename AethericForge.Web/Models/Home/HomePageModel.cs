@@ -1,4 +1,6 @@
-namespace AethericForge.Web.Models;
+namespace AethericForge.Web.Models.Home;
+
+using AethericForge.Web.Models.Shared;
 
 public sealed class HomePageModel
 {

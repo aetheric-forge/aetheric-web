@@ -1,5 +1,12 @@
 <section class="hero">
     <div class="hero-content">
+        @if (Model.Eyebrow is not null)
+        {
+            <p class="hero-eyebrow">
+                @Model.Eyebrow
+            </p> 
+        }
+
         <h1>@Model.Title</h1>
 
         <p class="hero-subtitle">
@@ -9,16 +16,16 @@
         <div class="hero-actions">
             @if (Model.PrimaryAction is not null)
             {
-                <a class="primary-action"
-                   href="@Model.PrimaryAction.Href">
+                <a class="hero-primary-action"
+                   href="@Model.PrimaryAction.Url">
                     @Model.PrimaryAction.Text
                 </a>
             }
 
             @if (Model.SecondaryAction is not null)
             {
-                <a class="secondary-action"
-                   href="@Model.SecondaryAction.Href">
+                <a class="hero-secondary-action"
+                   href="@Model.SecondaryAction.Url">
                     @Model.SecondaryAction.Text
                 </a>
             }
