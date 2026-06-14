@@ -1,6 +1,7 @@
 namespace AethericForge.Web.Services;
 
 using AethericForge.Web.Models;
+using AethericForge.Web.Models.Home;
 
 public interface IHomePageService
 {
@@ -31,8 +32,62 @@ public sealed class HomePageService : IHomePageService
                     {
                         Text = "Browse Documentation",
                         Href = "/documentation"
-                    }
+                        }
+                    },
+
+                    Mission = new MissionSectionModel
+                    {
+                        Header = new SectionHeaderModel
+                        {
+                            Title = "Our Mission",
+                            Subtitle = "Creating the resources, knowledge, and communities that enable people to build exceptional systems."
+                        },
+
+                        Description =
+                            "Aetheric Forge exists to lower the barriers to learning and creating. " +
+                            "We develop open-source projects, publish practical educational material, " +
+                            "and cultivate communities where students and professionals can learn by building together.",
+
+                        Pillars =
+                        [
+                            new MissionPillarModel
+                            {
+                                Title = "Build Open Infrastructure",
+                                Description =
+                                    "Create high-quality software, platform designs, and reference architectures " +
+                                    "that anyone can study, use, and improve."
+                            },
+
+                            new MissionPillarModel
+                            {
+                                Title = "Share Knowledge",
+                                Description =
+                                    "Transform experience into documentation, tutorials, design guides, " +
+                                    "and educational resources that help others grow."
+                            },
+
+                            new MissionPillarModel
+                            {
+                                Title = "Grow Communities",
+                                Description =
+                                    "Bring students, mentors, and practitioners together through collaboration, " +
+                                "discussion, and real-world projects."
+                        }
+                    ]
+                },
+
+                ProjectsHeader = new SectionHeaderModel
+                {
+                    Title = "Projects",
+                    Subtitle = "Open-source initiatives focused on education, infrastructure, and practical engineering."
+                },
+
+                CommunityHeader = new SectionHeaderModel
+                {
+                    Title = "Community",
+                    Subtitle = "Students, mentors, and professionals working together to learn and build."
                 }
-            });
+            }
+        );
     }
 }
