@@ -76,10 +76,41 @@ public sealed class HomePageService : IHomePageService
                     ]
                 },
 
-                ProjectsHeader = new SectionHeaderModel
+                Projects = new ProjectsSectionModel
                 {
-                    Title = "Projects",
-                    Subtitle = "Open-source initiatives focused on education, infrastructure, and practical engineering."
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Projects",
+                        Subtitle =
+                            "Open-source initiatives focused on education, infrastructure, and practical engineering."
+                    },
+
+                    Projects =
+                    [
+                        new ProjectCardModel
+                        {
+                            Title = "Infrastructure Designs",
+                            Description =
+                                "Reference architectures, deployment patterns, and infrastructure guidance developed through real-world experience.",
+                            Url = "/projects"
+                        },
+
+                        new ProjectCardModel
+                        {
+                            Title = "Educational Resources",
+                            Description =
+                                "Documentation, tutorials, and learning material created to help students and practitioners build capability.",
+                            Url = "/projects"
+                        },
+
+                        new ProjectCardModel
+                        {
+                            Title = "Community Initiatives",
+                            Description =
+                                "Collaborative projects that bring students, mentors, and professionals together to learn by building.",
+                            Url = "/projects"
+                        }
+                    ]
                 },
 
                 CommunityHeader = new SectionHeaderModel
