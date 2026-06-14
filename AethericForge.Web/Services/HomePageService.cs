@@ -148,6 +148,26 @@ public sealed class HomePageService : IHomePageService
                         }
                     ]
                 },
+                CallToAction = new CallToActionSectionModel
+                {
+                    Title = "Ready to Build With Us?",
+
+                    Description =
+                        "Explore open-source projects, discover educational resources, and become part of a growing community of builders.",
+
+                    PrimaryAction = new ActionLinkModel
+                    {
+                        Label = "Explore Projects",
+                        Url = "/projects",
+                        IsPrimary = true
+                    },
+
+                    SecondaryAction = new ActionLinkModel
+                    {
+                        Label = "Browse Documentation",
+                        Url = "/documentation"
+                    }
+                },
             }
         );
     }

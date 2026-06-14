@@ -1,0 +1,38 @@
+.call-to-action-section {
+    border-top:1px solid #fafafa;
+    padding: 8rem 0;
+}
+
+.call-to-action-section__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 2rem;
+
+    text-align: center;
+
+    max-width: 48rem;
+    margin: 0 auto;
+}
+
+.call-to-action-section__title {
+    margin: 0;
+
+    font-size: 3rem;
+    line-height: 1.1;
+}
+
+.call-to-action-section__description {
+    margin: 0;
+
+    font-size: 1.25rem;
+    line-height: 1.6;
+
+    opacity: 0.8;
+}
+
+.call-to-action-section__actions {
+    display: flex;
+    gap: 1rem;
+}

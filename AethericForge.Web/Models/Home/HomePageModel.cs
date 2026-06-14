@@ -6,4 +6,5 @@ public sealed class HomePageModel
     public MissionSectionModel Mission { get; init; } = new();
     public ProjectsSectionModel Projects { get; init; } = new();
     public CommunitySectionModel Community { get; init; } = new();
+    public CallToActionSectionModel CallToAction { get; init; } = new();
 }
