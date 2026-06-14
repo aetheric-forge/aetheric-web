@@ -112,12 +112,42 @@ public sealed class HomePageService : IHomePageService
                         }
                     ]
                 },
-
-                CommunityHeader = new SectionHeaderModel
+                Community = new CommunitySectionModel
                 {
-                    Title = "Community",
-                    Subtitle = "Students, mentors, and professionals working together to learn and build."
-                }
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Community",
+                        Subtitle =
+                            "A collaborative environment where students, mentors, and professionals learn by building together."
+                    },
+
+                    Audiences =
+                    [
+                        new CommunityAudienceCardModel
+                        {
+                            Title = "Students",
+                            Description =
+                                "Gain practical experience through real-world projects, open-source collaboration, and mentorship.",
+                            Url = "/community"
+                        },
+
+                        new CommunityAudienceCardModel
+                        {
+                            Title = "Mentors",
+                            Description =
+                                "Share knowledge, guide emerging talent, and help transform curiosity into capability.",
+                            Url = "/community"
+                        },
+
+                        new CommunityAudienceCardModel
+                        {
+                            Title = "Professionals",
+                            Description =
+                                "Contribute expertise, collaborate on meaningful initiatives, and support the next generation of builders.",
+                            Url = "/community"
+                        }
+                    ]
+                },
             }
         );
     }
