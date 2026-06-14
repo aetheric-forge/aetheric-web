@@ -1,0 +1,21 @@
+.hero {
+    padding: 4rem 0;
+}
+
+.hero-content {
+    max-width: 900px;
+}
+
+.hero h1 {
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+}
