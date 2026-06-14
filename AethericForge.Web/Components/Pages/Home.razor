@@ -1,7 +1,34 @@
 ﻿@page "/"
+@inject IHomePageService HomePageService
 
-<PageTitle>Home</PageTitle>
+@using AethericForge.Web.Models.Home
+@using AethericForge.Web.Components.Home
 
-<h1>Hello, world!</h1>
+@if (_model is null)
+{
+    return;
+}
 
-Welcome to your new app.
+<div class="home-page">
+    <div class="home-page__container">
+        <Hero Model="_model.Hero" />
+
+        <MissionSection Model="_model.Mission" />
+
+        <ProjectsSection Model="_model.Projects" />
+
+        <CommunitySection Model="_model.Community" />
+
+        <CallToActionSection Model="_model.CallToAction" />
+    </div>
+</div>
+
+@code
+{
+    private HomePageModel? _model;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await HomePageService.GetAsync();
+    }
+}

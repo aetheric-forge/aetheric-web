@@ -1,0 +1,38 @@
+<section class="call-to-action-section">
+    <div class="call-to-action-section__content">
+
+        <h2 class="call-to-action-section__title">
+            @Model.Title
+        </h2>
+
+        <p class="call-to-action-section__description">
+            @Model.Description
+        </p>
+
+        <div class="call-to-action-section__actions">
+
+            <a
+                class="@(Model.PrimaryAction.IsPrimary ? "primary-action" : "secondary-action")"
+                href="@Model.PrimaryAction.Url">
+                @Model.PrimaryAction.Label
+            </a>
+
+            @if (Model.SecondaryAction is not null)
+            {
+                <a
+                    class="@(Model.SecondaryAction.IsPrimary ? "primary-action" : "secondary-action")"
+                    href="@Model.SecondaryAction.Url">
+                    @Model.SecondaryAction.Label
+                </a>
+            }
+
+        </div>
+
+    </div>
+</section>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public required CallToActionSectionModel Model { get; init; }
+}

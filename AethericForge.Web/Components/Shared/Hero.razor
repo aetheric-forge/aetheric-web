@@ -1,0 +1,33 @@
+<section class="hero">
+    <div class="hero-content">
+        <h1>@Model.Title</h1>
+
+        <p class="hero-subtitle">
+            @Model.Subtitle
+        </p>
+
+        <div class="hero-actions">
+            @if (Model.PrimaryAction is not null)
+            {
+                <a class="primary-action"
+                   href="@Model.PrimaryAction.Href">
+                    @Model.PrimaryAction.Text
+                </a>
+            }
+
+            @if (Model.SecondaryAction is not null)
+            {
+                <a class="secondary-action"
+                   href="@Model.SecondaryAction.Href">
+                    @Model.SecondaryAction.Text
+                </a>
+            }
+        </div>
+    </div>
+</section>
+
+@code
+{
+    [Parameter, EditorRequired]
+    public HeroModel Model { get; set; } = default!;
+}
