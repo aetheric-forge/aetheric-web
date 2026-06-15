@@ -36,7 +36,8 @@ public sealed class HomePageService : IHomePageService
                         Text = "Browse Documentation",
                         Url = "/documentation"
                     }
-                }
-            });
+                },
+            }
+        );
     }
 }

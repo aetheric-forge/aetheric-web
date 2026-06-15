@@ -1,0 +1,24 @@
+.section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    max-width: 42rem;
+}
+
+.section-header__title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.section-header__subtitle {
+    font-size: 1.125rem;
+    line-height: 1.5;
+    opacity: 0.8;
+}
+
+.section-header__title,
+.section-header__description,
+.section-header__subtitle {
+    margin: 0;
+}

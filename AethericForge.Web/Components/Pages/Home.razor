@@ -1,13 +1,18 @@
 ﻿@page "/"
 @inject IHomePageService HomePageService
 
+@using AethericForge.Web.Models.Home
+@using AethericForge.Web.Components.Home
+
 @if (_model is null)
 {
     return;
 }
 
 <div class="home-page">
-    <Hero Model="_model.Hero" />
+    <div class="home-page__container">
+        <Hero Model="_model.Hero" />
+    </div>
 </div>
 
 @code

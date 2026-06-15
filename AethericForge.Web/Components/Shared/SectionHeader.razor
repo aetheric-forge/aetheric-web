@@ -1,0 +1,19 @@
+@using AethericForge.Web.Models
+
+<div class="section-header">
+    <h2 class="section-header__title">
+        @Model.Title
+    </h2>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Subtitle))
+    {
+        <p class="section-header__subtitle">
+            @Model.Subtitle
+        </p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required SectionHeaderModel Model { get; init; }
+}
