@@ -9,7 +9,7 @@ spec:
 
   source:
     repoURL: https://github.com/aetheric-forge/aethericforge-web.git
-    targetRevision: v0.1.2
+    targetRevision: v0.1
     path: deployment/kubernetes/aethericforge-web/workloads/overlays/dev
 
   destination:
