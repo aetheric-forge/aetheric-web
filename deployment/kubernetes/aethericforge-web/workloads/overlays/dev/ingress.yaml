@@ -14,15 +14,39 @@ spec:
   tls:
     - hosts:
         - www-dev.aethericforge.ca
+        - www.aethericforge.ca
+        - aethericforge.ca
       secretName: aethericforge-web-tls
   rules:
-    - host: www-dev.aethericforge.ca
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: aethericforge-web
-                port:
-                  number: 80
+  - host: www-dev.aethericforge.ca
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: aethericforge-web
+              port:
+                number: 80
+
+  - host: www.aethericforge.ca
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: aethericforge-web
+              port:
+                number: 80
+
+  - host: aethericforge.ca
+    http:
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: aethericforge-web
+              port:
+                number: 80
