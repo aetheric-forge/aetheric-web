@@ -1,4 +1,5 @@
 @using AethericForge.Web.Models
+@using AethericForge.Web.Models.Shared
 
 <div class="section-header">
     <h2 class="section-header__title">
@@ -15,5 +16,5 @@
 
 @code {
     [Parameter, EditorRequired]
-    public required SectionHeaderModel Model { get; init; }
+    public SectionHeaderModel Model { get; init; } = new();
 }
