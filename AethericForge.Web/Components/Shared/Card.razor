@@ -1,0 +1,33 @@
+<article class="card">
+
+    <div class="card-accent"></div>
+
+    <div class="card-content">
+
+        <h3 class="card-title">
+            @Model.Title
+        </h3>
+
+        <p class="card-description">
+            @Model.Description
+        </p>
+
+        @if (Model.Action is not null)
+        {
+            <a class="card-action"
+               href="@Model.Action.Url">
+                @Model.Action.Label →
+            </a>
+        }
+
+    </div>
+
+</article>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public CardModel Model { get; set; } = null!;
+
+}

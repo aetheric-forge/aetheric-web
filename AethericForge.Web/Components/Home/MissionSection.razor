@@ -1,28 +1,42 @@
+@using AethericForge.Web.Models.Home
+
 <section class="mission-section">
+
     <SectionHeader Model="Model.Header" />
 
-    <p class="mission-section__description">
-        @Model.Description
-    </p>
+    <div class="mission-content">
 
-    <div class="mission-section__pillars">
-        @foreach (var pillar in Model.Pillars)
-        {
-            <div class="mission-pillar">
-                <h3 class="mission-pillar__title">
-                    @pillar.Title
-                </h3>
+        <p class="mission-description">
+            @Model.Description
+        </p>
 
-                <p class="mission-pillar__description">
-                    @pillar.Description
-                </p>
-            </div>
-        }
+        <div class="mission-pillars">
+
+            @foreach (var pillar in Model.Pillars)
+            {
+                <div class="mission-pillar">
+
+                    <h3 class="mission-pillar-title">
+                        @pillar.Title
+                    </h3>
+
+                    <p class="mission-pillar-description">
+                        @pillar.Description
+                    </p>
+
+                </div>
+            }
+
+        </div>
+
     </div>
+
 </section>
 
-@code
-{
-    [Parameter, EditorRequired]
-    public required MissionSectionModel Model { get; init; }
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public MissionSectionModel Model { get; set; } = null!;
+
 }

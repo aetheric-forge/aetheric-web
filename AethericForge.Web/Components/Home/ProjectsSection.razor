@@ -1,28 +1,21 @@
 <section class="projects-section">
+
     <SectionHeader Model="Model.Header" />
 
-    <div class="projects-section__grid">
-        @foreach (var project in Model.Projects)
+
+    <CardGrid>
+        @foreach (var card in Model.Projects)
         {
-            <article class="project-card">
-                <h3 class="project-card__title">
-                    @project.Title
-                </h3>
-
-                <p class="project-card__description">
-                    @project.Description
-                </p>
-
-                <a class="project-card__link" href="@project.Url">
-                    Learn More →
-                </a>
-            </article>
+            <Card Model="card" />
         }
-    </div>
+    </CardGrid>
+
 </section>
 
-@code
-{
-    [Parameter, EditorRequired]
-    public required ProjectsSectionModel Model { get; init; }
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public ProjectsSectionModel Model { get; set; } = null!;
+
 }

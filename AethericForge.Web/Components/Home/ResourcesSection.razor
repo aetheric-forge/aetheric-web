@@ -1,0 +1,22 @@
+<section class="resources-section">
+
+    <SectionHeader Model="Model.Header" />
+
+    <div class="resources-grid">
+
+        @foreach (var card in Model.Cards)
+        {
+            <Card Model="card" />
+        }
+
+    </div>
+
+</section>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public ResourcesSectionModel Model { get; set; } = null!;
+
+}

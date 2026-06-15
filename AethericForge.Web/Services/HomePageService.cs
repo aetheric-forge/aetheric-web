@@ -2,6 +2,7 @@ namespace AethericForge.Web.Services;
 
 using AethericForge.Web.Models;
 using AethericForge.Web.Models.Home;
+using AethericForge.Web.Models.Shared;
 
 public interface IHomePageService
 {
@@ -17,155 +18,207 @@ public sealed class HomePageService : IHomePageService
             {
                 Hero = new HeroModel
                 {
+                    Eyebrow = "A Workshop for Builders, Thinkers, and Innovators",
+
                     Title = "Building Systems. Sharing Knowledge. Growing Together.",
 
                     Subtitle =
                         "Aetheric Forge is an open initiative dedicated to the creation of software, infrastructure, educational resources, and communities of practice. Through real-world projects, open documentation, and collaborative learning, we help transform curiosity into capability.",
 
-                    PrimaryAction = new HeroActionModel
-                    {
-                        Text = "Explore Projects",
-                        Href = "/projects"
-                    },
-
-                    SecondaryAction = new HeroActionModel
-                    {
-                        Text = "Browse Documentation",
-                        Href = "/documentation"
-                        }
-                    },
-
-                    Mission = new MissionSectionModel
-                    {
-                        Header = new SectionHeaderModel
-                        {
-                            Title = "Our Mission",
-                            Subtitle = "Creating the resources, knowledge, and communities that enable people to build exceptional systems."
-                        },
-
-                        Description =
-                            "Aetheric Forge exists to lower the barriers to learning and creating. " +
-                            "We develop open-source projects, publish practical educational material, " +
-                            "and cultivate communities where students and professionals can learn by building together.",
-
-                        Pillars =
-                        [
-                            new MissionPillarModel
-                            {
-                                Title = "Build Open Infrastructure",
-                                Description =
-                                    "Create high-quality software, platform designs, and reference architectures " +
-                                    "that anyone can study, use, and improve."
-                            },
-
-                            new MissionPillarModel
-                            {
-                                Title = "Share Knowledge",
-                                Description =
-                                    "Transform experience into documentation, tutorials, design guides, " +
-                                    "and educational resources that help others grow."
-                            },
-
-                            new MissionPillarModel
-                            {
-                                Title = "Grow Communities",
-                                Description =
-                                    "Bring students, mentors, and practitioners together through collaboration, " +
-                                "discussion, and real-world projects."
-                        }
-                    ]
-                },
-
-                Projects = new ProjectsSectionModel
-                {
-                    Header = new SectionHeaderModel
-                    {
-                        Title = "Projects",
-                        Subtitle =
-                            "Open-source initiatives focused on education, infrastructure, and practical engineering."
-                    },
-
-                    Projects =
-                    [
-                        new ProjectCardModel
-                        {
-                            Title = "Infrastructure Designs",
-                            Description =
-                                "Reference architectures, deployment patterns, and infrastructure guidance developed through real-world experience.",
-                            Url = "/projects"
-                        },
-
-                        new ProjectCardModel
-                        {
-                            Title = "Educational Resources",
-                            Description =
-                                "Documentation, tutorials, and learning material created to help students and practitioners build capability.",
-                            Url = "/projects"
-                        },
-
-                        new ProjectCardModel
-                        {
-                            Title = "Community Initiatives",
-                            Description =
-                                "Collaborative projects that bring students, mentors, and professionals together to learn by building.",
-                            Url = "/projects"
-                        }
-                    ]
-                },
-                Community = new CommunitySectionModel
-                {
-                    Header = new SectionHeaderModel
-                    {
-                        Title = "Community",
-                        Subtitle =
-                            "A collaborative environment where students, mentors, and professionals learn by building together."
-                    },
-
-                    Audiences =
-                    [
-                        new CommunityAudienceCardModel
-                        {
-                            Title = "Students",
-                            Description =
-                                "Gain practical experience through real-world projects, open-source collaboration, and mentorship.",
-                            Url = "/community"
-                        },
-
-                        new CommunityAudienceCardModel
-                        {
-                            Title = "Mentors",
-                            Description =
-                                "Share knowledge, guide emerging talent, and help transform curiosity into capability.",
-                            Url = "/community"
-                        },
-
-                        new CommunityAudienceCardModel
-                        {
-                            Title = "Professionals",
-                            Description =
-                                "Contribute expertise, collaborate on meaningful initiatives, and support the next generation of builders.",
-                            Url = "/community"
-                        }
-                    ]
-                },
-                CallToAction = new CallToActionSectionModel
-                {
-                    Title = "Ready to Build With Us?",
-
-                    Description =
-                        "Explore open-source projects, discover educational resources, and become part of a growing community of builders.",
-
                     PrimaryAction = new ActionLinkModel
                     {
                         Label = "Explore Projects",
-                        Url = "/projects",
-                        IsPrimary = true
+                        Url = "/projects"
                     },
 
                     SecondaryAction = new ActionLinkModel
                     {
                         Label = "Browse Documentation",
                         Url = "/documentation"
+                    }
+                },
+
+                ProjectsSection = new ProjectsSectionModel
+                {
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Projects and Initiatives",
+
+                        Subtitle =
+                            "Our projects bring together software development, infrastructure design, education, and community engagement to create practical solutions and meaningful learning opportunities."
+                    },
+
+                    Projects =
+                    [
+                        new CardModel
+                        {
+                            Title = "Open Source Software",
+
+                            Description =
+                                "Applications, libraries, and tools designed to solve real-world problems while demonstrating modern engineering practices.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "View Projects",
+                                Url = "/projects/software"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Infrastructure & Architecture",
+
+                            Description =
+                                "Reference architectures, deployment patterns, and operational practices that help organizations build reliable and sustainable systems.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Explore Roadmaps",
+                                Url = "/projects/infrastructure"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Educational Resources",
+
+                            Description =
+                                "Guides, workshops, videos, and learning materials created to help builders develop practical skills through real-world examples.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Browse Resources",
+                                Url = "/documentation"
+                            }
+                        }
+                    ]
+                },
+                MissionSection = new MissionSectionModel
+                {
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Our Mission",
+
+                        Subtitle =
+                            "Creating opportunities to learn, build, and grow through open collaboration."
+                    },
+
+                    Description =
+                        "Aetheric Forge exists to foster practical learning, open knowledge, and collaborative problem-solving. Through software, infrastructure, education, and community engagement, we help individuals and organizations develop the skills, tools, and relationships needed to create lasting impact.",
+
+                    Pillars =
+                    [
+                        new MissionPillarModel
+                        {
+                            Title = "Learn",
+
+                            Description =
+                                "Develop practical skills through real-world projects, mentorship, and shared experiences."
+                        },
+
+                        new MissionPillarModel
+                        {
+                            Title = "Build",
+
+                            Description =
+                                "Create software, infrastructure, and educational resources that provide meaningful value."
+                        },
+
+                        new MissionPillarModel
+                        {
+                            Title = "Share",
+
+                            Description =
+                                "Strengthen communities through open knowledge, collaboration, and continuous improvement."
+                        }
+                    ]
+                },
+                ResourcesSection = new ResourcesSectionModel
+                {
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Resources",
+
+                        Subtitle =
+                            "Explore articles, videos, workshops, and open-source repositories created to support learning, collaboration, and practical experimentation."
+                    },
+
+                    Cards =
+                    [
+                        new CardModel
+                        {
+                            Title = "Articles",
+
+                            Description =
+                                "In-depth explorations of software architecture, infrastructure design, organizational development, and practical engineering.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Read Articles",
+                                Url = "/articles"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Videos",
+
+                            Description =
+                                "Presentations, demonstrations, workshops, and discussions that bring ideas to life through visual learning.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Watch Videos",
+                                Url = "/videos"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Workshops",
+
+                            Description =
+                                "Hands-on learning experiences designed to help participants develop practical skills through guided projects and collaboration.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Explore Workshops",
+                                Url = "/workshops"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "GitHub Projects",
+
+                            Description =
+                                "Open-source repositories, reference implementations, and active development efforts from the Aetheric Forge community.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Browse Repositories",
+                                Url = "/github"
+                            }
+                        }
+                    ]
+                },
+                CallToActionSection = new CallToActionSectionModel
+                {
+                    Title = "Ready to Build With Us?",
+
+                    Description =
+                        "Whether you're looking to learn, contribute, collaborate, or simply follow along, we'd love to have you join the journey.",
+
+                    PrimaryAction = new ActionLinkModel
+                    {
+                        Label = "Explore Projects",
+                        Url = "/projects"
+                    },
+
+                    SecondaryAction = new ActionLinkModel
+                    {
+                        Label = "Browse Resources",
+                        Url = "/resources"
                     }
                 },
             }
