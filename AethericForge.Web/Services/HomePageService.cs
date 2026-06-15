@@ -27,13 +27,13 @@ public sealed class HomePageService : IHomePageService
 
                     PrimaryAction = new ActionLinkModel
                     {
-                        Text = "Explore Projects",
+                        Label = "Explore Projects",
                         Url = "/projects"
                     },
 
                     SecondaryAction = new ActionLinkModel
                     {
-                        Text = "Browse Documentation",
+                        Label = "Browse Documentation",
                         Url = "/documentation"
                     }
                 },
