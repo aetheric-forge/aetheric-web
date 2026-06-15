@@ -6,4 +6,5 @@ public sealed class HomePageModel
 {
     public HeroModel Hero { get; init; } = new();
     public ProjectsSectionModel ProjectsSection { get; init; } = new();
+    public MissionSectionModel MissionSection { get; init; } = new();
 }

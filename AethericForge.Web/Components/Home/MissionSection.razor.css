@@ -1,0 +1,62 @@
+.mission-section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3rem;
+
+    padding: 0 2rem;
+}
+
+.mission-content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3rem;
+}
+
+.mission-description {
+    max-width: 70ch;
+
+    font-size: 1.2rem;
+    line-height: 1.7;
+
+    color: #4b5563;
+
+    margin: 0;
+}
+
+.mission-pillars {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(240px, 1fr)
+        );
+
+    gap: 2rem;
+}
+
+.mission-pillar {
+    display: flex;
+    flex-direction: column;
+
+    gap: 1rem;
+}
+
+.mission-pillar-title {
+    margin: 0;
+
+    font-size: 1.5rem;
+    font-weight: 700;
+
+    color: #111827;
+}
+
+.mission-pillar-description {
+    margin: 0;
+
+    line-height: 1.7;
+
+    color: #4b5563;
+}

@@ -93,6 +93,46 @@ public sealed class HomePageService : IHomePageService
                         }
                     ]
                 },
+                MissionSection = new MissionSectionModel
+                {
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Our Mission",
+
+                        Subtitle =
+                            "Creating opportunities to learn, build, and grow through open collaboration."
+                    },
+
+                    Description =
+                        "Aetheric Forge exists to foster practical learning, open knowledge, and collaborative problem-solving. Through software, infrastructure, education, and community engagement, we help individuals and organizations develop the skills, tools, and relationships needed to create lasting impact.",
+
+                    Pillars =
+                    [
+                        new MissionPillarModel
+                        {
+                            Title = "Learn",
+
+                            Description =
+                                "Develop practical skills through real-world projects, mentorship, and shared experiences."
+                        },
+
+                        new MissionPillarModel
+                        {
+                            Title = "Build",
+
+                            Description =
+                                "Create software, infrastructure, and educational resources that provide meaningful value."
+                        },
+
+                        new MissionPillarModel
+                        {
+                            Title = "Share",
+
+                            Description =
+                                "Strengthen communities through open knowledge, collaboration, and continuous improvement."
+                        }
+                    ]
+                },
             }
         );
     }
