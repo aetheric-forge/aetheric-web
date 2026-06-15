@@ -1,0 +1,20 @@
+.projects-section {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4rem;
+
+    padding: 6rem 2rem;
+}
+
+.projects-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(320px, 1fr)
+        );
+
+    gap: 2rem;
+}
