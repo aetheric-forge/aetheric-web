@@ -133,6 +133,94 @@ public sealed class HomePageService : IHomePageService
                         }
                     ]
                 },
+                ResourcesSection = new ResourcesSectionModel
+                {
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Resources",
+
+                        Subtitle =
+                            "Explore articles, videos, workshops, and open-source repositories created to support learning, collaboration, and practical experimentation."
+                    },
+
+                    Cards =
+                    [
+                        new CardModel
+                        {
+                            Title = "Articles",
+
+                            Description =
+                                "In-depth explorations of software architecture, infrastructure design, organizational development, and practical engineering.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Read Articles",
+                                Url = "/articles"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Videos",
+
+                            Description =
+                                "Presentations, demonstrations, workshops, and discussions that bring ideas to life through visual learning.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Watch Videos",
+                                Url = "/videos"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Workshops",
+
+                            Description =
+                                "Hands-on learning experiences designed to help participants develop practical skills through guided projects and collaboration.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Explore Workshops",
+                                Url = "/workshops"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "GitHub Projects",
+
+                            Description =
+                                "Open-source repositories, reference implementations, and active development efforts from the Aetheric Forge community.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Browse Repositories",
+                                Url = "/github"
+                            }
+                        }
+                    ]
+                },
+                CallToActionSection = new CallToActionSectionModel
+                {
+                    Title = "Ready to Build With Us?",
+
+                    Description =
+                        "Whether you're looking to learn, contribute, collaborate, or simply follow along, we'd love to have you join the journey.",
+
+                    PrimaryAction = new ActionLinkModel
+                    {
+                        Label = "Explore Projects",
+                        Url = "/projects"
+                    },
+
+                    SecondaryAction = new ActionLinkModel
+                    {
+                        Label = "Browse Resources",
+                        Url = "/resources"
+                    }
+                },
             }
         );
     }

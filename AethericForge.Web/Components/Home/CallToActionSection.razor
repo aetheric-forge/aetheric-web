@@ -1,0 +1,43 @@
+<section class="cta-section">
+
+    <div class="cta-content">
+
+        <h2 class="cta-title">
+            @Model.Title
+        </h2>
+
+        <p class="cta-description">
+            @Model.Description
+        </p>
+
+        <div class="cta-actions">
+
+            @if (Model.PrimaryAction is not null)
+            {
+                <a class="cta-primary-action"
+                   href="@Model.PrimaryAction.Url">
+                    @Model.PrimaryAction.Label
+                </a>
+            }
+
+            @if (Model.SecondaryAction is not null)
+            {
+                <a class="cta-secondary-action"
+                   href="@Model.SecondaryAction.Url">
+                    @Model.SecondaryAction.Label
+                </a>
+            }
+
+        </div>
+
+    </div>
+
+</section>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public CallToActionSectionModel Model { get; set; } = null!;
+
+}

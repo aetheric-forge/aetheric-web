@@ -1,0 +1,33 @@
+.cta-section {
+    padding: 6rem 2rem;
+
+    background: #f5f5f5;
+
+    border-radius: 12px;
+}
+
+.cta-content {
+    max-width: 800px;
+}
+
+.cta-title {
+    margin: 0 0 1rem 0;
+
+    font-size: 2.5rem;
+    font-weight: 800;
+}
+
+.cta-description {
+    margin: 0 0 2rem 0;
+
+    font-size: 1.2rem;
+    line-height: 1.7;
+
+    color: #4b5563;
+}
+
+.cta-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
