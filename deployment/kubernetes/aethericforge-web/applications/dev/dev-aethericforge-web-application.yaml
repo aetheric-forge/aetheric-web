@@ -3,6 +3,7 @@ kind: Application
 
 metadata:
   name: aethericforge-web-dev
+  namespace: aetheric-forge
 
 spec:
   project: apps
