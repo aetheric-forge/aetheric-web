@@ -8,7 +8,7 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/aetheric-forge/aethericforge-web.git
+    repoURL: https://github.com/aetheric-forge/aetheric-web.git
     targetRevision: v0.1
     path: deployment/kubernetes/aethericforge-web/workloads/overlays/dev
 
