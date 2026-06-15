@@ -5,7 +5,7 @@ metadata:
   name: aethericforge-web-dev
 
 spec:
-  project: default
+  project: apps
 
   source:
     repoURL: https://github.com/aetheric-forge/aetheric-web.git
