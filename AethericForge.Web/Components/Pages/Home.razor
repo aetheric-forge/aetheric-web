@@ -2,6 +2,8 @@
 @inject IHomePageService HomePageService
 
 @using AethericForge.Web.Models.Home
+@using AethericForge.Web.Models.Shared
+@using AethericForge.Web.Components.Home
 
 @if (_model is null)
 {
@@ -11,6 +13,8 @@
 <div class="home-page">
     <div class="home-page__container">
         <Hero Model="_model.Hero" />
+
+        <ProjectsSection Model="_model.ProjectsSection" />
     </div>
 </div>
 

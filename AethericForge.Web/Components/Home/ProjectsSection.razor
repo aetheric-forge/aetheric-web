@@ -1,0 +1,21 @@
+<section class="projects-section">
+
+    <SectionHeader Model="Model.Header" />
+
+
+    <CardGrid>
+        @foreach (var card in Model.Projects)
+        {
+            <Card Model="card" />
+        }
+    </CardGrid>
+
+</section>
+
+@code {
+
+    [Parameter]
+    [EditorRequired]
+    public ProjectsSectionModel Model { get; set; } = null!;
+
+}

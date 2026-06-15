@@ -37,6 +37,62 @@ public sealed class HomePageService : IHomePageService
                         Url = "/documentation"
                     }
                 },
+
+                ProjectsSection = new ProjectsSectionModel
+                {
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Projects and Initiatives",
+
+                        Subtitle =
+                            "Our projects bring together software development, infrastructure design, education, and community engagement to create practical solutions and meaningful learning opportunities."
+                    },
+
+                    Projects =
+                    [
+                        new CardModel
+                        {
+                            Title = "Open Source Software",
+
+                            Description =
+                                "Applications, libraries, and tools designed to solve real-world problems while demonstrating modern engineering practices.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "View Projects",
+                                Url = "/projects/software"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Infrastructure & Architecture",
+
+                            Description =
+                                "Reference architectures, deployment patterns, and operational practices that help organizations build reliable and sustainable systems.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Explore Roadmaps",
+                                Url = "/projects/infrastructure"
+                            }
+                        },
+
+                        new CardModel
+                        {
+                            Title = "Educational Resources",
+
+                            Description =
+                                "Guides, workshops, videos, and learning materials created to help builders develop practical skills through real-world examples.",
+
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Browse Resources",
+                                Url = "/documentation"
+                            }
+                        }
+                    ]
+                },
             }
         );
     }
