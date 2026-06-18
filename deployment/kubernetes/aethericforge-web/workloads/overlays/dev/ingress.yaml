@@ -6,7 +6,7 @@ metadata:
   namespace: aetheric-forge
 
   annotations:
-    cert-manager.io/cluster-issuer: le-staging
+    cert-manager.io/cluster-issuer: le-prod
     metallb.io/address-pool: public-pool
 
 spec:
