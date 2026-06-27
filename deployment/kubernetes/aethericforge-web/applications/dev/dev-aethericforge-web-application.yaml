@@ -6,7 +6,7 @@ metadata:
   namespace: argocd
 
 spec:
-  project: apps
+  project: default
 
   source:
     repoURL: https://github.com/aetheric-forge/aetheric-web.git
