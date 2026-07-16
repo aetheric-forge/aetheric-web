@@ -16,6 +16,7 @@ using AethericForge.Runtime.Providers.Identity.InMemory;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Library;
+using AethericForge.Runtime.Services.Post;
 
 namespace AethericForge.Web.Hosting;
 
@@ -26,6 +27,7 @@ public static class ForgeCampusExtensions
         services.AddSingleton<IIdentityProvider>(new InMemoryIdentityProvider("Local", IdentityScheme.Local));
         services.AddSingleton<IIdentityLifecycleService, IdentityLifecycleService>();
         services.AddSingleton<IIdentityService, IdentityService>();
+        services.AddSingleton<IPostExchange, PostExchange>();
 
         services.AddSingleton<ICampus>(serviceProvider =>
         {
@@ -118,6 +120,11 @@ public static class ForgeCampusExtensions
                     {
                         name = campus.Archive.Context.Template.Descriptor.Name,
                         version = campus.Archive.Context.Template.Descriptor.Version.ToString()
+                    },
+                    library = new
+                    {
+                        name = campus.Library.Context.Template.Descriptor.Name,
+                        version = campus.Library.Context.Template.Descriptor.Version.ToString()
                     }
                 }));
 
