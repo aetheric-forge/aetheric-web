@@ -21,6 +21,7 @@
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Archive\AethericForge.Runtime.Services.Archive.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Identity\AethericForge.Runtime.Services.Identity.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Knowledge\AethericForge.Runtime.Services.Knowledge.csproj" />
+    <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Library\AethericForge.Runtime.Services.Library.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Post\AethericForge.Runtime.Services.Post.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Staging\AethericForge.Runtime.Services.Staging.csproj" />
   </ItemGroup>

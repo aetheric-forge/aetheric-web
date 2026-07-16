@@ -24,6 +24,7 @@
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Archive/AethericForge.Runtime.Services.Archive.csproj" />
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Identity/AethericForge.Runtime.Services.Identity.csproj" />
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Knowledge/AethericForge.Runtime.Services.Knowledge.csproj" />
+    <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Library/AethericForge.Runtime.Services.Library.csproj" />
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Post/AethericForge.Runtime.Services.Post.csproj" />
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Staging/AethericForge.Runtime.Services.Staging.csproj" />
     <Project Path="runtime/src/Tests/AethericForge.Runtime.Tests/AethericForge.Runtime.Tests.csproj" />

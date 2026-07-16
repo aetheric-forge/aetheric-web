@@ -1,14 +1,21 @@
+using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
+using AethericForge.Runtime.Abstractions.Interfaces.Archive.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Authentication;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Provisioning;
+using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
 using AethericForge.Runtime.Institutions.Abstractions.Builders;
+using AethericForge.Runtime.Institutions.Archive;
 using AethericForge.Runtime.Institutions.Campus;
+using AethericForge.Runtime.Institutions.Library;
 using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registrar;
 using AethericForge.Runtime.Providers.Identity.InMemory;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
+using AethericForge.Runtime.Services.Library;
 
 namespace AethericForge.Web.Hosting;
 
@@ -53,6 +60,28 @@ public static class ForgeCampusExtensions
 
             campus.Register<IPostOffice>(postOffice);
 
+            var archiveTemplate = InstitutionTemplateBuilder.Create()
+                .WithDescriptor("Archive", new Version(1, 0, 0), "Campus Archive")
+                .Build();
+
+            var archiveContext = new ArchiveContext(archiveTemplate, serviceProvider, campus);
+            var archiveVault = serviceProvider.GetRequiredService<IArchiveVault>();
+            var archivist = serviceProvider.GetRequiredService<IArchivist>();
+            var archive = new Archive(archiveContext, archiveVault, archivist);
+
+            campus.Register<IArchive>(archive);
+
+            var libraryTemplate = InstitutionTemplateBuilder.Create()
+                .WithDescriptor("Library", new Version(1, 0, 0), "Campus Library")
+                .Build();
+
+            var libraryContext = new LibraryContext(libraryTemplate, serviceProvider, campus);
+            var libraryVault = serviceProvider.GetRequiredService<ILibraryService>();
+            var librarian = serviceProvider.GetRequiredService<ILibrarian>();
+            var library = new Library(libraryContext, libraryVault, librarian);
+
+            campus.Register<ILibrary>(library);
+
             return campus;
         });
 
@@ -84,6 +113,11 @@ public static class ForgeCampusExtensions
                     {
                         name = campus.PostOffice.Context.Template.Descriptor.Name,
                         version = campus.PostOffice.Context.Template.Descriptor.Version.ToString()
+                    },
+                    archive = new
+                    {
+                        name = campus.Archive.Context.Template.Descriptor.Name,
+                        version = campus.Archive.Context.Template.Descriptor.Version.ToString()
                     }
                 }));
 
