@@ -1,4 +1,5 @@
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Authentication;
+using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Provisioning;
 using AethericForge.Runtime.Institutions.Abstractions.Builders;
 using AethericForge.Runtime.Institutions.Campus;
@@ -9,10 +10,12 @@ using AethericForge.Runtime.Services.Identity.Lifecycle;
 
 namespace AethericForge.Web.Hosting;
 
-public static class ForgeCampus AddForgeCampus(this IServiceCollection services)
+public static class ForgeCampusExtensions 
 {
+    public static IServiceCollection AddForgeCampus(this IServiceCollection services)
     {
         services.AddSingleton<IIdentityProvider>(new InMemoryIdentityProvider("Local", IdentityScheme.Local));
+        services.AddSingleton<IIdentityLifecycleService, IdentityLifecycleService>();
         services.AddSingleton<IIdentityService, IdentityService>();
 
         services.AddSingleton<ICampus>(serviceProvider =>
@@ -33,7 +36,7 @@ public static class ForgeCampus AddForgeCampus(this IServiceCollection services)
 
             var registrarContext = new RegistrarContext(registrarTemplate, serviceProvider, campus);
             var identityService = serviceProvider.GetRequiredService<IIdentityService>();
-            var registrar = new IdentityRegistrar(registrarContext, identityService);
+            var registrar = new Registrar(registrarContext, identityService);
 
             campus.Register<IRegistrar>(registrar);
 

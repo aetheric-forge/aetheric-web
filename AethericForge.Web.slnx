@@ -4,7 +4,6 @@
   </Folder>
   <Folder Name="/Runtime/">
     <Project Path="runtime/src/Abstractions/Interfaces/AethericForge.Runtime.Abstractions.Interfaces/AethericForge.Runtime.Abstractions.Interfaces.csproj" />
-    <Project Path="runtime/src/AethericForge.Runtime/AethericForge.Runtime.csproj" />
     <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Abstractions/AethericForge.Runtime.Institutions.Abstractions.csproj" />
     <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Archive/AethericForge.Runtime.Institutions.Archive.csproj" />
     <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Campus/AethericForge.Runtime.Institutions.Campus.csproj" />
