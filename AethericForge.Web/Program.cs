@@ -1,4 +1,5 @@
 using AethericForge.Web.Components;
+using AethericForge.Web.Hosting;
 using AethericForge.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddScoped<IHomePageService, HomePageService>();
+builder.Services.AddForgeCampus();
 
 var app = builder.Build();
 
@@ -24,6 +26,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapForgeCampusDiagnostics();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
