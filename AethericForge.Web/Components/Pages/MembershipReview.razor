@@ -50,6 +50,12 @@
                                 <button class="btn btn-outline-danger" @onclick="() => DeclineAsync(application.Id)">Decline</button>
                             </div>
                         }
+                        else if (application.Status is MembershipApplicationStatus.Approved && application.ProvisioningStatus == IdentityProvisioningStatus.Failed)
+                        {
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-warning" @onclick="() => RetryAsync(application.Id)">Retry provisioning</button>
+                            </div>
+                        }
                     </div>
                 </article>
             }
@@ -72,6 +78,12 @@
     private async Task DeclineAsync(Guid id)
     {
         await ReviewService.DeclineAsync(id, await GetReviewerAsync(), _notes.GetValueOrDefault(id));
+        await ReloadAsync();
+    }
+
+    private async Task RetryAsync(Guid id)
+    {
+        await ReviewService.RetryProvisioningAsync(id);
         await ReloadAsync();
     }
 

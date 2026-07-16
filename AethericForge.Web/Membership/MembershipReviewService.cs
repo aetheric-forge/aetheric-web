@@ -15,7 +15,30 @@ public sealed class MembershipReviewService(
         application.ReviewedBy = reviewer;
         application.ReviewedAt = DateTimeOffset.UtcNow;
         application.ReviewNotes = notes;
+        await store.SaveAsync(application, cancellationToken);
+
+        await TryProvisionAsync(application, cancellationToken);
+    }
+
+    public async Task RetryProvisioningAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var application = await RequireApplicationAsync(id, cancellationToken);
+        if (application.Status != MembershipApplicationStatus.Approved || application.ProvisioningStatus != IdentityProvisioningStatus.Failed)
+        {
+            throw new InvalidOperationException($"Application {id} cannot be retried.");
+        }
+
+        await TryProvisionAsync(application, cancellationToken);
+    }
+
+    private async Task TryProvisionAsync(
+        MembershipApplication application,
+        CancellationToken cancellationToken = default)
+    {
         application.ProvisioningStatus = IdentityProvisioningStatus.InProgress;
+        application.ProvisioningError = null;
         await store.SaveAsync(application, cancellationToken);
 
         try
