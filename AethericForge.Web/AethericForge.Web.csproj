@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Archive\AethericForge.Runtime.Institutions.Archive.csproj" />
+    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Library\AethericForge.Runtime.Institutions.Library.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.PostOffice\AethericForge.Runtime.Institutions.PostOffice.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Registrar\AethericForge.Runtime.Institutions.Registrar.csproj" />
