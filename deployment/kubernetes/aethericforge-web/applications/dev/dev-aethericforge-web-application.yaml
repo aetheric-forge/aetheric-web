@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: aethericforge-web-dev
+  namespace: argocd
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/aetheric-forge/aetheric-web.git
+    targetRevision: v0.1
+    path: deployment/kubernetes/aethericforge-web/workloads/overlays/dev
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: aetheric-forge
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

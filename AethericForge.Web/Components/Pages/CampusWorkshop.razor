@@ -1,0 +1,248 @@
+@page "/campus-workshop"
+@rendermode InteractiveServer
+@using System.Text
+@using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives
+@using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Artifacts
+@using AethericForge.Runtime.Abstractions.Interfaces.Post.Primitives
+@using AethericForge.Runtime.Institutions.Campus
+@using AethericForge.Runtime.Models.Archive.Primitives
+@using AethericForge.Runtime.Models.Knowledge.Primitives
+@using AethericForge.Runtime.Models.Knowledge.Representations
+@using AethericForge.Runtime.Models.Post
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject ICampus Campus
+
+<PageTitle>Campus Workshop</PageTitle>
+
+<main class="workshop">
+    <header class="workshop__header">
+        <div>
+            <p class="workshop__eyebrow">Forge Campus</p>
+            <h1>Institution Workshop</h1>
+            <p>Send real work through the Library, Archive, and Post Office.</p>
+        </div>
+        <a class="btn btn-outline-secondary" href="/">Return home</a>
+    </header>
+
+    <div class="workshop__grid">
+        <section class="institution-card">
+            <header>
+                <span class="institution-card__number">01</span>
+                <div>
+                    <h2>Library</h2>
+                    <p>Publish and retrieve a knowledge artifact.</p>
+                </div>
+            </header>
+
+            <label for="library-title" class="form-label">Title</label>
+            <input id="library-title" class="form-control" @bind="_libraryTitle" />
+
+            <label for="library-content" class="form-label">Knowledge</label>
+            <textarea id="library-content" class="form-control" rows="5" @bind="_libraryContent"></textarea>
+
+            <button class="btn btn-primary" @onclick="PublishToLibraryAsync" disabled="@_libraryBusy">
+                @(_libraryBusy ? "Publishing…" : "Publish through Library")
+            </button>
+
+            @if (_libraryResult is not null)
+            {
+                <div class="institution-result institution-result--success" role="status">
+                    <strong>Published and retrieved</strong>
+                    <span>@_libraryResult</span>
+                </div>
+            }
+            @if (_libraryError is not null)
+            {
+                <div class="institution-result institution-result--error" role="alert">@_libraryError</div>
+            }
+        </section>
+
+        <section class="institution-card">
+            <header>
+                <span class="institution-card__number">02</span>
+                <div>
+                    <h2>Archive</h2>
+                    <p>Store bytes, inspect metadata, and retrieve them.</p>
+                </div>
+            </header>
+
+            <label for="archive-content" class="form-label">Document</label>
+            <textarea id="archive-content" class="form-control" rows="8" @bind="_archiveContent"></textarea>
+
+            <button class="btn btn-primary" @onclick="ArchiveAndRetrieveAsync" disabled="@_archiveBusy">
+                @(_archiveBusy ? "Archiving…" : "Archive and retrieve")
+            </button>
+
+            @if (_archiveResult is not null)
+            {
+                <div class="institution-result institution-result--success" role="status">
+                    <strong>Archived and retrieved</strong>
+                    <span>@_archiveResult</span>
+                </div>
+            }
+            @if (_archiveError is not null)
+            {
+                <div class="institution-result institution-result--error" role="alert">@_archiveError</div>
+            }
+        </section>
+
+        <section class="institution-card">
+            <header>
+                <span class="institution-card__number">03</span>
+                <div>
+                    <h2>Post Office</h2>
+                    <p>Accept a message into the exchange and collect it.</p>
+                </div>
+            </header>
+
+            <label for="post-message" class="form-label">Message</label>
+            <textarea id="post-message" class="form-control" rows="8" @bind="_postMessage"></textarea>
+
+            <button class="btn btn-primary" @onclick="SendAndCollectPostAsync" disabled="@_postBusy">
+                @(_postBusy ? "Delivering…" : "Send and collect")
+            </button>
+
+            @if (_postResult is not null)
+            {
+                <div class="institution-result institution-result--success" role="status">
+                    <strong>Accepted and collected</strong>
+                    <span>@_postResult</span>
+                </div>
+            }
+            @if (_postError is not null)
+            {
+                <div class="institution-result institution-result--error" role="alert">@_postError</div>
+            }
+        </section>
+    </div>
+</main>
+
+@code {
+    private string _libraryTitle = "The First Campus Artifact";
+    private string _libraryContent = "Knowledge becomes useful when it can be shared.";
+    private bool _libraryBusy;
+    private string? _libraryResult;
+    private string? _libraryError;
+
+    private string _archiveContent = "The Archive remembers what the Campus must not lose.";
+    private bool _archiveBusy;
+    private string? _archiveResult;
+    private string? _archiveError;
+
+    private string _postMessage = "Greetings from the first authenticated resident of Forge Campus.";
+    private bool _postBusy;
+    private string? _postResult;
+    private string? _postError;
+
+    private async Task PublishToLibraryAsync()
+    {
+        _libraryBusy = true;
+        _libraryResult = null;
+        _libraryError = null;
+
+        try
+        {
+            var content = Encoding.UTF8.GetBytes(_libraryContent);
+            var representation = new KnowledgeRepresentation(
+                "text/plain",
+                content.Length,
+                _ => Task.FromResult<Stream>(new MemoryStream(content, writable: false)),
+                encoding: "utf-8",
+                language: "en");
+
+            var artifact = await Campus.Library.PublishArtifactAsync(
+                new KnowledgeDescriptor(_libraryTitle, summary: _libraryContent),
+                [representation]);
+
+            var retrieved = await Campus.Library.GetArtifactAsync(artifact.Reference);
+            if (retrieved is null)
+            {
+                throw new InvalidOperationException("The published artifact could not be retrieved.");
+            }
+
+            await using var stream = await retrieved.Representations.First().OpenStreamAsync();
+            using var reader = new StreamReader(stream, Encoding.UTF8);
+            var retrievedContent = await reader.ReadToEndAsync();
+
+            _libraryResult = $"{FormatKnowledgeReference(retrieved)} — “{retrievedContent}”";
+        }
+        catch (Exception exception)
+        {
+            _libraryError = exception.Message;
+        }
+        finally
+        {
+            _libraryBusy = false;
+        }
+    }
+
+    private async Task ArchiveAndRetrieveAsync()
+    {
+        _archiveBusy = true;
+        _archiveResult = null;
+        _archiveError = null;
+
+        try
+        {
+            var content = Encoding.UTF8.GetBytes(_archiveContent);
+            await using var source = new MemoryStream(content, writable: false);
+            var reference = await Campus.Archive.ArchiveAsync(
+                source,
+                new ArchiveMetadata(contentType: "text/plain", contentLength: content.Length));
+
+            var exists = await Campus.Archive.ExistsAsync(reference);
+            var metadata = await Campus.Archive.StatAsync(reference);
+            await using var retrieved = await Campus.Archive.RetrieveAsync(reference);
+            using var reader = new StreamReader(retrieved, Encoding.UTF8);
+            var retrievedContent = await reader.ReadToEndAsync();
+
+            _archiveResult = $"{reference.Store}/{reference.Key} · {metadata?.ContentLength ?? 0} bytes · exists: {exists} — “{retrievedContent}”";
+        }
+        catch (Exception exception)
+        {
+            _archiveError = exception.Message;
+        }
+        finally
+        {
+            _archiveBusy = false;
+        }
+    }
+
+    private async Task SendAndCollectPostAsync()
+    {
+        _postBusy = true;
+        _postResult = null;
+        _postError = null;
+
+        try
+        {
+            var contract = new PostContract("CampusWorkshop.Message", "1.0.0", PostIntent.Event);
+            var reference = new PostReference("ForgeCampus", Guid.NewGuid().ToString("N"), contract);
+            var envelope = new PostEnvelope<string>(reference, _postMessage, new PostMetadata());
+
+            var acceptedReference = await Campus.PostOffice.AcceptAsync(envelope);
+            var collected = await Campus.PostOffice.CollectAsync(acceptedReference);
+            if (collected is null)
+            {
+                throw new InvalidOperationException("The Post Office accepted the message but could not collect it.");
+            }
+
+            _postResult = $"{acceptedReference.Domain}/{acceptedReference.Address} — “{collected.Payload}”";
+        }
+        catch (Exception exception)
+        {
+            _postError = exception.Message;
+        }
+        finally
+        {
+            _postBusy = false;
+        }
+    }
+
+    private static string FormatKnowledgeReference(IKnowledgeArtifact artifact)
+    {
+        var reference = artifact.Reference;
+        return $"{reference.Scheme}:{reference.Kind}/{reference.Name}@{reference.Version}.{reference.Revision}";
+    }
+}

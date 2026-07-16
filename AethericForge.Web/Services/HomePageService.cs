@@ -204,7 +204,10 @@ public sealed class HomePageService : IHomePageService
                 },
                 CallToActionSection = new CallToActionSectionModel
                 {
-                    Title = "Ready to Build With Us?",
+                    Header = new SectionHeaderModel
+                    {
+                        Title = "Ready to Build With Us?"
+                    },
 
                     Description =
                         "Whether you're looking to learn, contribute, collaborate, or simply follow along, we'd love to have you join the journey.",

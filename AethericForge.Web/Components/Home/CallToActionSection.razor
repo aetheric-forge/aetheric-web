@@ -1,10 +1,10 @@
+@using AethericForge.Web.Components.Shared
+
 <section class="cta-section">
 
     <div class="cta-content">
 
-        <h2 class="cta-title">
-            @Model.Title
-        </h2>
+        <SectionHeader Model="@Model.Header" />
 
         <p class="cta-description">
             @Model.Description
@@ -38,6 +38,6 @@
 
     [Parameter]
     [EditorRequired]
-    public CallToActionSectionModel Model { get; set; } = null!;
+    public CallToActionSectionModel Model { get; set; } = new();
 
 }
