@@ -9,7 +9,7 @@
     <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Campus/AethericForge.Runtime.Institutions.Campus.csproj" />
     <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Library/AethericForge.Runtime.Institutions.Library.csproj" />
     <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.PostOffice/AethericForge.Runtime.Institutions.PostOffice.csproj" />
-    <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Registrar/AethericForge.Runtime.Institutions.Registrar.csproj" />
+    <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Registry/AethericForge.Runtime.Institutions.Registry.csproj" />
     <Project Path="runtime/src/Models/AethericForge.Runtime.Models/AethericForge.Runtime.Models.csproj" />
     <Project Path="runtime/src/Providers/AethericForge.Runtime.Providers.Archive.InMemory/AethericForge.Runtime.Providers.Archive.InMemory.csproj" />
     <Project Path="runtime/src/Providers/AethericForge.Runtime.Providers.Archive.MongoDb/AethericForge.Runtime.Providers.Archive.MongoDb.csproj" />
@@ -26,6 +26,7 @@
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Knowledge/AethericForge.Runtime.Services.Knowledge.csproj" />
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Library/AethericForge.Runtime.Services.Library.csproj" />
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Post/AethericForge.Runtime.Services.Post.csproj" />
+    <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Registry/AethericForge.Runtime.Services.Registry.csproj" />
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Staging/AethericForge.Runtime.Services.Staging.csproj" />
     <Project Path="runtime/src/Tests/AethericForge.Runtime.Tests/AethericForge.Runtime.Tests.csproj" />
   </Folder>
