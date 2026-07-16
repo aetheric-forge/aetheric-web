@@ -1,12 +1,23 @@
+using AethericForge.Runtime.Abstractions.Interfaces.Identity.Authentication;
+using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
+using AethericForge.Runtime.Abstractions.Interfaces.Identity.Provisioning;
 using AethericForge.Runtime.Institutions.Abstractions.Builders;
 using AethericForge.Runtime.Institutions.Campus;
+using AethericForge.Runtime.Institutions.Registrar;
+using AethericForge.Runtime.Providers.Identity.InMemory;
+using AethericForge.Runtime.Services.Identity;
+using AethericForge.Runtime.Services.Identity.Lifecycle;
 
 namespace AethericForge.Web.Hosting;
 
-public static class ForgeCampusExtensions
-{
-    public static IServiceCollection AddForgeCampus(this IServiceCollection services)
+public static class ForgeCampusion AddForgeCampus(this IServiceCollection services)
     {
+        services.AddSingleton<IIdenExtensions
+                                   {
+                                       public static IServiceCollecttityLifecycleService, IdentityLifecycleService>();
+        services.AddSingleton<IIdentityProvider>(new InMemoryIdentityProvider("Local", IdentityScheme.Local));
+        services.AddSingleton<IIdentityService, IdentityService>();
+
         services.AddSingleton<ICampus>(serviceProvider =>
         {
             var template = InstitutionTemplateBuilder.Create()
@@ -17,7 +28,19 @@ public static class ForgeCampusExtensions
                 .Build();
 
             var context = new CampusContext(template, serviceProvider);
-            return new Campus(context);
+            var campus = new Campus(context);
+
+            var registrarTemplate = InstitutionTemplateBuilder.Create()
+                .WithDescriptor("Registrar", new Version(1, 0, 0), "Campus Registrar")
+                .Build();
+
+            var registrarContext = new RegistrarContext(registrarTemplate, serviceProvider, campus);
+            var identityService = serviceProvider.GetRequiredService<IIdentityService>();
+            var registrar = new Registrar(registrarContext, identityService);
+
+            campus.Register<IRegistrar>(registrar);
+
+            return campus;
         });
 
         services.AddSingleton<ForgeCampusHost>();
@@ -38,7 +61,12 @@ public static class ForgeCampusExtensions
                     institution = campus.Context.Template.Descriptor.Name,
                     version = campus.Context.Template.Descriptor.Version.ToString(),
                     isRoot = campus.Context.Parent is null,
-                    host.IsRunning
+                    host.IsRunning,
+                    registrar = new
+                    {
+                        name = campus.Registrar.Context.Template.Descriptor.Name,
+                        version = campus.Registrar.Context.Template.Descriptor.Version.ToString()
+                    }
                 }));
 
         return endpoints;

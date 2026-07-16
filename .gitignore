@@ -3,3 +3,4 @@ bin/
 .vscode/
 .idea/
 *.DotSettings.user
+.output.txt

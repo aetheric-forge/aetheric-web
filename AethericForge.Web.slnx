@@ -1,4 +1,6 @@
 <Solution>
-  <Project Path="AethericForge.Web/AethericForge.Web.csproj" />
-  <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Campus/AethericForge.Runtime.Institutions.Campus.csproj" />
+  <Folder Name="/Application/">
+    <Project Path="AethericForge.Web/AethericForge.Web.csproj" />
+  </Folder>
+  <Folder Name="/Runtime/" />
 </Solution>
