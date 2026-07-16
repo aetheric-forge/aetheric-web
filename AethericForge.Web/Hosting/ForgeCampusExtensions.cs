@@ -56,7 +56,8 @@ public static class ForgeCampusExtensions
                     
                     provider.AddSubject(
                         new IdentitySubject(
-                            "dean", IdentityScheme.Local, "Prof. Valkyr"));
+                            "dean", IdentityScheme.Local, "Prof. Valkyr"),
+                        "forge");
                     
                     return provider;
                 })
@@ -82,6 +83,7 @@ public static class ForgeCampusExtensions
                 .With<IPostmaster, Postmaster>()
                 .With<IPostOfficeContext, PostOfficeContext>()
                 .With<IPostOffice, PostOffice>()
+                .With<IKnowledgeProvider>(_ => new InMemoryKnowledgeProvider("InMemory"))
                 .With<IKnowledgeService, KnowledgeService>()
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()

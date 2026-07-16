@@ -1,0 +1,61 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+
+<PageTitle>Campus Login</PageTitle>
+
+<main class="login-page">
+    <section class="login-card" aria-labelledby="login-heading">
+        <header>
+            <p class="login-card__eyebrow">Forge Campus Registry</p>
+            <h1 id="login-heading">Enter the campus</h1>
+            <p>Authenticate against the campus's in-memory identity registry.</p>
+        </header>
+
+        @if (Error == "invalid")
+        {
+            <div class="alert alert-danger" role="alert">
+                The Registry did not recognize those credentials.
+            </div>
+        }
+
+        <form method="post" action="/account/login" class="login-form">
+            <AntiforgeryToken />
+            <input type="hidden" name="returnUrl" value="@SafeReturnUrl" />
+
+            <div>
+                <label for="username" class="form-label">Username</label>
+                <input id="username" name="username" class="form-control"
+                       autocomplete="username" autofocus required />
+            </div>
+
+            <div>
+                <label for="password" class="form-label">Password</label>
+                <input id="password" name="password" type="password" class="form-control"
+                       autocomplete="current-password" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Sign in</button>
+        </form>
+
+        <aside class="login-card__hint">
+            <strong>Test identity</strong>
+            <span><code>dean</code> / <code>forge</code></span>
+        </aside>
+    </section>
+</main>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrl { get; set; }
+
+    private string SafeReturnUrl =>
+        !string.IsNullOrWhiteSpace(ReturnUrl) &&
+        ReturnUrl.StartsWith('/') &&
+        !ReturnUrl.StartsWith("//", StringComparison.Ordinal)
+            ? ReturnUrl
+            : "/";
+}
