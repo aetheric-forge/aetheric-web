@@ -23,6 +23,7 @@ using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
 using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
+using AethericForge.Runtime.Models.Identity.Primitives;
 using AethericForge.Runtime.Providers.Archive.InMemory;
 using AethericForge.Runtime.Providers.Identity.InMemory;
 using AethericForge.Runtime.Providers.Knowledge.InMemory;
@@ -47,6 +48,19 @@ public static class ForgeCampusExtensions
                     new Version(0, 1, 0),
                     "The Aetheric Forge learning and collaboration campus.")
                 .With<IIdentityRegistry, IdentityRegistry>()
+                .With<InMemoryIdentityProvider>(_ =>
+                {
+                    var provider = new InMemoryIdentityProvider(
+                        "ForgeCampus",
+                        IdentityScheme.Local);
+                    
+                    provider.AddSubject(
+                        new IdentitySubject(
+                            "dean", IdentityScheme.Local, "Prof. Valkyr"));
+                    
+                    return provider;
+                })
+                .With<IIdentityProvider>(sp => sp.GetRequiredService<InMemoryIdentityProvider>())
                 .With<IIdentityLifecycleService, IdentityLifecycleService>()
                 .With<IIdentityService, IdentityService>()
                 .With<IRegistryService, RegistryService>()
