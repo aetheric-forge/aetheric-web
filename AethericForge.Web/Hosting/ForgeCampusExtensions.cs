@@ -1,8 +1,10 @@
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Authentication;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Provisioning;
+using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
 using AethericForge.Runtime.Institutions.Abstractions.Builders;
 using AethericForge.Runtime.Institutions.Campus;
+using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registrar;
 using AethericForge.Runtime.Providers.Identity.InMemory;
 using AethericForge.Runtime.Services.Identity;
@@ -40,6 +42,17 @@ public static class ForgeCampusExtensions
 
             campus.Register<IRegistrar>(registrar);
 
+            var postOfficeTemplate = InstitutionTemplateBuilder.Create()
+                .WithDescriptor("PostOffice", new Version(1, 0, 0), "Campus Post Office")
+                .Build();
+
+            var postOfficeContext = new PostOfficeContext(postOfficeTemplate, serviceProvider, campus);
+            var postExchange = serviceProvider.GetRequiredService<IPostExchange>();
+            var postmaster = serviceProvider.GetRequiredService<IPostmaster>();
+            var postOffice = new PostOffice(postOfficeContext, postExchange, postmaster);
+
+            campus.Register<IPostOffice>(postOffice);
+
             return campus;
         });
 
@@ -66,6 +79,11 @@ public static class ForgeCampusExtensions
                     {
                         name = campus.Registrar.Context.Template.Descriptor.Name,
                         version = campus.Registrar.Context.Template.Descriptor.Version.ToString()
+                    },
+                    postOffice = new
+                    {
+                        name = campus.PostOffice.Context.Template.Descriptor.Name,
+                        version = campus.PostOffice.Context.Template.Descriptor.Version.ToString()
                     }
                 }));
 
