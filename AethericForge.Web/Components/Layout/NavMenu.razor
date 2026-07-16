@@ -15,16 +15,33 @@
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
+            <NavLink class="nav-link" href="campus/apply">Apply to Campus</NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+        <AuthorizeView Context="auth">
+            <Authorized>
+                <AuthorizeView Policy="ForgeAdministrator" Context="administratorAuth">
+                    <Authorized>
+                        <div class="nav-item px-3">
+                            <NavLink class="nav-link" href="campus/admin/membership">Review applications</NavLink>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+                <div class="nav-item px-3">
+                    <span class="nav-link">@auth.User.Identity?.Name</span>
+                </div>
+                <div class="nav-item px-3">
+                    <form method="post" action="/account/logout">
+                        <AntiforgeryToken />
+                        <button type="submit" class="nav-link btn btn-link">Sign out</button>
+                    </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="login">Sign in</NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
     </nav>
 </div>
-

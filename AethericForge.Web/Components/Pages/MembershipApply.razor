@@ -1,0 +1,73 @@
+@page "/campus/apply"
+@rendermode InteractiveServer
+@using AethericForge.Web.Membership
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+@inject IMembershipApplicationStore Store
+
+<PageTitle>Apply to Forge Campus</PageTitle>
+
+<main class="container py-5">
+    <p class="text-uppercase">Forge Campus Registry</p>
+    <h1>Apply for membership</h1>
+    <p class="lead">Tell us who you are, what you hope to learn, and what you would like to contribute.</p>
+
+    @if (_submittedId is not null)
+    {
+        <div class="alert alert-success" role="status">
+            <h2>Application received</h2>
+            <p>Your reference is <code>@_submittedId</code>. The Forge administrators will review it.</p>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="_application" OnValidSubmit="SubmitAsync" FormName="membership-application" class="mt-4">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label for="display-name" class="form-label">Name</label>
+                <InputText id="display-name" class="form-control" @bind-Value="_application.DisplayName" />
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <InputText id="email" type="email" class="form-control" @bind-Value="_application.Email" />
+            </div>
+            <div class="mb-3">
+                <label for="username" class="form-label">Requested username</label>
+                <InputText id="username" class="form-control" @bind-Value="_application.RequestedUsername" />
+            </div>
+            <div class="mb-3">
+                <label for="statement" class="form-label">Why would you like to join the Campus?</label>
+                <InputTextArea id="statement" class="form-control" rows="8" @bind-Value="_application.Statement" />
+            </div>
+            <div class="form-check mb-3">
+                <InputCheckbox id="consent" class="form-check-input" @bind-Value="_application.Consent" />
+                <label for="consent" class="form-check-label">I consent to the Forge retaining this information to review my application.</label>
+            </div>
+            <button type="submit" class="btn btn-primary" disabled="@_submitting">
+                @(_submitting ? "Submitting…" : "Submit application")
+            </button>
+        </EditForm>
+    }
+</main>
+
+@code {
+    private MembershipApplication _application = new();
+    private Guid? _submittedId;
+    private bool _submitting;
+
+    private async Task SubmitAsync()
+    {
+        _submitting = true;
+        try
+        {
+            var submitted = await Store.SubmitAsync(_application);
+            _submittedId = submitted.Id;
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+}
