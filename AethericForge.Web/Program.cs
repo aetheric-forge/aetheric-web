@@ -1,5 +1,6 @@
 using AethericForge.Web.Components;
 using AethericForge.Web.Hosting;
+using AethericForge.Web.Membership;
 using AethericForge.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -16,10 +17,13 @@ builder.Services
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/login";
     });
-builder.Services.AddAuthorization();
+builder.Services.AddForgeAuthorization(builder.Environment, builder.Configuration);
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<IHomePageService, HomePageService>();
+builder.Services.AddSingleton<IMembershipApplicationStore, InMemoryMembershipApplicationStore>();
+builder.Services.AddSingleton<IMemberIdentityProvisioner, DevelopmentMemberIdentityProvisioner>();
+builder.Services.AddScoped<MembershipReviewService>();
 builder.Services.AddForgeCampus();
 
 var app = builder.Build();

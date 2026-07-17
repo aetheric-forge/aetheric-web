@@ -1,30 +1,47 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">AethericForge.Web</a>
+﻿<nav class="site-nav" aria-label="Primary navigation">
+    <a class="site-nav__brand" href="/" aria-label="Aetheric Forge home">
+        <span class="site-nav__mark" aria-hidden="true">
+            <span></span>
+        </span>
+        <span class="site-nav__brand-text">
+            <strong>Aetheric Forge</strong>
+            <small>Open systems &amp; shared knowledge</small>
+        </span>
+    </a>
+
+    <input id="site-nav-toggle" class="site-nav__toggle" type="checkbox" />
+    <label class="site-nav__toggle-label" for="site-nav-toggle">
+        <span class="visually-hidden">Toggle navigation</span>
+        <span></span><span></span><span></span>
+    </label>
+
+    <div class="site-nav__links">
+        <a href="/#mission">Mission</a>
+        <a href="/projects">Projects</a>
+        <a href="/#resources">Resources</a>
+        <a href="/campus/apply">Join Campus</a>
+
+        <AuthorizeView Context="auth">
+            <Authorized>
+                <AuthorizeView Policy="ForgeAdministrator" Context="administratorAuth">
+                    <Authorized>
+                        <a href="/campus/admin/membership">Applications</a>
+                    </Authorized>
+                </AuthorizeView>
+
+                <span class="site-nav__identity">@auth.User.Identity?.Name</span>
+                <form method="post" action="/account/logout">
+                    <AntiforgeryToken />
+                    <button type="submit" class="site-nav__account-action">Sign out</button>
+                </form>
+            </Authorized>
+            <NotAuthorized>
+                <a class="site-nav__account-action" href="/login">Sign in</a>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <a class="site-nav__github" href="https://github.com/aetheric-forge" target="_blank" rel="noreferrer">
+            GitHub <span aria-hidden="true">↗</span>
+        </a>
     </div>
-</div>
-
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
+</nav>

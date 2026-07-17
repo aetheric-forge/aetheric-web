@@ -1,0 +1,124 @@
+@page "/projects"
+
+<PageTitle>Projects | Aetheric Forge</PageTitle>
+
+<div class="projects-page">
+    <header class="projects-hero">
+        <p class="projects-hero__eyebrow">Projects and Initiatives</p>
+        <h1>Ideas become useful when they survive contact with reality.</h1>
+        <p class="projects-hero__lede">
+            Aetheric Forge projects are working systems, reference designs, and learning
+            environments. Each one is built in the open so the decisions, trade-offs,
+            and occasional scars remain available to the next person solving the problem.
+        </p>
+        <a class="projects-hero__action"
+           href="https://github.com/aetheric-forge"
+           target="_blank"
+           rel="noreferrer">
+            Browse all repositories
+        </a>
+    </header>
+
+    <main class="projects-list" aria-label="Aetheric Forge projects">
+        <article id="aetheric-runtime" class="project">
+            <div class="project__number" aria-hidden="true">01</div>
+            <div class="project__body">
+                <div class="project__meta">
+                    <span class="project__status">Active development</span>
+                    <span>Software architecture</span>
+                </div>
+                <h2>Aetheric Runtime</h2>
+                <p class="project__summary">
+                    A modular foundation for composing institutions: software systems whose
+                    services, authority, knowledge, identity, and communication reflect the
+                    organization they support.
+                </p>
+                <p>
+                    The Runtime explores a more deliberate alternative to accumulating
+                    disconnected applications. Its abstractions cover capabilities such as
+                    archives, libraries, registries, identity, and message exchange, while
+                    institution packages compose those capabilities into a coherent operating
+                    environment. The result is both usable code and a reference architecture
+                    for reasoning about long-lived organizational systems.
+                </p>
+                <a class="project__link"
+                   href="https://github.com/aetheric-forge/aetheric-runtime"
+                   target="_blank"
+                   rel="noreferrer">
+                    Explore Aetheric Runtime on GitHub →
+                </a>
+            </div>
+        </article>
+
+        <article class="project">
+            <div class="project__number" aria-hidden="true">02</div>
+            <div class="project__body">
+                <div class="project__meta">
+                    <span class="project__status">Early construction</span>
+                    <span>Learning and collaboration</span>
+                </div>
+                <h2>Forge Campus</h2>
+                <p class="project__summary">
+                    A learning and collaboration institution where people can develop real
+                    capability by participating in real projects.
+                </p>
+                <p>
+                    Forge Campus is the first institution composed on the Aetheric Runtime.
+                    It brings the architectural work into direct contact with education:
+                    membership, workshops, shared knowledge, durable project artifacts, and
+                    collaboration all become parts of the same environment. It is intended to
+                    support mentorship and practical experimentation without reducing either
+                    one to a conventional course-management system.
+                </p>
+                <a class="project__link" href="/campus/apply">
+                    Learn about joining Forge Campus →
+                </a>
+            </div>
+        </article>
+
+        <article class="project">
+            <div class="project__number" aria-hidden="true">03</div>
+            <div class="project__body">
+                <div class="project__meta">
+                    <span class="project__status">Online now</span>
+                    <span>Open infrastructure</span>
+                </div>
+                <h2>Aetheric Web</h2>
+                <p class="project__summary">
+                    The public face of the initiative—and a proving ground for the platform
+                    beneath it.
+                </p>
+                <p>
+                    This site communicates the work, hosts the emerging Campus experience,
+                    and exercises the Runtime in a deployed application. Its source remains
+                    public so the website itself can serve as a practical example of how the
+                    pieces fit together, from interface and application design through to
+                    operation in production.
+                </p>
+                <a class="project__link"
+                   href="https://github.com/aetheric-forge/aetheric-web"
+                   target="_blank"
+                   rel="noreferrer">
+                    Explore Aetheric Web on GitHub →
+                </a>
+            </div>
+        </article>
+    </main>
+
+    <section class="projects-invitation" aria-labelledby="projects-invitation-title">
+        <div>
+            <p class="projects-invitation__eyebrow">Open by design</p>
+            <h2 id="projects-invitation-title">Follow the work—or help shape it.</h2>
+            <p>
+                The repositories are public because the process is part of the product.
+                Explore the code, raise a question, or join the Campus as it takes form.
+            </p>
+        </div>
+        <div class="projects-invitation__actions">
+            <a class="projects-invitation__primary" href="https://github.com/aetheric-forge" target="_blank" rel="noreferrer">Visit GitHub</a>
+            <a class="projects-invitation__secondary" href="/campus/apply">Join Campus</a>
+        </div>
+    </section>
+
+    <Footer />
+</div>

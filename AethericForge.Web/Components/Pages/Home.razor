@@ -5,6 +5,8 @@
 @using AethericForge.Web.Models.Shared
 @using AethericForge.Web.Components.Home
 
+<PageTitle>Aetheric Forge | Build. Teach. Share.</PageTitle>
+
 @if (_model is null)
 {
     return;
@@ -12,8 +14,6 @@
 
 <div class="home-page">
     <div class="home-page__container">
-        <AuthenticationWidget />
-
         <Hero Model="_model.Hero" />
 
         <MissionSection Model="_model.MissionSection" />

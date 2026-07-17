@@ -1,0 +1,104 @@
+@page "/campus/admin/membership"
+@rendermode InteractiveServer
+@using AethericForge.Web.Hosting
+@using AethericForge.Web.Membership
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
+@inject IMembershipApplicationStore Store
+@inject MembershipReviewService ReviewService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Membership Review</PageTitle>
+
+<main class="container py-5">
+    <p class="text-uppercase">Forge Campus Registry</p>
+    <h1>Membership applications</h1>
+
+    @if (_applications is null)
+    {
+        <p>Loading applications…</p>
+    }
+    else if (_applications.Count == 0)
+    {
+        <div class="alert alert-secondary">No applications await the Forge.</div>
+    }
+    else
+    {
+        <div class="d-grid gap-3 mt-4">
+            @foreach (var application in _applications)
+            {
+                <article class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between gap-3">
+                            <div>
+                                <h2 class="h4">@application.DisplayName</h2>
+                                <p><a href="mailto:@application.Email">@application.Email</a> · <code>@application.RequestedUsername</code></p>
+                            </div>
+                            <span class="badge text-bg-secondary align-self-start">@application.Status</span>
+                        </div>
+                        <p>@application.Statement</p>
+                        <p class="small text-muted">Submitted @application.SubmittedAt.ToLocalTime().ToString("g") · Provisioning: @application.ProvisioningStatus</p>
+
+                        @if (application.Status is MembershipApplicationStatus.Submitted or MembershipApplicationStatus.UnderReview)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label" for="notes-@application.Id">Review notes</label>
+                                <textarea id="notes-@application.Id" class="form-control" @bind="_notes[application.Id]"></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-primary" @onclick="() => ApproveAsync(application.Id)">Approve and provision</button>
+                                <button class="btn btn-outline-danger" @onclick="() => DeclineAsync(application.Id)">Decline</button>
+                            </div>
+                        }
+                        else if (application.Status is MembershipApplicationStatus.Approved && application.ProvisioningStatus == IdentityProvisioningStatus.Failed)
+                        {
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-warning" @onclick="() => RetryAsync(application.Id)">Retry provisioning</button>
+                            </div>
+                        }
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private IReadOnlyList<MembershipApplication>? _applications;
+    private readonly Dictionary<Guid, string?> _notes = new();
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task ApproveAsync(Guid id)
+    {
+        await ReviewService.ApproveAsync(id, await GetReviewerAsync(), _notes.GetValueOrDefault(id));
+        await ReloadAsync();
+    }
+
+    private async Task DeclineAsync(Guid id)
+    {
+        await ReviewService.DeclineAsync(id, await GetReviewerAsync(), _notes.GetValueOrDefault(id));
+        await ReloadAsync();
+    }
+
+    private async Task RetryAsync(Guid id)
+    {
+        await ReviewService.RetryProvisioningAsync(id);
+        await ReloadAsync();
+    }
+
+    private async Task<string> GetReviewerAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authenticationState.User.Identity?.Name ?? "unknown administrator";
+    }
+
+    private async Task ReloadAsync()
+    {
+        _applications = await Store.ListAsync();
+        foreach (var application in _applications)
+        {
+            _notes.TryAdd(application.Id, application.ReviewNotes);
+        }
+    }
+}

@@ -33,8 +33,8 @@ public sealed class HomePageService : IHomePageService
 
                     SecondaryAction = new ActionLinkModel
                     {
-                        Label = "Browse Documentation",
-                        Url = "/documentation"
+                        Label = "Explore Resources",
+                        Url = "/#resources"
                     }
                 },
 
@@ -59,8 +59,8 @@ public sealed class HomePageService : IHomePageService
 
                             Action = new ActionLinkModel
                             {
-                                Label = "View Projects",
-                                Url = "/projects/software"
+                                Label = "Explore Our Projects",
+                                Url = "/projects"
                             }
                         },
 
@@ -73,8 +73,8 @@ public sealed class HomePageService : IHomePageService
 
                             Action = new ActionLinkModel
                             {
-                                Label = "Explore Roadmaps",
-                                Url = "/projects/infrastructure"
+                                Label = "Discover the Runtime",
+                                Url = "/projects#aetheric-runtime"
                             }
                         },
 
@@ -88,7 +88,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "Browse Resources",
-                                Url = "/documentation"
+                                Url = "/#resources"
                             }
                         }
                     ]
@@ -152,11 +152,7 @@ public sealed class HomePageService : IHomePageService
                             Description =
                                 "In-depth explorations of software architecture, infrastructure design, organizational development, and practical engineering.",
 
-                            Action = new ActionLinkModel
-                            {
-                                Label = "Read Articles",
-                                Url = "/articles"
-                            }
+                            Action = null
                         },
 
                         new CardModel
@@ -168,8 +164,8 @@ public sealed class HomePageService : IHomePageService
 
                             Action = new ActionLinkModel
                             {
-                                Label = "Watch Videos",
-                                Url = "/videos"
+                                Label = "Visit our YouTube Channel",
+                                Url = "https://youtube.com/@AethericForge-ca"
                             }
                         },
 
@@ -183,7 +179,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "Explore Workshops",
-                                Url = "/workshops"
+                                Url = "/campus-workshop"
                             }
                         },
 
@@ -197,7 +193,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "Browse Repositories",
-                                Url = "/github"
+                                Url = "https://github.com/aetheric-forge"
                             }
                         }
                     ]
@@ -221,7 +217,7 @@ public sealed class HomePageService : IHomePageService
                     SecondaryAction = new ActionLinkModel
                     {
                         Label = "Browse Resources",
-                        Url = "/resources"
+                        Url = "/#resources"
                     }
                 },
             }

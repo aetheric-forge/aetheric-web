@@ -4,7 +4,9 @@
 
     gap: 4rem;
 
-    padding: 6rem 2rem;
+    padding: clamp(5rem, 10vw, 8rem) clamp(1.5rem, 5vw, 4rem);
+    border-radius: 1.25rem;
+    background: #e9edf4;
 }
 
 .projects-grid {
