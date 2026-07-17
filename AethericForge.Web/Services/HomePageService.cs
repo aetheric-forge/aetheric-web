@@ -28,7 +28,7 @@ public sealed class HomePageService : IHomePageService
                     PrimaryAction = new ActionLinkModel
                     {
                         Label = "Explore Projects",
-                        Url = "/#projects"
+                        Url = "/projects"
                     },
 
                     SecondaryAction = new ActionLinkModel
@@ -59,8 +59,8 @@ public sealed class HomePageService : IHomePageService
 
                             Action = new ActionLinkModel
                             {
-                                Label = "View Projects",
-                                Url = "https://github.com/aetheric-forge"
+                                Label = "Explore Our Projects",
+                                Url = "/projects"
                             }
                         },
 
@@ -73,8 +73,8 @@ public sealed class HomePageService : IHomePageService
 
                             Action = new ActionLinkModel
                             {
-                                Label = "Explore Roadmaps",
-                                Url = "https://github.com/aetheric-forge/aetheric-runtime"
+                                Label = "Discover the Runtime",
+                                Url = "/projects#aetheric-runtime"
                             }
                         },
 
@@ -162,7 +162,11 @@ public sealed class HomePageService : IHomePageService
                             Description =
                                 "Presentations, demonstrations, workshops, and discussions that bring ideas to life through visual learning.",
 
-                            Action = null
+                            Action = new ActionLinkModel
+                            {
+                                Label = "Visit our YouTube Channel",
+                                Url = "https://youtube.com/@AethericForge-ca"
+                            }
                         },
 
                         new CardModel
@@ -207,7 +211,7 @@ public sealed class HomePageService : IHomePageService
                     PrimaryAction = new ActionLinkModel
                     {
                         Label = "Explore Projects",
-                        Url = "/#projects"
+                        Url = "/projects"
                     },
 
                     SecondaryAction = new ActionLinkModel
