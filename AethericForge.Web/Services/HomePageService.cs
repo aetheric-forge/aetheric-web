@@ -28,13 +28,13 @@ public sealed class HomePageService : IHomePageService
                     PrimaryAction = new ActionLinkModel
                     {
                         Label = "Explore Projects",
-                        Url = "/projects"
+                        Url = "/#projects"
                     },
 
                     SecondaryAction = new ActionLinkModel
                     {
-                        Label = "Browse Documentation",
-                        Url = "/documentation"
+                        Label = "Explore Resources",
+                        Url = "/#resources"
                     }
                 },
 
@@ -60,7 +60,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "View Projects",
-                                Url = "/projects/software"
+                                Url = "https://github.com/aetheric-forge"
                             }
                         },
 
@@ -74,7 +74,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "Explore Roadmaps",
-                                Url = "/projects/infrastructure"
+                                Url = "https://github.com/aetheric-forge/aetheric-runtime"
                             }
                         },
 
@@ -88,7 +88,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "Browse Resources",
-                                Url = "/documentation"
+                                Url = "/#resources"
                             }
                         }
                     ]
@@ -152,11 +152,7 @@ public sealed class HomePageService : IHomePageService
                             Description =
                                 "In-depth explorations of software architecture, infrastructure design, organizational development, and practical engineering.",
 
-                            Action = new ActionLinkModel
-                            {
-                                Label = "Read Articles",
-                                Url = "/articles"
-                            }
+                            Action = null
                         },
 
                         new CardModel
@@ -166,11 +162,7 @@ public sealed class HomePageService : IHomePageService
                             Description =
                                 "Presentations, demonstrations, workshops, and discussions that bring ideas to life through visual learning.",
 
-                            Action = new ActionLinkModel
-                            {
-                                Label = "Watch Videos",
-                                Url = "/videos"
-                            }
+                            Action = null
                         },
 
                         new CardModel
@@ -183,7 +175,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "Explore Workshops",
-                                Url = "/workshops"
+                                Url = "/campus-workshop"
                             }
                         },
 
@@ -197,7 +189,7 @@ public sealed class HomePageService : IHomePageService
                             Action = new ActionLinkModel
                             {
                                 Label = "Browse Repositories",
-                                Url = "/github"
+                                Url = "https://github.com/aetheric-forge"
                             }
                         }
                     ]
@@ -215,13 +207,13 @@ public sealed class HomePageService : IHomePageService
                     PrimaryAction = new ActionLinkModel
                     {
                         Label = "Explore Projects",
-                        Url = "/projects"
+                        Url = "/#projects"
                     },
 
                     SecondaryAction = new ActionLinkModel
                     {
                         Label = "Browse Resources",
-                        Url = "/resources"
+                        Url = "/#resources"
                     }
                 },
             }

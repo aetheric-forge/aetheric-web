@@ -1,5 +1,8 @@
 <section class="hero">
-    <div class="content">
+    <div class="hero__glow hero__glow--one" aria-hidden="true"></div>
+    <div class="hero__glow hero__glow--two" aria-hidden="true"></div>
+
+    <div class="hero__content">
         @if (Model.Eyebrow is not null)
         {
             <p class="hero-eyebrow">
@@ -7,7 +10,7 @@
             </p> 
         }
 
-        <h1>@Model.Title</h1>
+        <h1 class="hero-title">@Model.Title</h1>
 
         <p class="hero-subtitle">
             @Model.Subtitle
@@ -30,6 +33,16 @@
                 </a>
             }
         </div>
+    </div>
+
+    <div class="hero__signal" aria-hidden="true">
+        <span class="hero__signal-label">The Forge</span>
+        <div class="hero__signal-ring hero__signal-ring--outer"></div>
+        <div class="hero__signal-ring hero__signal-ring--middle"></div>
+        <div class="hero__signal-ring hero__signal-ring--inner"></div>
+        <div class="hero__signal-core"></div>
+        <span class="hero__signal-note hero__signal-note--top">OPEN BY DESIGN</span>
+        <span class="hero__signal-note hero__signal-note--bottom">BUILD · TEACH · SHARE</span>
     </div>
 </section>
 
