@@ -14,16 +14,33 @@
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.PostOffice\AethericForge.Runtime.Institutions.PostOffice.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Registry\AethericForge.Runtime.Institutions.Registry.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.InMemory\AethericForge.Runtime.Providers.Archive.InMemory.csproj" />
+    <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.MongoDb\AethericForge.Runtime.Providers.Archive.MongoDb.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Identity.InMemory\AethericForge.Runtime.Providers.Identity.InMemory.csproj" />
+    <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Identity.Keycloak\AethericForge.Runtime.Providers.Identity.Keycloak.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Knowledge.InMemory\AethericForge.Runtime.Providers.Knowledge.InMemory.csproj" />
+    <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Knowledge.MongoDb\AethericForge.Runtime.Providers.Knowledge.MongoDb.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Post.InMemory\AethericForge.Runtime.Providers.Post.InMemory.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Staging.InMemory\AethericForge.Runtime.Providers.Staging.InMemory.csproj" />
+    <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Staging.Redis\AethericForge.Runtime.Providers.Staging.Redis.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Archive\AethericForge.Runtime.Services.Archive.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Identity\AethericForge.Runtime.Services.Identity.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Knowledge\AethericForge.Runtime.Services.Knowledge.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Library\AethericForge.Runtime.Services.Library.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Post\AethericForge.Runtime.Services.Post.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Staging\AethericForge.Runtime.Services.Staging.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MongoDB.Driver">
+      <HintPath>..\..\..\.nuget\packages\mongodb.driver\3.5.0\lib\net6.0\MongoDB.Driver.dll</HintPath>
+    </Reference>
+    <Reference Include="StackExchange.Redis">
+      <HintPath>..\..\..\.nuget\packages\stackexchange.redis\2.8.24\lib\net8.0\StackExchange.Redis.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.10" />
   </ItemGroup>
 
 </Project>

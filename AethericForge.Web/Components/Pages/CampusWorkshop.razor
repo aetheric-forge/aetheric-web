@@ -150,12 +150,12 @@
                 _ => Task.FromResult<Stream>(new MemoryStream(content, writable: false)),
                 encoding: "utf-8",
                 language: "en");
-
-            var artifact = await Campus.Library.PublishArtifactAsync(
+            
+            var artifact = await Campus.Library.Librarian.PublishArtifactAsync(
                 new KnowledgeDescriptor(_libraryTitle, summary: _libraryContent),
                 [representation]);
 
-            var retrieved = await Campus.Library.GetArtifactAsync(artifact.Reference);
+            var retrieved = await Campus.Library.Librarian.GetArtifactAsync(artifact.Reference);
             if (retrieved is null)
             {
                 throw new InvalidOperationException("The published artifact could not be retrieved.");
