@@ -221,8 +221,8 @@
             var reference = new PostReference("ForgeCampus", Guid.NewGuid().ToString("N"), contract);
             var envelope = new PostEnvelope<string>(reference, _postMessage, new PostMetadata());
 
-            var acceptedReference = await Campus.PostOffice.AcceptAsync(envelope);
-            var collected = await Campus.PostOffice.CollectAsync(acceptedReference);
+            var acceptedReference = await Campus.PostOffice.Postmaster.AcceptAsync(envelope);
+            var collected = await Campus.PostOffice.Postmaster.CollectAsync(acceptedReference);
             if (collected is null)
             {
                 throw new InvalidOperationException("The Post Office accepted the message but could not collect it.");

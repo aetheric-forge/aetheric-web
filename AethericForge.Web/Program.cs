@@ -10,13 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services
-    .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/login";
-        options.AccessDeniedPath = "/login";
-    });
+builder.Services.AddForgeCampusAuthentication(builder.Configuration);
 builder.Services.AddForgeAuthorization(builder.Environment, builder.Configuration);
 builder.Services.AddCascadingAuthenticationState();
 

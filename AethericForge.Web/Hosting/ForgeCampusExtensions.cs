@@ -1,5 +1,6 @@
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
+using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Authorities;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
@@ -8,6 +9,8 @@ using AethericForge.Runtime.Abstractions.Interfaces.Identity.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Post.Primitives;
+using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Workbench.Services;
@@ -18,8 +21,10 @@ using AethericForge.Runtime.Institutions.Abstractions.Primitives;
 using AethericForge.Runtime.Institutions.Archive;
 using AethericForge.Runtime.Institutions.Campus;
 using AethericForge.Runtime.Institutions.Library;
+using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
 using AethericForge.Runtime.Institutions.Workbench;
+using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Providers.Archive.MongoDb;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
@@ -30,6 +35,7 @@ using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Library;
+using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
@@ -111,14 +117,15 @@ public static class ForgeCampusExtensions
                 .With<IRegistrar, Registrar>()
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
+                .With<IArchiveSerializer, JsonArchiveSerializer>()
                 .With<IArchiveProvider>(sp => new MongoDbArchiveProvider(
                     sp.GetRequiredService<IMongoDatabase>(),
                     "MongoDb",
                     "archive"))
-                .With<IArchiveVault, ArchiveVault>()
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
+                .With<IArchiveVault, ArchiveVault>()
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
                 .With<IMongoClient>(sp => new MongoClient(BuildMongoUri(sp.GetRequiredService<IConfiguration>())))
@@ -137,6 +144,12 @@ public static class ForgeCampusExtensions
                 .With<ILibrarian, Librarian>()
                 .With<ILibraryContext, LibraryContext>()
                 .With<ILibrary, Library>()
+                .With<IPostService, PostService>()
+                .With<ITeam<IPostClerk>>(_ => new Team<IPostClerk>(Array.Empty<IPostClerk>()))
+                .With<IPostExchange, PostExchange>()
+                .With<IPostmaster, Postmaster>()
+                .With<IPostOfficeContext, PostOfficeContext>()
+                .With<IPostOffice, PostOffice>()
                 .With<IConnectionMultiplexer>(serviceProvider =>
                 {
                     var configuration =
@@ -178,8 +191,14 @@ public static class ForgeCampusExtensions
             var registryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Registry", campusTemplate.Descriptor.Version, "Registry institution") };
             campus.Register<IRegistry>(ActivatorUtilities.CreateInstance<Registry>(serviceProvider, new RegistryContext(registryTemplate, serviceProvider, campus)));
             
+            var archiveTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Archive", campusTemplate.Descriptor.Version, "Archive institution") };
+            campus.Register<IArchive>(ActivatorUtilities.CreateInstance<Archive>(serviceProvider, new ArchiveContext(archiveTemplate, serviceProvider, campus)));
+
             var libraryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Library", campusTemplate.Descriptor.Version, "Library institution") };
             campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new LibraryContext(libraryTemplate, serviceProvider, campus)));
+
+            var postOfficeTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("PostOffice", campusTemplate.Descriptor.Version, "Post Office institution") };
+            campus.Register<IPostOffice>(ActivatorUtilities.CreateInstance<PostOffice>(serviceProvider, new PostOfficeContext(postOfficeTemplate, serviceProvider, campus)));
 
             var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
             campus.Register<IWorkbench>(ActivatorUtilities.CreateInstance<Workbench>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));

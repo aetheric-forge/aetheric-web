@@ -21,25 +21,27 @@ public static class ForgeAuthenticationExtensions
         IConfiguration configuration)
     {
         var keycloakSection = configuration.GetRequiredSection("Keycloak");
+        var authority = keycloakSection["Authority"];
+        var realm = keycloakSection["Realm"];
 
         services
             .AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
             })
             .AddCookie(options =>
             {
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = SameSiteMode.Lax;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.LoginPath = "/account/login";
                 options.SlidingExpiration = true;
             })
             .AddOpenIdConnect(options =>
             {
-                options.Authority = keycloakSection["Authority"];
+                options.Authority = $"{authority}/realms/{realm}";
                 options.ClientId = keycloakSection["ClientId"];
                 options.ClientSecret = keycloakSection["ClientSecret"];
                 options.ResponseType = OpenIdConnectResponseType.Code;
@@ -54,13 +56,6 @@ public static class ForgeAuthenticationExtensions
                 options.Events.OnTokenValidated = RegisterPrincipalAsync;
             });
 
-        services.AddAuthorization(options =>
-        {
-            options.FallbackPolicy = new AuthorizationPolicyBuilder()
-                .RequireAuthenticatedUser()
-                .Build();
-        });
-        services.AddCascadingAuthenticationState();
         services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
         services.AddScoped<ICurrentPersonAccessor, CurrentPersonAccessor>();
 
@@ -72,8 +67,6 @@ public static class ForgeAuthenticationExtensions
     {
         endpoints.MapGet("/account/login", Login)
             .AllowAnonymous();
-        endpoints.MapPost("/account/login", LoginFromFormAsync)
-            .AllowAnonymous();
         endpoints.MapPost("/account/logout", LogoutAsync);
 
         return endpoints;
@@ -83,18 +76,6 @@ public static class ForgeAuthenticationExtensions
     {
         var returnUrl = GetSafeReturnUrl(
             context.Request.Query["ReturnUrl"].ToString());
-
-        return ChallengeOpenIdConnect(returnUrl);
-    }
-
-    private static async Task<IResult> LoginFromFormAsync(
-        HttpContext context,
-        IAntiforgery antiforgery,
-        CancellationToken cancellationToken)
-    {
-        await antiforgery.ValidateRequestAsync(context);
-        var form = await context.Request.ReadFormAsync(cancellationToken);
-        var returnUrl = GetSafeReturnUrl(form["returnUrl"].ToString());
 
         return ChallengeOpenIdConnect(returnUrl);
     }
