@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using ParallelYou.Web.Authentication;
-
 namespace AethericForge.Web.Hosting;
 
 public static class ForgeAuthenticationExtensions
@@ -57,10 +55,7 @@ public static class ForgeAuthenticationExtensions
             });
 
         services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
-        services.AddScoped<AethericForge.Web.Authentication.ICurrentPersonAccessor,
-            AethericForge.Web.Authentication.CurrentPersonAccessor>();
-        services.AddScoped<ParallelYou.Web.Authentication.ICurrentPersonAccessor,
-            ParallelYou.Web.Authentication.CurrentPersonAccessor>();
+        services.AddScoped<ICurrentPersonAccessor, CurrentPersonAccessor>();
 
         return services;
     }

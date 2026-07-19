@@ -2,9 +2,9 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions.Capture
-@using ParallelYou.Models.Capture
-@using ParallelYou.Web.Authentication
+@using global::ParallelYou.Abstractions.Capture
+@using global::ParallelYou.Models.Capture
+@using AethericForge.Web.Authentication
 @inject ICaptureService CaptureService
 @inject ICurrentIdentityAccessor CurrentIdentity
 @inject ILogger<Capture> Logger

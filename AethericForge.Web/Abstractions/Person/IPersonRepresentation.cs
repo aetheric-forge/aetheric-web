@@ -1,4 +1,4 @@
-using ParallelYou.Abstractions;
+using AethericForge.Web.Abstractions;
 
 namespace AethericForge.Web.Abstractions.Person;
 

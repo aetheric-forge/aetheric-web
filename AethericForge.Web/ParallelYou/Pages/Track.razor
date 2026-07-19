@@ -2,10 +2,10 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions
-@using ParallelYou.Abstractions.Tracking
-@using ParallelYou.Models.Tracking
-@using ParallelYou.Web.Authentication
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Tracking
+@using global::ParallelYou.Models.Tracking
+@using AethericForge.Web.Authentication
 @inject ITrackingService TrackingService
 @inject ICurrentIdentityAccessor CurrentIdentity
 @inject ICurrentPersonAccessor CurrentPerson

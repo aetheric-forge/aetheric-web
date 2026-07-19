@@ -9,8 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Authentication\CurrentIdentityAccessor.cs" />
-    <ProjectReference Include="..\parallel-you\ParallelYou.Web\ParallelYou.Web.csproj" />
+    <ProjectReference Include="..\parallel-you\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
+    <ProjectReference Include="..\parallel-you\ParallelYou.Models\ParallelYou.Models.csproj" />
+    <ProjectReference Include="..\parallel-you\ParallelYou.Services\ParallelYou.Services.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Archive\AethericForge.Runtime.Institutions.Archive.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Library\AethericForge.Runtime.Institutions.Library.csproj" />

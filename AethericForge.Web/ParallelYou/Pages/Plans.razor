@@ -2,11 +2,11 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions
-@using ParallelYou.Abstractions.Intention
-@using ParallelYou.Abstractions.Plan
-@using ParallelYou.Models.Plan
-@using ParallelYou.Web.Authentication
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Intention
+@using global::ParallelYou.Abstractions.Plan
+@using global::ParallelYou.Models.Plan
+@using AethericForge.Web.Authentication
 @inject IPlanningService PlanningService
 @inject IIntentionService IntentionService
 @inject ICurrentIdentityAccessor CurrentIdentity

@@ -1,5 +1,4 @@
-<Router AppAssembly="@typeof(Program).Assembly"
-        AdditionalAssemblies="@(new[] { typeof(ParallelYou.Web.Components.Pages.Home).Assembly })">
+<Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(AethericForge.Web.Components.Layout.MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />

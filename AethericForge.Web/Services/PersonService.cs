@@ -6,9 +6,9 @@ using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Models.Knowledge.Authorities;
 using AethericForge.Runtime.Models.Knowledge.Primitives;
 using AethericForge.Runtime.Models.Knowledge.Representations;
+using AethericForge.Web.Abstractions;
 using AethericForge.Web.Abstractions.Person;
-using ParallelYou.Abstractions;
-using ParallelYou.Models.Person;
+using AethericForge.Web.Models.Person;
 
 namespace AethericForge.Web.Services;
 
@@ -40,7 +40,7 @@ public sealed class PersonService(ILibrarian librarian) : ServiceBase, IPersonSe
             if (artifact is not null)
             {
                 var record = await ReadRecordAsync(artifact, cancellationToken);
-                return new ParallelYou.Models.Person.Person(record.PersonId);
+                return new Person(record.PersonId);
             }
 
             var personId = Guid.NewGuid();
@@ -68,7 +68,7 @@ public sealed class PersonService(ILibrarian librarian) : ServiceBase, IPersonSe
                 authority: authority,
                 ct: cancellationToken);
 
-            return new ParallelYou.Models.Person.Person(personId);
+            return new Person(personId);
         }
         finally
         {

@@ -1,4 +1,4 @@
-namespace ParallelYou.Abstractions;
+namespace AethericForge.Web.Abstractions;
 
 public enum ProvenanceKind
 {

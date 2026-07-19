@@ -2,11 +2,11 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using AethericForge.Runtime.Models.Knowledge.Authorities
-@using ParallelYou.Abstractions
-@using ParallelYou.Abstractions.Plan
-@using ParallelYou.Abstractions.Recommendation
-@using ParallelYou.Models.Recommendation
-@using ParallelYou.Web.Authentication
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Plan
+@using global::ParallelYou.Abstractions.Recommendation
+@using global::ParallelYou.Models.Recommendation
+@using AethericForge.Web.Authentication
 @inject IRecommendationService RecommendationService
 @inject IPlanningService PlanningService
 @inject ICurrentIdentityAccessor CurrentIdentity

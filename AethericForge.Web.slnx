@@ -1,10 +1,11 @@
 <Solution>
   <Folder Name="/Application/">
     <Project Path="AethericForge.Web/AethericForge.Web.csproj" />
+  </Folder>
+  <Folder Name="/Application/ParallelYou/">
     <Project Path="parallel-you/ParallelYou.Abstractions/ParallelYou.Abstractions.csproj" />
     <Project Path="parallel-you/ParallelYou.Models/ParallelYou.Models.csproj" />
     <Project Path="parallel-you/ParallelYou.Services/ParallelYou.Services.csproj" />
-    <Project Path="parallel-you/ParallelYou.Web/ParallelYou.Web.csproj" />
   </Folder>
   <Folder Name="/Runtime/">
     <Project Path="runtime/src/Abstractions/Interfaces/AethericForge.Runtime.Abstractions.Interfaces/AethericForge.Runtime.Abstractions.Interfaces.csproj" />
