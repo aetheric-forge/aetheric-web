@@ -16,6 +16,7 @@
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Registry\AethericForge.Runtime.Institutions.Registry.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.InMemory\AethericForge.Runtime.Providers.Archive.InMemory.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.MongoDb\AethericForge.Runtime.Providers.Archive.MongoDb.csproj" />
+    <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.S3\AethericForge.Runtime.Providers.Archive.S3.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Identity.InMemory\AethericForge.Runtime.Providers.Identity.InMemory.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Identity.Keycloak\AethericForge.Runtime.Providers.Identity.Keycloak.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Knowledge.InMemory\AethericForge.Runtime.Providers.Knowledge.InMemory.csproj" />

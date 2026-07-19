@@ -27,6 +27,7 @@ using AethericForge.Runtime.Institutions.Workbench;
 using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Providers.Archive.MongoDb;
+using AethericForge.Runtime.Providers.Archive.S3;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
 using AethericForge.Runtime.Providers.Knowledge.MongoDb;
 using AethericForge.Runtime.Providers.Post.RabbitMq;
@@ -42,6 +43,9 @@ using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
 using AethericForge.Web.Abstractions.Person;
 using AethericForge.Web.Services;
+using Amazon;
+using Amazon.Runtime;
+using Amazon.S3;
 using MongoDB.Driver;
 using StackExchange.Redis;
 
@@ -69,6 +73,9 @@ public static class ForgeCampusExtensions
             Password = password,
             DatabaseName = databaseName,
             AuthenticationSource = authenticationDatabase,
+            AuthenticationMechanism = configuration.GetValue<string>(
+                "MongoDb:AuthenticationMechanism",
+                "SCRAM-SHA-256"),
             DirectConnection = configuration.GetValue(
                 "MongoDb:DirectConnection",
                 true)
@@ -107,6 +114,29 @@ public static class ForgeCampusExtensions
             : throw new InvalidOperationException($"{key} is required.");
     }    
     
+    private static AmazonS3Config BuildS3Config(IConfiguration configuration)
+    {
+        return new AmazonS3Config
+        {
+            ServiceURL = GetRequiredSetting(configuration, "S3:ServiceUrl"),
+            ForcePathStyle = configuration.GetValue("S3:ForcePathStyle", true),
+            AuthenticationRegion = configuration.GetValue(
+                "S3:AuthenticationRegion",
+                "us-east-1")
+        };
+    }
+
+    private static IAmazonS3 BuildS3Client(IConfiguration configuration)
+    {
+        var credentials = new BasicAWSCredentials(
+            GetRequiredSetting(configuration, "S3:AccessKey"),
+            GetRequiredSetting(configuration, "S3:SecretKey"));
+
+        return new AmazonS3Client(
+            credentials,
+            BuildS3Config(configuration));
+    }
+    
     public static IServiceCollection AddForgeCampus(this IServiceCollection services)
     {
         services.AddInstitutionTemplate(builder =>
@@ -138,10 +168,16 @@ public static class ForgeCampusExtensions
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
                 .With<IArchiveSerializer, JsonArchiveSerializer>()
-                .With<IArchiveProvider>(sp => new MongoDbArchiveProvider(
-                    sp.GetRequiredService<IMongoDatabase>(),
-                    "MongoDb",
-                    "archive"))
+                .With<AWSCredentials>(sp => new BasicAWSCredentials(
+                    sp.GetRequiredService<IConfiguration>().GetValue<string>("S3:AccessKey"),
+                    sp.GetRequiredService<IConfiguration>().GetValue<string>("S3:SecretKey")))
+                .With<IAmazonS3>(sp => new AmazonS3Client(
+                    sp.GetRequiredService<AWSCredentials>(), 
+                    BuildS3Config(sp.GetRequiredService<IConfiguration>())))
+                .With<IArchiveProvider>(sp => new S3ArchiveProvider(
+                    sp.GetRequiredService<IAmazonS3>(),
+                    "MinIO",
+                    "forge-campus-archive"))
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
@@ -155,7 +191,7 @@ public static class ForgeCampusExtensions
                         sp.GetRequiredService<IConfiguration>(),
                         "MongoDb:DatabaseName")))
                 .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
-                    sp.GetRequiredService<IMongoDatabase>(), "forge-campus", "knowledge"))
+                    sp.GetRequiredService<IMongoDatabase>(), "ForgeCampus", "knowledge"))
                 .With<IKnowledgeService, KnowledgeService>()
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()
@@ -164,9 +200,9 @@ public static class ForgeCampusExtensions
                 .With<ILibrarian, Librarian>()
                 .With<ILibraryContext, LibraryContext>()
                 .With<ILibrary, Library>()
-                .With<IPostProvider>(sp => new RabbitMqPostProvider(
-                    "RabbitMq",
-                    BuildRabbitMqUrl(sp.GetRequiredService<IConfiguration>())))
+                .With<IPostProvider>(sp => new RabbitMqPostProvider( "ForgeCampus", 
+                    BuildRabbitMqUrl(
+                       sp.GetRequiredService<IConfiguration>())))
                 .With<IPostService, PostService>()
                 .With<ITeam<IPostClerk>>(_ => new Team<IPostClerk>(Array.Empty<IPostClerk>()))
                 .With<IPostExchange, PostExchange>()
