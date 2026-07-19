@@ -9,6 +9,7 @@ using AethericForge.Runtime.Abstractions.Interfaces.Identity.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Post.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Services;
@@ -28,6 +29,7 @@ using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Providers.Archive.MongoDb;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
 using AethericForge.Runtime.Providers.Knowledge.MongoDb;
+using AethericForge.Runtime.Providers.Post.RabbitMq;
 using AethericForge.Runtime.Providers.Staging.Redis;
 using AethericForge.Runtime.Services.Archive;
 using AethericForge.Runtime.Services.Identity;
@@ -73,6 +75,25 @@ public static class ForgeCampusExtensions
         };
 
         return builder.ToMongoUrl().ToString();
+    }
+
+    private static string BuildRabbitMqUrl(IConfiguration configuration)
+    {
+        var useSsl = configuration.GetValue("RabbitMq:Ssl", false);
+        var builder = new UriBuilder
+        {
+            Scheme = useSsl ? "amqps" : "amqp",
+            Host = GetRequiredSetting(configuration, "RabbitMq:Host"),
+            Port = configuration.GetValue<int?>("RabbitMq:Port")
+                   ?? (useSsl ? 5671 : 5672),
+            UserName = GetRequiredSetting(configuration, "RabbitMq:Username"),
+            Password = GetRequiredSetting(configuration, "RabbitMq:Password"),
+            Path = Uri.EscapeDataString(GetRequiredSetting(
+                configuration,
+                "RabbitMq:VirtualHost"))
+        };
+
+        return builder.Uri.ToString();
     }
     
     private static string GetRequiredSetting(
@@ -143,6 +164,9 @@ public static class ForgeCampusExtensions
                 .With<ILibrarian, Librarian>()
                 .With<ILibraryContext, LibraryContext>()
                 .With<ILibrary, Library>()
+                .With<IPostProvider>(sp => new RabbitMqPostProvider(
+                    "RabbitMq",
+                    BuildRabbitMqUrl(sp.GetRequiredService<IConfiguration>())))
                 .With<IPostService, PostService>()
                 .With<ITeam<IPostClerk>>(_ => new Team<IPostClerk>(Array.Empty<IPostClerk>()))
                 .With<IPostExchange, PostExchange>()
