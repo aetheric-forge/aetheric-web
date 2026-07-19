@@ -1,0 +1,295 @@
+@page "/parallel-you/reflect"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Artifacts
+@using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Primitives
+@using AethericForge.Runtime.Models.Knowledge.Authorities
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Capture
+@using global::ParallelYou.Abstractions.Reflection
+@using global::ParallelYou.Models.Reflection
+@using AethericForge.Web.Authentication
+@inject ICaptureService CaptureService
+@inject IReflectionService ReflectionService
+@inject ICurrentIdentityAccessor CurrentIdentity
+@inject ICurrentPersonAccessor CurrentPerson
+@inject ILogger<Reflect> Logger
+
+<PageTitle>Reflect</PageTitle>
+
+<div class="reflect-page">
+    <header class="reflect-header">
+        <p class="reflect-eyebrow">Reflection</p>
+        <h1>Look again</h1>
+        <p>Choose something you captured and preserve what you understand about it now.</p>
+    </header>
+
+    @if (isLoading)
+    {
+        <p role="status">Gathering your captures…</p>
+    }
+    else if (loadFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Your captures could not be prepared for reflection.
+        </div>
+    }
+    else if (captures.Count == 0)
+    {
+        <div class="reflect-empty">
+            <h2>Reflection needs something to examine</h2>
+            <p>Capture an expression first; it will remain distinct from whatever you later make of it.</p>
+            <a class="btn btn-primary" href="/parallel-you/capture">Create a capture</a>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="input" OnValidSubmit="SaveReflectionAsync" FormName="reflection" class="reflect-form">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="reflection-capture" class="form-label">Capture to examine</label>
+                <InputSelect id="reflection-capture" class="form-select" @bind-Value="input.CaptureIndex">
+                    <option value="">Choose a capture…</option>
+                    @for (var index = 0; index < captures.Count; index++)
+                    {
+                        <option value="@index">@captures[index].Title</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => input.CaptureIndex" />
+            </div>
+
+            @if (SelectedCapture is { } selected)
+            {
+                <blockquote class="capture-evidence">@selected.Content</blockquote>
+            }
+
+            <div class="mb-3">
+                <label for="reflection-question" class="form-label">Question</label>
+                <InputText id="reflection-question" class="form-control" @bind-Value="input.Question" />
+                <ValidationMessage For="() => input.Question" />
+            </div>
+
+            <div class="mb-3">
+                <label for="reflection-content" class="form-label">What do you notice now?</label>
+                <InputTextArea id="reflection-content"
+                               class="form-control reflection-content"
+                               @bind-Value="input.Content"
+                               placeholder="Your present interpretation—not a correction to what you originally captured." />
+                <ValidationMessage For="() => input.Content" />
+            </div>
+
+            <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                @(isSaving ? "Preserving…" : "Preserve reflection")
+            </button>
+        </EditForm>
+    }
+
+    @if (saved)
+    {
+        <div class="alert alert-success reflect-result" role="status">
+            <strong>Reflection preserved.</strong> The original capture remains unchanged.
+        </div>
+    }
+
+    @if (saveFailed)
+    {
+        <div class="alert alert-danger reflect-result" role="alert">
+            This reflection could not be preserved. Your writing is still here.
+        </div>
+    }
+
+    @if (!isLoading && reflections.Count > 0)
+    {
+        <section class="reflection-history" aria-labelledby="reflection-history-title">
+            <h2 id="reflection-history-title">Preserved reflections</h2>
+            <div class="reflection-list">
+                @foreach (var reflection in reflections)
+                {
+                    <article class="reflection-card">
+                        <p class="reflection-subject">@reflection.Subject.Description</p>
+                        @foreach (var question in reflection.Questions)
+                        {
+                            <h3>@question</h3>
+                        }
+                        @foreach (var insight in reflection.Insights)
+                        {
+                            <p class="reflection-insight">@insight.Content</p>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private readonly List<CaptureOption> captures = [];
+    private readonly List<IReflection> reflections = [];
+    private ReflectionInput input = new();
+    private bool isLoading = true;
+    private bool isSaving;
+    private bool loadFailed;
+    private bool saveFailed;
+    private bool saved;
+
+    private CaptureOption? SelectedCapture =>
+        input.CaptureIndex is { } index && index >= 0 && index < captures.Count
+            ? captures[index]
+            : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(
+                identity,
+                CaptureAuthority.Context);
+            var artifacts = await CaptureService.GetCapturesAsync(authority);
+
+            foreach (var artifact in artifacts)
+            {
+                captures.Add(await ToOptionAsync(artifact));
+            }
+
+            await LoadReflectionsAsync(identity, person.Id);
+        }
+        catch (Exception exception)
+        {
+            loadFailed = true;
+            Logger.LogError(exception, "Captures could not be loaded for reflection");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveReflectionAsync()
+    {
+        var capture = SelectedCapture;
+        if (capture is null)
+        {
+            return;
+        }
+
+        isSaving = true;
+        saveFailed = false;
+        saved = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(
+                identity,
+                ReflectionAuthority.Context);
+            var subject = new ReflectionSubject
+            {
+                Id = Guid.NewGuid(),
+                Type = "Capture",
+                Description = capture.Title
+            };
+            var reflection = await ReflectionService.StartReflectionAsync(
+                person.Id,
+                subject,
+                [input.Question.Trim()],
+                authority);
+            var evidenceAdded = await ReflectionService.AddEvidenceAsync(
+                reflection.Id,
+                new ReflectionEvidence
+                {
+                    Id = Guid.NewGuid(),
+                    Content = capture.Content,
+                    Provenance = new Provenance(
+                        ProvenanceKind.Declared,
+                        capture.Reference.ToString(),
+                        capture.CapturedAtUtc)
+                },
+                authority,
+                capture.Reference);
+            var insightAdded = await ReflectionService.AddInsightAsync(
+                reflection.Id,
+                new ReflectionInsightSubmission
+                {
+                    Id = Guid.NewGuid(),
+                    Content = input.Content.Trim()
+                },
+                authority);
+
+            if (!evidenceAdded || !insightAdded)
+            {
+                throw new InvalidOperationException(
+                    "The reflection could not be completed.");
+            }
+
+            saved = true;
+            input = new ReflectionInput();
+            await LoadReflectionsAsync(identity, person.Id);
+        }
+        catch (Exception exception)
+        {
+            saveFailed = true;
+            Logger.LogError(exception, "Reflection could not be preserved");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task LoadReflectionsAsync(
+        AethericForge.Runtime.Abstractions.Interfaces.Identity.Subjects.IIdentitySubject identity,
+        Guid personId)
+    {
+        var authority = new KnowledgeAuthority(
+            identity,
+            ReflectionAuthority.Context);
+        var loaded = await ReflectionService.GetReflectionsAsync(authority);
+
+        reflections.Clear();
+        reflections.AddRange(loaded.Where(reflection =>
+            reflection.PersonId == personId));
+    }
+
+    private static async Task<CaptureOption> ToOptionAsync(
+        IKnowledgeArtifact artifact)
+    {
+        var representation = artifact.Representations.FirstOrDefault()
+            ?? throw new InvalidDataException("A capture has no representation.");
+        await using var stream = await representation.OpenStreamAsync();
+        using var reader = new StreamReader(
+            stream,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: true);
+
+        return new CaptureOption(
+            artifact.Descriptor.Title,
+            await reader.ReadToEndAsync(),
+            artifact.Reference,
+            artifact.CreatedAtUtc);
+    }
+
+    private sealed class ReflectionInput
+    {
+        [Required(ErrorMessage = "Choose a capture to reflect upon.")]
+        public int? CaptureIndex { get; set; }
+
+        [Required(ErrorMessage = "Give this reflection a question.")]
+        [StringLength(500)]
+        public string Question { get; set; } = "What do I notice now?";
+
+        [Required(ErrorMessage = "Write what you presently understand.")]
+        [StringLength(100_000)]
+        public string Content { get; set; } = string.Empty;
+    }
+
+    private sealed record CaptureOption(
+        string Title,
+        string Content,
+        IKnowledgeReference Reference,
+        DateTimeOffset CapturedAtUtc);
+}

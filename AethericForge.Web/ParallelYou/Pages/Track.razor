@@ -1,0 +1,383 @@
+@page "/parallel-you/track"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using AethericForge.Runtime.Models.Knowledge.Authorities
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Tracking
+@using global::ParallelYou.Models.Tracking
+@using AethericForge.Web.Authentication
+@inject ITrackingService TrackingService
+@inject ICurrentIdentityAccessor CurrentIdentity
+@inject ICurrentPersonAccessor CurrentPerson
+@inject ILogger<Track> Logger
+
+<PageTitle>Track</PageTitle>
+
+<div class="tracking-page">
+    <header class="tracking-header">
+        <p class="tracking-eyebrow">Tracking</p>
+        <h1>Notice what changes</h1>
+        <p>Keep a sequence of honest observations without turning them into a verdict.</p>
+    </header>
+
+    <section class="new-subject" aria-labelledby="new-subject-title">
+        <div class="section-heading">
+            <div>
+                <h2 id="new-subject-title">Begin observing something</h2>
+                <p>Name what you want to notice, then describe its present state.</p>
+            </div>
+        </div>
+
+        <EditForm Model="newSubject" OnValidSubmit="CreateSubjectAsync" FormName="new-tracked-subject">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="subject-description" class="form-label">What are you observing?</label>
+                <InputText id="subject-description"
+                           class="form-control"
+                           @bind-Value="newSubject.Description"
+                           placeholder="Energy, confidence about a decision, connection to a project…" />
+                <ValidationMessage For="() => newSubject.Description" />
+            </div>
+
+            <div class="mb-3">
+                <label for="subject-value" class="form-label">What is true about it right now?</label>
+                <InputTextArea id="subject-value"
+                               class="form-control observation-value"
+                               @bind-Value="newSubject.Value"
+                               placeholder="Describe the present state in your own words." />
+                <ValidationMessage For="() => newSubject.Value" />
+            </div>
+
+            <div class="mb-3 confidence-field">
+                <label for="subject-confidence" class="form-label">How certain does this feel?</label>
+                <InputSelect id="subject-confidence" class="form-select" @bind-Value="newSubject.Confidence">
+                    <option value="1">Stated with confidence</option>
+                    <option value="0.75">Fairly certain</option>
+                    <option value="0.5">Uncertain</option>
+                    <option value="0.25">Tentative</option>
+                </InputSelect>
+            </div>
+
+            <button type="submit" class="btn btn-primary" disabled="@isCreating">
+                @(isCreating ? "Preserving…" : "Begin tracking")
+            </button>
+        </EditForm>
+    </section>
+
+    @if (saveFailed)
+    {
+        <div class="alert alert-danger tracking-result" role="alert">
+            That observation could not be preserved. Your writing is still here.
+        </div>
+    }
+
+    @if (saved)
+    {
+        <div class="alert alert-success tracking-result" role="status">
+            <strong>Observation preserved.</strong> Earlier states remain in the history.
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <p class="tracking-state" role="status">Gathering your observations…</p>
+    }
+    else if (loadFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Your tracked subjects could not be retrieved.
+        </div>
+    }
+    else if (currentStates.Count == 0)
+    {
+        <div class="tracking-empty">
+            <h2>No observations yet</h2>
+            <p>Begin with something whose movement—or persistence—is worth noticing.</p>
+        </div>
+    }
+    else
+    {
+        <section class="tracked-subjects" aria-labelledby="tracked-subjects-title">
+            <div class="section-heading">
+                <div>
+                    <h2 id="tracked-subjects-title">What you are observing</h2>
+                    <p>Each new entry is added to the record; earlier states remain intact.</p>
+                </div>
+            </div>
+
+            <div class="subject-list">
+                @foreach (var state in currentStates)
+                {
+                    var subjectId = state.Subject.Id;
+                    var observation = observations[subjectId];
+
+                    <article class="subject-card" @key="subjectId">
+                        <header>
+                            <div>
+                                <h3>@state.Subject.Description</h3>
+                                <p class="current-label">Current observation</p>
+                            </div>
+                            <time datetime="@state.Provenance.Timestamp.ToString("O")">
+                                @FormatTimestamp(state.Provenance.Timestamp)
+                            </time>
+                        </header>
+
+                        <p class="current-value">@state.Value</p>
+                        <p class="confidence-note">@FormatConfidence(state.Confidence)</p>
+
+                        <details class="add-observation">
+                            <summary>Add another observation</summary>
+                            <EditForm Model="observation"
+                                      OnValidSubmit="() => AddObservationAsync(state)"
+                                      FormName="@($"observation-{subjectId:N}")">
+                                <DataAnnotationsValidator />
+
+                                <div class="mb-3">
+                                    <label for="@($"value-{subjectId:N}")" class="form-label">
+                                        What is true now?
+                                    </label>
+                                    <InputTextArea id="@($"value-{subjectId:N}")"
+                                                   class="form-control observation-value"
+                                                   @bind-Value="observation.Value" />
+                                    <ValidationMessage For="() => observation.Value" />
+                                </div>
+
+                                <div class="mb-3 confidence-field">
+                                    <label for="@($"confidence-{subjectId:N}")" class="form-label">
+                                        How certain does this feel?
+                                    </label>
+                                    <InputSelect id="@($"confidence-{subjectId:N}")"
+                                                 class="form-select"
+                                                 @bind-Value="observation.Confidence">
+                                        <option value="1">Stated with confidence</option>
+                                        <option value="0.75">Fairly certain</option>
+                                        <option value="0.5">Uncertain</option>
+                                        <option value="0.25">Tentative</option>
+                                    </InputSelect>
+                                </div>
+
+                                <button type="submit"
+                                        class="btn btn-primary"
+                                        disabled="@savingSubjects.Contains(subjectId)">
+                                    @(savingSubjects.Contains(subjectId) ? "Preserving…" : "Preserve observation")
+                                </button>
+                            </EditForm>
+                        </details>
+
+                        @if (histories.TryGetValue(subjectId, out var history))
+                        {
+                            <details class="observation-history">
+                                <summary>Observation history (@history.Count)</summary>
+                                <ol>
+                                    @foreach (var entry in history)
+                                    {
+                                        <li>
+                                            <div class="history-meta">
+                                                <time datetime="@entry.Provenance.Timestamp.ToString("O")">
+                                                    @FormatTimestamp(entry.Provenance.Timestamp)
+                                                </time>
+                                                <span>@FormatConfidence(entry.Confidence)</span>
+                                            </div>
+                                            <p>@entry.Value</p>
+                                        </li>
+                                    }
+                                </ol>
+                            </details>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private readonly List<ITrackedState> currentStates = [];
+    private readonly Dictionary<Guid, List<ITrackedState>> histories = [];
+    private readonly Dictionary<Guid, ObservationInput> observations = [];
+    private readonly HashSet<Guid> savingSubjects = [];
+    private NewSubjectInput newSubject = new();
+    private bool isLoading = true;
+    private bool isCreating;
+    private bool loadFailed;
+    private bool saveFailed;
+    private bool saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task CreateSubjectAsync()
+    {
+        isCreating = true;
+        saveFailed = false;
+        saved = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, TrackingAuthority.Context);
+            var state = new TrackedState(
+                Guid.NewGuid(),
+                person.Id,
+                new TrackedSubject(
+                    Guid.NewGuid(),
+                    "SelfObservation",
+                    newSubject.Description.Trim()),
+                newSubject.Value.Trim(),
+                CreateProvenance(),
+                newSubject.Confidence);
+
+            await TrackingService.TrackAsync(state, authority);
+            newSubject = new NewSubjectInput();
+            await LoadAsync(showLoadingState: false);
+            saved = true;
+        }
+        catch (Exception exception)
+        {
+            saveFailed = true;
+            Logger.LogError(exception, "Tracked subject could not be created");
+        }
+        finally
+        {
+            isCreating = false;
+        }
+    }
+
+    private async Task AddObservationAsync(ITrackedState currentState)
+    {
+        var subjectId = currentState.Subject.Id;
+        var input = observations[subjectId];
+        savingSubjects.Add(subjectId);
+        saveFailed = false;
+        saved = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, TrackingAuthority.Context);
+            var state = new TrackedState(
+                Guid.NewGuid(),
+                person.Id,
+                new TrackedSubject(
+                    currentState.Subject.Id,
+                    currentState.Subject.Type,
+                    currentState.Subject.Description),
+                input.Value.Trim(),
+                CreateProvenance(),
+                input.Confidence);
+
+            await TrackingService.TrackAsync(state, authority);
+            observations[subjectId] = new ObservationInput();
+            await LoadAsync(showLoadingState: false);
+            saved = true;
+        }
+        catch (Exception exception)
+        {
+            saveFailed = true;
+            Logger.LogError(
+                exception,
+                "Observation for subject {SubjectId} could not be preserved",
+                subjectId);
+        }
+        finally
+        {
+            savingSubjects.Remove(subjectId);
+        }
+    }
+
+    private async Task LoadAsync(bool showLoadingState = true)
+    {
+        if (showLoadingState)
+        {
+            isLoading = true;
+        }
+
+        loadFailed = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, TrackingAuthority.Context);
+            var loaded = await TrackingService.GetCurrentStatesAsync(
+                person.Id,
+                authority);
+
+            currentStates.Clear();
+            currentStates.AddRange(loaded);
+            histories.Clear();
+
+            foreach (var state in currentStates)
+            {
+                histories[state.Subject.Id] = (await TrackingService.GetHistoryAsync(
+                    person.Id,
+                    state.Subject.Id,
+                    authority)).ToList();
+            }
+
+            var activeSubjectIds = currentStates
+                .Select(state => state.Subject.Id)
+                .ToHashSet();
+            foreach (var subjectId in observations.Keys
+                         .Where(id => !activeSubjectIds.Contains(id))
+                         .ToArray())
+            {
+                observations.Remove(subjectId);
+            }
+
+            foreach (var subjectId in activeSubjectIds)
+            {
+                observations.TryAdd(subjectId, new ObservationInput());
+            }
+        }
+        catch (Exception exception)
+        {
+            loadFailed = true;
+            Logger.LogError(exception, "Tracking observations could not be loaded");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static Provenance CreateProvenance()
+        => new(
+            ProvenanceKind.Declared,
+            "Human report",
+            DateTimeOffset.UtcNow);
+
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+        => timestamp.ToString("MMM d, yyyy · HH:mm 'UTC'");
+
+    private static string FormatConfidence(decimal confidence)
+        => confidence switch
+        {
+            >= 1m => "Stated with confidence",
+            >= 0.75m => "Fairly certain",
+            >= 0.5m => "Uncertain",
+            _ => "Tentative"
+        };
+
+    private class ObservationInput
+    {
+        [Required(ErrorMessage = "Describe what is true right now.")]
+        [StringLength(100_000)]
+        public string Value { get; set; } = string.Empty;
+
+        [Range(typeof(decimal), "0", "1")]
+        public decimal Confidence { get; set; } = 1m;
+    }
+
+    private sealed class NewSubjectInput : ObservationInput
+    {
+        [Required(ErrorMessage = "Name what you want to observe.")]
+        [StringLength(300)]
+        public string Description { get; set; } = string.Empty;
+    }
+}

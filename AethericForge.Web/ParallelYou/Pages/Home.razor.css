@@ -1,0 +1,244 @@
+.home-hero {
+    min-height: 31rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(17rem, 0.65fr);
+    align-items: center;
+    gap: clamp(2rem, 7vw, 7rem);
+    padding: 1rem 0 clamp(4rem, 8vw, 7rem);
+}
+
+.eyebrow {
+    margin: 0 0 1.1rem;
+    color: var(--py-cobalt);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+}
+
+.home-hero h1 {
+    max-width: 13ch;
+    margin: 0;
+}
+
+.home-hero h1 em {
+    color: var(--py-cobalt);
+    font-weight: 400;
+}
+
+.home-hero__lede {
+    max-width: 41rem;
+    margin: 1.75rem 0 0;
+    color: var(--py-muted);
+    font-family: var(--py-display);
+    font-size: clamp(1.05rem, 2vw, 1.28rem);
+    line-height: 1.65;
+}
+
+.home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.35rem;
+    margin-top: 2rem;
+}
+
+.home-actions__quiet {
+    color: var(--py-ink-soft);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.home-actions__quiet span {
+    display: inline-block;
+    margin-left: 0.25rem;
+    color: var(--py-cobalt);
+    transition: transform 150ms ease;
+}
+
+.home-actions__quiet:hover span {
+    transform: translateX(3px);
+}
+
+.orbit {
+    position: relative;
+    width: min(100%, 22rem);
+    aspect-ratio: 1;
+    justify-self: center;
+}
+
+.orbit__ring {
+    position: absolute;
+    border: 1px solid color-mix(in srgb, var(--py-ink) 14%, transparent);
+    border-radius: 50%;
+}
+
+.orbit__ring--outer {
+    inset: 3%;
+}
+
+.orbit__ring--inner {
+    inset: 25%;
+    border-style: dashed;
+}
+
+.orbit__present,
+.orbit__possible {
+    position: absolute;
+    border-radius: 50%;
+}
+
+.orbit__present {
+    width: 3.2rem;
+    height: 3.2rem;
+    left: 21%;
+    top: 46%;
+    background: var(--py-ink);
+    box-shadow: 0 0 0 0.7rem rgba(23, 35, 31, 0.07);
+}
+
+.orbit__possible {
+    width: 1.4rem;
+    height: 1.4rem;
+    right: 16%;
+    top: 25%;
+    border: 3px solid var(--py-cobalt);
+    background: var(--py-canvas);
+    box-shadow: 0 0 0 0.7rem rgba(49, 94, 232, 0.09);
+}
+
+.orbit::after {
+    content: "";
+    position: absolute;
+    width: 42%;
+    height: 1px;
+    left: 36%;
+    top: 43%;
+    background: var(--py-cobalt);
+    transform: rotate(-28deg);
+    transform-origin: left;
+}
+
+.orbit__label {
+    position: absolute;
+    color: var(--py-muted);
+    font-size: 0.65rem;
+    font-weight: 750;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.orbit__label--present {
+    left: 16%;
+    top: 66%;
+}
+
+.orbit__label--possible {
+    right: 7%;
+    top: 16%;
+}
+
+.practice-flow {
+    padding: clamp(3rem, 6vw, 5rem) 0;
+    border-top: 1px solid var(--py-line);
+}
+
+.section-intro h2 {
+    margin: 0 0 2.25rem;
+}
+
+.practice-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.practice-card {
+    min-height: 18rem;
+    display: flex;
+    flex-direction: column;
+    padding: 1.6rem;
+    border: 1px solid var(--py-line);
+    border-radius: 0.8rem;
+    background: color-mix(in srgb, var(--py-surface) 86%, transparent);
+    color: var(--py-text);
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.practice-card:hover {
+    border-color: color-mix(in srgb, var(--py-cobalt) 38%, var(--py-line));
+    box-shadow: 0 1rem 2.5rem rgba(31, 42, 37, 0.07);
+    color: var(--py-text);
+    transform: translateY(-3px);
+}
+
+.practice-card__number {
+    color: var(--py-cobalt);
+    font-family: var(--py-display);
+    font-size: 0.82rem;
+}
+
+.practice-card h3 {
+    margin: 2.5rem 0 0.7rem;
+    font-size: 1.45rem;
+}
+
+.practice-card p {
+    margin: 0;
+    color: var(--py-muted);
+    font-size: 0.92rem;
+}
+
+.practice-card__link {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    color: var(--py-cobalt);
+    font-size: 0.78rem;
+    font-weight: 750;
+}
+
+.home-principle {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 42rem);
+    justify-content: center;
+    gap: 1rem;
+    padding: clamp(3rem, 8vw, 6rem) 1.5rem;
+    border-radius: 0.9rem;
+    background: var(--py-ink);
+    color: var(--py-paper);
+}
+
+.home-principle__mark {
+    color: var(--py-cobalt-soft);
+    font-family: var(--py-display);
+    font-size: 3rem;
+    line-height: 0.8;
+}
+
+.home-principle p {
+    margin: 0;
+    font-family: var(--py-display);
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+    .home-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .orbit {
+        display: none;
+    }
+
+    .practice-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .practice-card {
+        min-height: 14rem;
+    }
+}

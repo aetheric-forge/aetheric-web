@@ -10,8 +10,6 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using ParallelYou.Web.Authentication;
-
 namespace AethericForge.Web.Hosting;
 
 public static class ForgeAuthenticationExtensions

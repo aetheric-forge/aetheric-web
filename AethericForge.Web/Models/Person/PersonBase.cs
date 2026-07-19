@@ -1,7 +1,6 @@
 using AethericForge.Web.Abstractions.Person;
-using ParallelYou.Abstractions;
 
-namespace ParallelYou.Models.Person;
+namespace AethericForge.Web.Models.Person;
 
 public abstract class PersonBase : IPerson
 {

@@ -1,0 +1,171 @@
+:root {
+    --py-ink: #17231f;
+    --py-ink-soft: #26352f;
+    --py-canvas: #f5f3ed;
+    --py-paper: #eeebe0;
+    --py-surface: #fffefa;
+    --py-text: #202724;
+    --py-muted: #69736e;
+    --py-line: #dcded7;
+    --py-cobalt: #315ee8;
+    --py-cobalt-dark: #2449ba;
+    --py-cobalt-soft: #829cff;
+    --py-moss: #4d8a68;
+    --py-danger: #b33b3b;
+    --py-display: Georgia, 'Times New Roman', serif;
+    --py-body: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+    background: var(--py-canvas);
+    color: var(--py-text);
+    font-family: var(--py-body);
+    font-size: 16px;
+    line-height: 1.55;
+}
+
+body {
+    background-image:
+        radial-gradient(circle at 85% 8%, rgba(49, 94, 232, 0.045), transparent 25rem),
+        linear-gradient(rgba(23, 35, 31, 0.018) 1px, transparent 1px);
+    background-size: auto, 100% 3rem;
+}
+
+a,
+.btn-link {
+    color: var(--py-cobalt);
+}
+
+a:hover {
+    color: var(--py-cobalt-dark);
+}
+
+h1,
+h2,
+h3 {
+    color: var(--py-text);
+    font-family: var(--py-display);
+    letter-spacing: -0.035em;
+}
+
+h1 {
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 500;
+    line-height: 1.02;
+}
+
+h2 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 500;
+}
+
+button,
+.btn,
+.form-control,
+.form-select {
+    border-radius: 0.45rem;
+}
+
+.btn {
+    min-height: 2.45rem;
+    padding: 0.48rem 0.9rem;
+    font-weight: 650;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: var(--py-cobalt);
+    border-color: var(--py-cobalt);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--py-cobalt-dark);
+    border-color: var(--py-cobalt-dark);
+}
+
+.btn-outline-secondary {
+    color: var(--py-ink-soft);
+    border-color: #aeb5b0;
+}
+
+.form-control,
+.form-select {
+    border-color: #cfd4cf;
+    background-color: var(--py-surface);
+    color: var(--py-text);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus,
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus {
+    border-color: var(--py-cobalt-soft);
+    box-shadow: 0 0 0 0.2rem rgba(49, 94, 232, 0.15);
+}
+
+.form-check-input:checked {
+    background-color: var(--py-cobalt);
+    border-color: var(--py-cobalt);
+}
+
+.card {
+    border-color: var(--py-line);
+    background: var(--py-surface);
+    box-shadow: 0 0.5rem 1.5rem rgba(31, 42, 37, 0.035);
+}
+
+h1:focus {
+    outline: none;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid var(--py-moss);
+}
+
+.invalid {
+    outline: 1px solid var(--py-danger);
+}
+
+.validation-message {
+    color: var(--py-danger);
+}
+
+.blazor-error-boundary {
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+    background: var(--py-danger);
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred.";
+}
+
+.darker-border-checkbox.form-check-input {
+    border-color: #929a95;
+}
+
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}

@@ -1,0 +1,229 @@
+.plans-page {
+    max-width: 58rem;
+    margin: 2.5rem auto;
+}
+
+.plans-header {
+    margin-bottom: 2rem;
+}
+
+.plans-header h1 {
+    margin-bottom: 0.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.04em;
+}
+
+.plans-header p:last-child,
+.section-heading p,
+.plans-state {
+    color: var(--bs-secondary-color);
+}
+
+.plans-eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--bs-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.new-plan,
+.plan-card,
+.plans-empty {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    background: var(--bs-body-bg);
+}
+
+.new-plan {
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.section-heading {
+    margin-bottom: 1.25rem;
+}
+
+.section-heading h2 {
+    margin-bottom: 0.25rem;
+    font-size: 1.35rem;
+}
+
+.section-heading p {
+    margin-bottom: 0;
+}
+
+.plan-course {
+    min-height: 8rem;
+}
+
+.intention-choices {
+    display: grid;
+    gap: 0.55rem;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+}
+
+.intention-choices legend {
+    float: none;
+    width: auto;
+    padding: 0 0.25rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.selection-error {
+    margin-top: -0.5rem;
+    color: var(--bs-danger);
+    font-size: 0.875rem;
+}
+
+.intentions-needed,
+.plans-empty {
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.intentions-needed p {
+    margin-bottom: 1rem;
+}
+
+.plan-result {
+    margin: 1.25rem 0;
+}
+
+.plan-library {
+    margin-top: 2.5rem;
+}
+
+.plan-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.plan-card {
+    padding: 1.5rem;
+}
+
+.plan-card > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.plan-card h3 {
+    margin: 0.45rem 0 0;
+    font-size: 1.35rem;
+}
+
+.plan-card time,
+.history-meta {
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+}
+
+.acceptance-state {
+    display: inline-flex;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.acceptance-state.accepted {
+    color: var(--bs-success-text-emphasis);
+    background: var(--bs-success-bg-subtle);
+}
+
+.acceptance-state.proposed {
+    color: var(--bs-secondary-color);
+    background: var(--bs-secondary-bg);
+}
+
+.current-course {
+    margin: 1.25rem 0;
+    font-size: 1.06rem;
+    white-space: pre-wrap;
+}
+
+.related-intentions {
+    padding: 0.85rem 1rem;
+    border-left: 3px solid var(--bs-primary);
+    background: var(--bs-tertiary-bg);
+}
+
+.related-intentions > span {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.related-intentions ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+
+.revise-plan,
+.plan-history {
+    margin-top: 1.25rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.revise-plan summary,
+.plan-history summary {
+    padding-top: 1rem;
+    color: var(--bs-primary);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.revise-plan form {
+    padding-top: 1rem;
+}
+
+.plan-history ol {
+    display: grid;
+    gap: 1.25rem;
+    margin: 1rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.plan-history li {
+    padding-left: 0.35rem;
+}
+
+.plan-history h4 {
+    margin: 0.35rem 0;
+    font-size: 1rem;
+}
+
+.plan-history li > p {
+    margin-bottom: 0.75rem;
+    white-space: pre-wrap;
+}
+
+.history-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .plans-page {
+        margin-top: 1rem;
+    }
+
+    .plan-card > header,
+    .history-meta {
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+}

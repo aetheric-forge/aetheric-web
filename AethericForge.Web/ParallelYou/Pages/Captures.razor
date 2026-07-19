@@ -1,0 +1,120 @@
+@page "/parallel-you/captures"
+@rendermode InteractiveServer
+@using System.Text
+@using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Artifacts
+@using AethericForge.Runtime.Models.Knowledge.Authorities
+@using global::ParallelYou.Abstractions.Capture
+@using AethericForge.Web.Authentication
+@inject ICaptureService CaptureService
+@inject ICurrentIdentityAccessor CurrentIdentity
+@inject ILogger<Captures> Logger
+
+<PageTitle>Captures</PageTitle>
+
+<div class="captures-page">
+    <header class="captures-header">
+        <div>
+            <p class="captures-eyebrow">Library</p>
+            <h1>Your captures</h1>
+            <p>Original expressions, preserved without pretending they mean more than they do.</p>
+        </div>
+        <a class="btn btn-primary" href="/parallel-you/capture">New capture</a>
+    </header>
+
+    @if (isLoading)
+    {
+        <p class="captures-state" role="status">Opening the Library…</p>
+    }
+    else if (loadFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Your captures could not be retrieved.
+        </div>
+    }
+    else if (captures.Count == 0)
+    {
+        <div class="captures-empty">
+            <h2>Nothing captured yet</h2>
+            <p>When something is worth keeping, put it here before it escapes.</p>
+            <a class="btn btn-outline-primary" href="/parallel-you/capture">Capture something</a>
+        </div>
+    }
+    else
+    {
+        <div class="captures-list">
+            @foreach (var capture in captures)
+            {
+                <details class="capture-card">
+                    <summary>
+                        <span class="capture-title">@capture.Title</span>
+                        <time datetime="@capture.CapturedAtUtc.ToString("O")">
+                            @capture.CapturedAtUtc.ToString("MMM d, yyyy · HH:mm 'UTC'")
+                        </time>
+                    </summary>
+                    <div class="capture-content">@capture.Content</div>
+                </details>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private readonly List<CaptureListItem> captures = [];
+    private bool isLoading = true;
+    private bool loadFailed;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authority = new KnowledgeAuthority(
+                await CurrentIdentity.GetIdentityAsync(),
+                CaptureAuthority.Context);
+            var artifacts = await CaptureService.GetCapturesAsync(authority);
+
+            foreach (var artifact in artifacts)
+            {
+                captures.Add(await ToListItemAsync(artifact));
+            }
+        }
+        catch (Exception exception)
+        {
+            loadFailed = true;
+            Logger.LogError(exception, "Capture retrieval failed");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static async Task<CaptureListItem> ToListItemAsync(
+        IKnowledgeArtifact artifact)
+    {
+        var representation = artifact.Representations.FirstOrDefault();
+        if (representation is null)
+        {
+            return new CaptureListItem(
+                artifact.Descriptor.Title,
+                "This capture has no readable representation.",
+                artifact.CreatedAtUtc);
+        }
+
+        await using var stream = await representation.OpenStreamAsync();
+        using var reader = new StreamReader(
+            stream,
+            Encoding.UTF8,
+            detectEncodingFromByteOrderMarks: true);
+        var content = await reader.ReadToEndAsync();
+
+        return new CaptureListItem(
+            artifact.Descriptor.Title,
+            content,
+            artifact.CreatedAtUtc);
+    }
+
+    private sealed record CaptureListItem(
+        string Title,
+        string Content,
+        DateTimeOffset CapturedAtUtc);
+}

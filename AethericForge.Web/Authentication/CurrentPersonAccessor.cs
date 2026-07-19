@@ -1,6 +1,4 @@
 using AethericForge.Web.Abstractions.Person;
-using ParallelYou.Web.Authentication;
-
 namespace AethericForge.Web.Authentication;
 
 public interface ICurrentPersonAccessor

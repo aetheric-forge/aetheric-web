@@ -4,7 +4,7 @@ using AethericForge.Runtime.Abstractions.Interfaces.Identity.Subjects;
 using AethericForge.Runtime.Models.Identity.Primitives;
 using Microsoft.AspNetCore.Components.Authorization;
 
-namespace ParallelYou.Web.Authentication;
+namespace AethericForge.Web.Authentication;
 
 public interface ICurrentIdentityAccessor
 {

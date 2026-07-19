@@ -1,0 +1,104 @@
+.reflect-page {
+    max-width: 52rem;
+    margin: 2.5rem auto;
+}
+
+.reflect-header {
+    margin-bottom: 2rem;
+}
+
+.reflect-header h1 {
+    margin-bottom: 0.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.04em;
+}
+
+.reflect-header > p:last-child {
+    color: var(--bs-secondary-color);
+    font-size: 1.1rem;
+}
+
+.reflect-eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--bs-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.reflect-form {
+    padding: clamp(1.25rem, 4vw, 2rem);
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    background: var(--bs-body-bg);
+    box-shadow: 0 1rem 3rem rgba(20, 34, 54, 0.08);
+}
+
+.capture-evidence {
+    max-height: 12rem;
+    margin: 0 0 1.5rem;
+    padding: 1rem 1.25rem;
+    overflow: auto;
+    border-left: 0.25rem solid var(--bs-primary);
+    background: var(--bs-tertiary-bg);
+    white-space: pre-wrap;
+}
+
+.reflection-content {
+    min-height: 12rem;
+    resize: vertical;
+}
+
+.reflect-empty {
+    padding: 3rem 2rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: 1rem;
+    text-align: center;
+}
+
+.reflect-result {
+    margin-top: 1rem;
+}
+
+.reflection-history {
+    margin-top: 3rem;
+}
+
+.reflection-history > h2 {
+    margin-bottom: 1rem;
+    font-size: 1.35rem;
+}
+
+.reflection-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.reflection-card {
+    padding: 1.25rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+}
+
+.reflection-card h3 {
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+    color: var(--bs-secondary-color);
+}
+
+.reflection-subject {
+    margin-bottom: 0.35rem;
+    font-weight: 650;
+}
+
+.reflection-insight {
+    margin-bottom: 0;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+    .reflect-page {
+        margin-top: 1rem;
+    }
+}

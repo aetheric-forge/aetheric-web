@@ -1,0 +1,131 @@
+@page "/parallel-you/capture"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using AethericForge.Runtime.Models.Knowledge.Authorities
+@using global::ParallelYou.Abstractions.Capture
+@using global::ParallelYou.Models.Capture
+@using AethericForge.Web.Authentication
+@inject ICaptureService CaptureService
+@inject ICurrentIdentityAccessor CurrentIdentity
+@inject ILogger<Capture> Logger
+
+<PageTitle>Capture</PageTitle>
+
+<div class="capture-page">
+    <header class="capture-header">
+        <p class="capture-eyebrow">Capture</p>
+        <h1>What’s on your mind?</h1>
+        <p>Put it down as it is. You can decide what it means later.</p>
+    </header>
+
+    <EditForm Model="input" OnValidSubmit="CaptureAsync" FormName="capture" class="capture-form">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label for="capture-content" class="form-label">Your note</label>
+            <InputTextArea id="capture-content"
+                           class="form-control capture-content"
+                           @bind-Value="input.Content"
+                           placeholder="An idea, question, observation, reminder—anything worth keeping."
+                           autofocus />
+            <ValidationMessage For="() => input.Content" />
+        </div>
+
+        <div class="mb-3">
+            <label for="capture-title" class="form-label">
+                Title <span class="text-body-secondary">(optional)</span>
+            </label>
+            <InputText id="capture-title"
+                       class="form-control"
+                       @bind-Value="input.Title"
+                       placeholder="We’ll derive one from your note if you leave this blank." />
+            <ValidationMessage For="() => input.Title" />
+        </div>
+
+        <div class="capture-actions">
+            <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                @(isSaving ? "Capturing…" : "Capture")
+            </button>
+            <span class="capture-assurance">Saved without forcing it into a category.</span>
+        </div>
+    </EditForm>
+
+    @if (capturedTitle is not null)
+    {
+        <div class="alert alert-success capture-result" role="status">
+            <strong>Captured.</strong> “@capturedTitle” is safely in the Library.
+        </div>
+    }
+
+    @if (captureFailed)
+    {
+        <div class="alert alert-danger capture-result" role="alert">
+            This capture could not be saved. Your text is still here so you can try again.
+        </div>
+    }
+</div>
+
+@code {
+    private CaptureInput input = new();
+    private bool isSaving;
+    private bool captureFailed;
+    private string? capturedTitle;
+
+    private async Task CaptureAsync()
+    {
+        isSaving = true;
+        captureFailed = false;
+        capturedTitle = null;
+
+        try
+        {
+            var content = input.Content.Trim();
+            var title = DeriveTitle(input.Title, content);
+            var authority = new KnowledgeAuthority(
+                await CurrentIdentity.GetIdentityAsync(),
+                CaptureAuthority.Context);
+            var artifact = await CaptureService.CaptureAsync(
+                new CaptureEvidence(title, content),
+                authority);
+
+            capturedTitle = artifact.Descriptor.Title;
+            input = new CaptureInput();
+        }
+        catch (Exception exception)
+        {
+            captureFailed = true;
+            Logger.LogError(exception, "Capture failed");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static string DeriveTitle(string? suppliedTitle, string content)
+    {
+        if (!string.IsNullOrWhiteSpace(suppliedTitle))
+        {
+            return suppliedTitle.Trim();
+        }
+
+        var firstLine = content
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+            .Select(line => line.Trim())
+            .FirstOrDefault(line => line.Length > 0) ?? "Untitled capture";
+
+        return firstLine.Length <= 80
+            ? firstLine
+            : $"{firstLine[..77]}…";
+    }
+
+    private sealed class CaptureInput
+    {
+        [StringLength(200, ErrorMessage = "Keep the title under 200 characters.")]
+        public string? Title { get; set; }
+
+        [Required(ErrorMessage = "Give me something to capture.")]
+        [StringLength(100_000, ErrorMessage = "This capture is too large for the quick-capture form.")]
+        public string Content { get; set; } = string.Empty;
+    }
+}

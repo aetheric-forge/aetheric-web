@@ -1,6 +1,6 @@
-using ParallelYou.Abstractions;
+using AethericForge.Web.Abstractions;
 
-namespace ParallelYou.Models.Person;
+namespace AethericForge.Web.Models.Person;
 
 public sealed class PersonRepresentation(
     Guid personId,

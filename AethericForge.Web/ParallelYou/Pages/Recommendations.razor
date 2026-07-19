@@ -1,0 +1,724 @@
+@page "/parallel-you/recommendations"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using AethericForge.Runtime.Models.Knowledge.Authorities
+@using global::ParallelYou.Abstractions
+@using global::ParallelYou.Abstractions.Plan
+@using global::ParallelYou.Abstractions.Recommendation
+@using global::ParallelYou.Models.Recommendation
+@using AethericForge.Web.Authentication
+@inject IRecommendationService RecommendationService
+@inject IPlanningService PlanningService
+@inject ICurrentIdentityAccessor CurrentIdentity
+@inject ICurrentPersonAccessor CurrentPerson
+@inject ILogger<Recommendations> Logger
+
+<PageTitle>Recommendations</PageTitle>
+
+<div class="recommendations-page">
+    <header class="recommendations-header">
+        <p class="recommendations-eyebrow">Recommendation</p>
+        <h1>Make a choice easier to see</h1>
+        <p>Present options for consideration without turning them into decisions, permission, or action.</p>
+    </header>
+
+    @if (isLoading)
+    {
+        <p class="recommendations-state" role="status">Gathering Recommendations and Plans…</p>
+    }
+    else if (loadFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Your Recommendation context could not be retrieved.
+        </div>
+    }
+    else
+    {
+        <section class="new-recommendation" aria-labelledby="new-recommendation-title">
+            <div class="section-heading">
+                <h2 id="new-recommendation-title">Present a Recommendation</h2>
+                <p>This first interface preserves an explicitly authored Recommendation; it does not claim to generate one.</p>
+            </div>
+
+            @if (plans.Count == 0)
+            {
+                <div class="plans-needed">
+                    <p>A Recommendation needs a Plan-scoped subject.</p>
+                    <a class="btn btn-outline-primary" href="/parallel-you/plans">Review Plans</a>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="newRecommendation"
+                          OnValidSubmit="PresentRecommendationAsync"
+                          FormName="new-recommendation">
+                    <DataAnnotationsValidator />
+                    @RecommendationEditor(newRecommendation, "new-recommendation", allowPlanChange: true)
+
+                    @if (newCandidateValidationFailed)
+                    {
+                        <p class="validation-error">Every Candidate needs a Plan and description.</p>
+                    }
+
+                    <button type="submit" class="btn btn-primary" disabled="@isPresenting">
+                        @(isPresenting ? "Presenting…" : "Present Recommendation")
+                    </button>
+                </EditForm>
+            }
+        </section>
+
+        @if (operationFailed)
+        {
+            <div class="alert alert-danger recommendation-result" role="alert">
+                That Recommendation change could not be preserved. Your current writing remains here.
+            </div>
+        }
+
+        @if (operationSucceeded)
+        {
+            <div class="alert alert-success recommendation-result" role="status">
+                <strong>Recommendation updated.</strong> No Plan was changed or executed.
+            </div>
+        }
+
+        @if (recommendations.Count == 0)
+        {
+            <div class="recommendations-empty">
+                <h2>No Recommendations presented</h2>
+                <p>Withholding a Recommendation is valid when presenting one would not improve agency.</p>
+            </div>
+        }
+        else
+        {
+            <section class="recommendation-library" aria-labelledby="recommendation-library-title">
+                <div class="section-heading">
+                    <h2 id="recommendation-library-title">Presented Recommendations</h2>
+                    <p>Presentation, response, Plan acceptance, and execution remain separate.</p>
+                </div>
+
+                <div class="recommendation-list">
+                    @foreach (var recommendation in recommendations)
+                    {
+                        var recommendationId = recommendation.Id;
+                        var representation = recommendation.Representation;
+
+                        <article class="recommendation-card" @key="recommendationId">
+                            <header>
+                                <div>
+                                    <span class="response-state @GetResponseClass(representation.Response)">
+                                        @FormatResponse(representation.Response)
+                                    </span>
+                                    <h3>@representation.Subject.Description</h3>
+                                </div>
+                                <time datetime="@representation.Provenance.Timestamp.ToString("O")">
+                                    @FormatTimestamp(representation.Provenance.Timestamp)
+                                </time>
+                            </header>
+
+                            <p class="plan-reference">Plan: @GetPlanName(representation.Subject.PlanId)</p>
+                            <p class="rationale">@representation.Rationale</p>
+                            <p class="confidence">@FormatConfidence(representation.Confidence)</p>
+
+                            @if (representation.Assumptions.Count > 0)
+                            {
+                                <div class="assumptions">
+                                    <h4>Material assumptions</h4>
+                                    <ul>
+                                        @foreach (var assumption in representation.Assumptions)
+                                        {
+                                            <li>@assumption</li>
+                                        }
+                                    </ul>
+                                </div>
+                            }
+
+                            <div class="candidate-list" aria-label="Recommendation Candidates">
+                                @foreach (var candidate in representation.Candidates)
+                                {
+                                    <label class="candidate-option">
+                                        <input type="checkbox"
+                                               disabled="@(representation.Response != RecommendationResponse.AwaitingResponse)"
+                                               checked="@responseSelections[recommendationId].Contains(candidate.Id)"
+                                               @onchange="args => SetResponseSelection(recommendationId, candidate.Id, args)" />
+                                        <span>
+                                            <strong>@FormatCandidateKind(candidate.Kind)</strong>
+                                            @candidate.Description
+                                            <small>Plan: @GetPlanName(candidate.PlanId)</small>
+                                        </span>
+                                    </label>
+                                }
+                            </div>
+
+                            @if (responseValidationFailures.Contains(recommendationId))
+                            {
+                                <p class="validation-error">Select at least one Candidate to accept.</p>
+                            }
+
+                            @if (representation.Response == RecommendationResponse.AwaitingResponse)
+                            {
+                                <div class="response-actions">
+                                    <button type="button"
+                                            class="btn btn-primary"
+                                            disabled="@respondingRecommendations.Contains(recommendationId)"
+                                            @onclick="() => RespondAsync(recommendation, RecommendationResponse.Accepted)">
+                                        Accept selected
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-secondary"
+                                            disabled="@respondingRecommendations.Contains(recommendationId)"
+                                            @onclick="() => RespondAsync(recommendation, RecommendationResponse.Deferred)">
+                                        Defer
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-outline-secondary"
+                                            disabled="@respondingRecommendations.Contains(recommendationId)"
+                                            @onclick="() => RespondAsync(recommendation, RecommendationResponse.Rejected)">
+                                        Reject
+                                    </button>
+                                </div>
+                            }
+                            else if (representation.ResponseProvenance is { } responseProvenance)
+                            {
+                                <p class="response-recorded">
+                                    Response recorded @FormatTimestamp(responseProvenance.Timestamp).
+                                    This did not authorize execution.
+                                </p>
+                            }
+
+                            <details class="revise-recommendation">
+                                <summary>Revise this Recommendation</summary>
+                                <EditForm Model="revisions[recommendationId]"
+                                          OnValidSubmit="() => ReviseRecommendationAsync(recommendation)"
+                                          FormName="@($"revision-{recommendationId:N}")">
+                                    <DataAnnotationsValidator />
+                                    @RecommendationEditor(
+                                        revisions[recommendationId],
+                                        $"revision-{recommendationId:N}",
+                                        allowPlanChange: true)
+
+                                    @if (revisionValidationFailures.Contains(recommendationId))
+                                    {
+                                        <p class="validation-error">Every Candidate needs a Plan and description.</p>
+                                    }
+
+                                    <button type="submit"
+                                            class="btn btn-primary"
+                                            disabled="@revisingRecommendations.Contains(recommendationId)">
+                                        @(revisingRecommendations.Contains(recommendationId)
+                                            ? "Presenting…"
+                                            : "Present revision")
+                                    </button>
+                                </EditForm>
+                            </details>
+
+                            @if (histories.TryGetValue(recommendationId, out var history))
+                            {
+                                <details class="recommendation-history">
+                                    <summary>Representation history (@history.Count)</summary>
+                                    <ol>
+                                        @foreach (var historical in history)
+                                        {
+                                            <li>
+                                                <div class="history-meta">
+                                                    <time datetime="@historical.Provenance.Timestamp.ToString("O")">
+                                                        @FormatTimestamp(historical.Provenance.Timestamp)
+                                                    </time>
+                                                    <span>@FormatResponse(historical.Response)</span>
+                                                </div>
+                                                <p>@historical.Rationale</p>
+                                                <ul>
+                                                    @foreach (var candidate in historical.Candidates)
+                                                    {
+                                                        <li>
+                                                            @FormatCandidateKind(candidate.Kind): @candidate.Description
+                                                            @if (historical.SelectedCandidateIds.Contains(candidate.Id))
+                                                            {
+                                                                <strong> — selected</strong>
+                                                            }
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </li>
+                                        }
+                                    </ol>
+                                </details>
+                            }
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    }
+</div>
+
+@code {
+    private readonly List<IPlan> plans = [];
+    private readonly List<IRecommendation> recommendations = [];
+    private readonly Dictionary<Guid, List<IRecommendationRepresentation>> histories = [];
+    private readonly Dictionary<Guid, RecommendationInput> revisions = [];
+    private readonly Dictionary<Guid, HashSet<Guid>> responseSelections = [];
+    private readonly HashSet<Guid> respondingRecommendations = [];
+    private readonly HashSet<Guid> revisingRecommendations = [];
+    private readonly HashSet<Guid> responseValidationFailures = [];
+    private readonly HashSet<Guid> revisionValidationFailures = [];
+    private RecommendationInput newRecommendation = new();
+    private bool newCandidateValidationFailed;
+    private bool isLoading = true;
+    private bool isPresenting;
+    private bool loadFailed;
+    private bool operationFailed;
+    private bool operationSucceeded;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task PresentRecommendationAsync()
+    {
+        if (!ValidateCandidates(newRecommendation))
+        {
+            newCandidateValidationFailed = true;
+            return;
+        }
+
+        isPresenting = true;
+        newCandidateValidationFailed = false;
+        BeginOperation();
+
+        try
+        {
+            var (personId, authority) = await GetContextAsync();
+            await RecommendationService.PresentRecommendationAsync(
+                personId,
+                CreateSubmission(newRecommendation),
+                authority);
+            newRecommendation = new RecommendationInput();
+            await LoadAsync(showLoadingState: false);
+            operationSucceeded = true;
+        }
+        catch (Exception exception)
+        {
+            operationFailed = true;
+            Logger.LogError(exception, "Recommendation could not be presented");
+        }
+        finally
+        {
+            isPresenting = false;
+        }
+    }
+
+    private async Task ReviseRecommendationAsync(IRecommendation recommendation)
+    {
+        var recommendationId = recommendation.Id;
+        var input = revisions[recommendationId];
+        if (!ValidateCandidates(input))
+        {
+            revisionValidationFailures.Add(recommendationId);
+            return;
+        }
+
+        revisingRecommendations.Add(recommendationId);
+        revisionValidationFailures.Remove(recommendationId);
+        BeginOperation();
+
+        try
+        {
+            var (personId, authority) = await GetContextAsync();
+            var revision = await RecommendationService.ReviseRecommendationAsync(
+                personId,
+                recommendationId,
+                CreateSubmission(input),
+                authority);
+            if (revision is null)
+            {
+                throw new InvalidOperationException(
+                    "The current Recommendation representation could not be found.");
+            }
+
+            await LoadAsync(showLoadingState: false);
+            operationSucceeded = true;
+        }
+        catch (Exception exception)
+        {
+            operationFailed = true;
+            Logger.LogError(
+                exception,
+                "Recommendation {RecommendationId} could not be revised",
+                recommendationId);
+        }
+        finally
+        {
+            revisingRecommendations.Remove(recommendationId);
+        }
+    }
+
+    private async Task RespondAsync(
+        IRecommendation recommendation,
+        RecommendationResponse response)
+    {
+        var recommendationId = recommendation.Id;
+        var selectedCandidateIds = response == RecommendationResponse.Accepted
+            ? responseSelections[recommendationId].ToArray()
+            : [];
+        if (response == RecommendationResponse.Accepted &&
+            selectedCandidateIds.Length == 0)
+        {
+            responseValidationFailures.Add(recommendationId);
+            return;
+        }
+
+        respondingRecommendations.Add(recommendationId);
+        responseValidationFailures.Remove(recommendationId);
+        BeginOperation();
+
+        try
+        {
+            var (personId, authority) = await GetContextAsync();
+            var responded = await RecommendationService.RecordResponseAsync(
+                personId,
+                recommendationId,
+                response,
+                selectedCandidateIds,
+                new Provenance(
+                    ProvenanceKind.Declared,
+                    "Human response",
+                    DateTimeOffset.UtcNow),
+                authority);
+            if (responded is null)
+            {
+                throw new InvalidOperationException(
+                    "The current Recommendation representation could not be found.");
+            }
+
+            await LoadAsync(showLoadingState: false);
+            operationSucceeded = true;
+        }
+        catch (Exception exception)
+        {
+            operationFailed = true;
+            Logger.LogError(
+                exception,
+                "Response to Recommendation {RecommendationId} could not be recorded",
+                recommendationId);
+        }
+        finally
+        {
+            respondingRecommendations.Remove(recommendationId);
+        }
+    }
+
+    private async Task LoadAsync(bool showLoadingState = true)
+    {
+        if (showLoadingState)
+        {
+            isLoading = true;
+        }
+
+        loadFailed = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var planAuthority = new KnowledgeAuthority(identity, PlanAuthority.Context);
+            var recommendationAuthority = new KnowledgeAuthority(
+                identity,
+                RecommendationAuthority.Context);
+            var loadedPlans = await PlanningService.GetPlansAsync(
+                person.Id,
+                planAuthority);
+            var loadedRecommendations = await RecommendationService
+                .GetRecommendationsAsync(person.Id, recommendationAuthority);
+
+            plans.Clear();
+            plans.AddRange(loadedPlans);
+            recommendations.Clear();
+            recommendations.AddRange(loadedRecommendations);
+            histories.Clear();
+
+            foreach (var recommendation in recommendations)
+            {
+                histories[recommendation.Id] = (await RecommendationService
+                    .GetHistoryAsync(
+                        person.Id,
+                        recommendation.Id,
+                        recommendationAuthority)).ToList();
+                revisions[recommendation.Id] = ToInput(recommendation.Representation);
+                responseSelections[recommendation.Id] = recommendation
+                    .Representation.SelectedCandidateIds.ToHashSet();
+            }
+
+            var activeIds = recommendations.Select(item => item.Id).ToHashSet();
+            RemoveStaleKeys(revisions, activeIds);
+            RemoveStaleKeys(responseSelections, activeIds);
+        }
+        catch (Exception exception)
+        {
+            loadFailed = true;
+            Logger.LogError(exception, "Recommendations could not be loaded");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private RenderFragment RecommendationEditor(
+        RecommendationInput input,
+        string prefix,
+        bool allowPlanChange) => @<div class="recommendation-editor">
+        <div class="mb-3">
+            <label for="@($"{prefix}-plan")" class="form-label">Recommendation subject Plan</label>
+            <InputSelect id="@($"{prefix}-plan")"
+                         class="form-select"
+                         disabled="@(!allowPlanChange)"
+                         @bind-Value="input.PlanId">
+                <option value="">Choose a Plan…</option>
+                @foreach (var plan in plans)
+                {
+                    <option value="@plan.Id">@plan.Representation.DisplayName</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="() => input.PlanId" />
+        </div>
+
+        <div class="mb-3">
+            <label for="@($"{prefix}-subject")" class="form-label">Question or concern</label>
+            <InputText id="@($"{prefix}-subject")"
+                       class="form-control"
+                       @bind-Value="input.SubjectDescription"
+                       placeholder="What choice or concern does this Recommendation address?" />
+            <ValidationMessage For="() => input.SubjectDescription" />
+        </div>
+
+        <fieldset class="candidate-editor mb-3">
+            <legend>Candidates for consideration</legend>
+            @foreach (var candidate in input.Candidates)
+            {
+                <div class="candidate-editor-row" @key="candidate.Id">
+                    <InputSelect class="form-select candidate-plan" @bind-Value="candidate.PlanId">
+                        <option value="">Choose Candidate Plan…</option>
+                        @foreach (var plan in plans)
+                        {
+                            <option value="@plan.Id">@plan.Representation.DisplayName</option>
+                        }
+                    </InputSelect>
+                    <InputSelect class="form-select candidate-kind" @bind-Value="candidate.Kind">
+                        @foreach (var kind in Enum.GetValues<RecommendationCandidateKind>())
+                        {
+                            <option value="@kind">@FormatCandidateKind(kind)</option>
+                        }
+                    </InputSelect>
+                    <InputTextArea class="form-control"
+                                   @bind-Value="candidate.Description"
+                                   placeholder="Describe this option without presenting it as inevitable." />
+                    @if (input.Candidates.Count > 1)
+                    {
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary"
+                                @onclick="() => RemoveCandidate(input, candidate.Id)">
+                            Remove
+                        </button>
+                    }
+                </div>
+            }
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary"
+                    @onclick="() => AddCandidate(input)">
+                Add alternative
+            </button>
+        </fieldset>
+
+        <div class="mb-3">
+            <label for="@($"{prefix}-rationale")" class="form-label">Why might this be useful now?</label>
+            <InputTextArea id="@($"{prefix}-rationale")"
+                           class="form-control rationale-input"
+                           @bind-Value="input.Rationale" />
+            <ValidationMessage For="() => input.Rationale" />
+        </div>
+
+        <div class="mb-3">
+            <label for="@($"{prefix}-assumptions")" class="form-label">Material assumptions</label>
+            <InputTextArea id="@($"{prefix}-assumptions")"
+                           class="form-control"
+                           @bind-Value="input.Assumptions"
+                           placeholder="One assumption per line. Leave blank if none are material." />
+        </div>
+
+        <div class="mb-3 confidence-input">
+            <label for="@($"{prefix}-confidence")" class="form-label">Confidence</label>
+            <InputSelect id="@($"{prefix}-confidence")"
+                         class="form-select"
+                         @bind-Value="input.Confidence">
+                <option value="0.25">Low</option>
+                <option value="0.5">Uncertain</option>
+                <option value="0.75">Moderate</option>
+                <option value="1">High</option>
+            </InputSelect>
+        </div>
+    </div>;
+
+    private async Task<(Guid PersonId, KnowledgeAuthority Authority)> GetContextAsync()
+    {
+        var identity = await CurrentIdentity.GetIdentityAsync();
+        var person = await CurrentPerson.GetPersonAsync();
+        return (
+            person.Id,
+            new KnowledgeAuthority(identity, RecommendationAuthority.Context));
+    }
+
+    private RecommendationSubmission CreateSubmission(RecommendationInput input)
+    {
+        var planId = input.PlanId ?? throw new InvalidOperationException(
+            "A Recommendation subject Plan is required.");
+        return new RecommendationSubmission(
+            new RecommendationSubject(planId, input.SubjectDescription.Trim()),
+            input.Candidates.Select(candidate => new RecommendationCandidate(
+                candidate.Id,
+                candidate.PlanId ?? throw new InvalidOperationException(
+                    "A Candidate Plan is required."),
+                candidate.Kind,
+                candidate.Description.Trim())).ToArray(),
+            input.Rationale.Trim(),
+            input.Assumptions.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            input.Confidence,
+            new Provenance(
+                ProvenanceKind.Declared,
+                "Human-authored Recommendation",
+                DateTimeOffset.UtcNow));
+    }
+
+    private static RecommendationInput ToInput(IRecommendationRepresentation representation)
+        => new()
+        {
+            PlanId = representation.Subject.PlanId,
+            SubjectDescription = representation.Subject.Description,
+            Rationale = representation.Rationale,
+            Assumptions = string.Join(Environment.NewLine, representation.Assumptions),
+            Confidence = representation.Confidence,
+            Candidates = representation.Candidates.Select(candidate => new CandidateInput
+            {
+                Id = candidate.Id,
+                PlanId = candidate.PlanId,
+                Kind = candidate.Kind,
+                Description = candidate.Description
+            }).ToList()
+        };
+
+    private static bool ValidateCandidates(RecommendationInput input)
+        => input.Candidates.Count > 0 &&
+           input.Candidates.All(candidate =>
+               candidate.PlanId is not null &&
+               !string.IsNullOrWhiteSpace(candidate.Description));
+
+    private static void AddCandidate(RecommendationInput input)
+        => input.Candidates.Add(new CandidateInput());
+
+    private static void RemoveCandidate(RecommendationInput input, Guid candidateId)
+        => input.Candidates.RemoveAll(candidate => candidate.Id == candidateId);
+
+    private void SetResponseSelection(
+        Guid recommendationId,
+        Guid candidateId,
+        ChangeEventArgs args)
+    {
+        var selection = responseSelections[recommendationId];
+        if (args.Value is true)
+        {
+            selection.Add(candidateId);
+            responseValidationFailures.Remove(recommendationId);
+        }
+        else
+        {
+            selection.Remove(candidateId);
+        }
+    }
+
+    private static void RemoveStaleKeys<T>(
+        Dictionary<Guid, T> dictionary,
+        HashSet<Guid> activeIds)
+    {
+        foreach (var key in dictionary.Keys.Where(key => !activeIds.Contains(key)).ToArray())
+        {
+            dictionary.Remove(key);
+        }
+    }
+
+    private void BeginOperation()
+    {
+        operationFailed = false;
+        operationSucceeded = false;
+    }
+
+    private string GetPlanName(Guid planId)
+        => plans.FirstOrDefault(plan => plan.Id == planId)?.Representation.DisplayName
+           ?? $"Plan {planId:N}";
+
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+        => timestamp.ToString("MMM d, yyyy · HH:mm 'UTC'");
+
+    private static string FormatResponse(RecommendationResponse response)
+        => response switch
+        {
+            RecommendationResponse.AwaitingResponse => "Awaiting response",
+            RecommendationResponse.Accepted => "Accepted",
+            RecommendationResponse.Rejected => "Rejected",
+            RecommendationResponse.Deferred => "Deferred",
+            _ => response.ToString()
+        };
+
+    private static string GetResponseClass(RecommendationResponse response)
+        => response.ToString().ToLowerInvariant();
+
+    private static string FormatCandidateKind(RecommendationCandidateKind kind)
+        => kind switch
+        {
+            RecommendationCandidateKind.ConsiderPlan => "Consider Plan",
+            RecommendationCandidateKind.AcceptPlan => "Consider accepting Plan",
+            RecommendationCandidateKind.RevisePlan => "Consider revising Plan",
+            RecommendationCandidateKind.DeferPlan => "Consider deferring Plan",
+            RecommendationCandidateKind.RejectPlan => "Consider rejecting Plan",
+            _ => kind.ToString()
+        };
+
+    private static string FormatConfidence(decimal confidence)
+        => confidence switch
+        {
+            >= 1m => "High confidence",
+            >= 0.75m => "Moderate confidence",
+            >= 0.5m => "Uncertain",
+            _ => "Low confidence"
+        };
+
+    private sealed class RecommendationInput
+    {
+        [Required(ErrorMessage = "Choose the Plan this Recommendation concerns.")]
+        public Guid? PlanId { get; set; }
+
+        [Required(ErrorMessage = "Describe the question or concern.")]
+        [StringLength(500)]
+        public string SubjectDescription { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Explain why this Recommendation may be useful.")]
+        [StringLength(100_000)]
+        public string Rationale { get; set; } = string.Empty;
+
+        [StringLength(100_000)]
+        public string Assumptions { get; set; } = string.Empty;
+
+        [Range(typeof(decimal), "0", "1")]
+        public decimal Confidence { get; set; } = 0.5m;
+
+        public List<CandidateInput> Candidates { get; set; } = [new()];
+    }
+
+    private sealed class CandidateInput
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid? PlanId { get; set; }
+        public RecommendationCandidateKind Kind { get; set; } =
+            RecommendationCandidateKind.ConsiderPlan;
+        public string Description { get; set; } = string.Empty;
+    }
+}
