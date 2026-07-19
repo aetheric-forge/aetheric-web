@@ -6,14 +6,18 @@
     <label for="nav-toggle" class="navbar-toggler" title="Navigation menu">
         <span></span><span></span><span></span>
     </label>
+    <label for="institution-nav-collapse" class="sidebar-collapser" title="Collapse institution navigation">
+        <span aria-hidden="true">‹</span>
+        <span class="visually-hidden">Collapse institution navigation</span>
+    </label>
 </div>
 
 <input id="nav-toggle" type="checkbox" class="nav-toggle" />
 
 <div class="nav-scrollable" onclick="document.getElementById('nav-toggle').checked = false">
-    <nav class="nav-groups" aria-label="Primary navigation">
-        <div class="nav-group">
-            <div class="nav-group__label">Workspace</div>
+    <nav class="nav-groups" aria-label="Parallel You navigation">
+        <details class="nav-group" open>
+            <summary class="nav-group__label"><span>Workspace</span><span aria-hidden="true">⌄</span></summary>
             <NavLink class="nav-link" href="/parallel-you" Match="NavLinkMatch.All">
                 <span class="nav-symbol" aria-hidden="true">O</span><span>Overview</span>
             </NavLink>
@@ -23,20 +27,20 @@
             <NavLink class="nav-link" href="/parallel-you/captures">
                 <span class="nav-symbol" aria-hidden="true">L</span><span>Library</span>
             </NavLink>
-        </div>
+        </details>
 
-        <div class="nav-group">
-            <div class="nav-group__label">Practice</div>
+        <details class="nav-group" open>
+            <summary class="nav-group__label"><span>Practice</span><span aria-hidden="true">⌄</span></summary>
             <NavLink class="nav-link" href="/parallel-you/reflect">
                 <span class="nav-symbol" aria-hidden="true">R</span><span>Reflect</span>
             </NavLink>
             <NavLink class="nav-link" href="/parallel-you/track">
                 <span class="nav-symbol" aria-hidden="true">T</span><span>Track</span>
             </NavLink>
-        </div>
+        </details>
 
-        <div class="nav-group">
-            <div class="nav-group__label">Direction</div>
+        <details class="nav-group" open>
+            <summary class="nav-group__label"><span>Direction</span><span aria-hidden="true">⌄</span></summary>
             <NavLink class="nav-link" href="/parallel-you/intentions">
                 <span class="nav-symbol" aria-hidden="true">I</span><span>Intentions</span>
             </NavLink>
@@ -46,11 +50,15 @@
             <NavLink class="nav-link" href="/parallel-you/recommendations">
                 <span class="nav-symbol" aria-hidden="true">→</span><span>Recommendations</span>
             </NavLink>
-        </div>
+        </details>
     </nav>
 
     <div class="nav-note">
         <span class="nav-note__line"></span>
-        A private record of what was true, what changed, and what may come next.
+        <a class="campus-return" href="/">
+            <span aria-hidden="true">←</span>
+            <span>Return to Forge Campus</span>
+        </a>
+        <p>A private record of what was true, what changed, and what may come next.</p>
     </div>
 </div>
