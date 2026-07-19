@@ -1,0 +1,56 @@
+<div class="brand-row">
+    <a class="brand" href="/parallel-you" aria-label="Parallel You home">
+        <span class="brand-mark" aria-hidden="true"><span></span></span>
+        <span class="brand-name">Parallel <strong>You</strong></span>
+    </a>
+    <label for="nav-toggle" class="navbar-toggler" title="Navigation menu">
+        <span></span><span></span><span></span>
+    </label>
+</div>
+
+<input id="nav-toggle" type="checkbox" class="nav-toggle" />
+
+<div class="nav-scrollable" onclick="document.getElementById('nav-toggle').checked = false">
+    <nav class="nav-groups" aria-label="Primary navigation">
+        <div class="nav-group">
+            <div class="nav-group__label">Workspace</div>
+            <NavLink class="nav-link" href="/parallel-you" Match="NavLinkMatch.All">
+                <span class="nav-symbol" aria-hidden="true">O</span><span>Overview</span>
+            </NavLink>
+            <NavLink class="nav-link" href="/parallel-you/capture">
+                <span class="nav-symbol" aria-hidden="true">+</span><span>Capture</span>
+            </NavLink>
+            <NavLink class="nav-link" href="/parallel-you/captures">
+                <span class="nav-symbol" aria-hidden="true">L</span><span>Library</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group__label">Practice</div>
+            <NavLink class="nav-link" href="/parallel-you/reflect">
+                <span class="nav-symbol" aria-hidden="true">R</span><span>Reflect</span>
+            </NavLink>
+            <NavLink class="nav-link" href="/parallel-you/track">
+                <span class="nav-symbol" aria-hidden="true">T</span><span>Track</span>
+            </NavLink>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-group__label">Direction</div>
+            <NavLink class="nav-link" href="/parallel-you/intentions">
+                <span class="nav-symbol" aria-hidden="true">I</span><span>Intentions</span>
+            </NavLink>
+            <NavLink class="nav-link" href="/parallel-you/plans">
+                <span class="nav-symbol" aria-hidden="true">P</span><span>Plans</span>
+            </NavLink>
+            <NavLink class="nav-link" href="/parallel-you/recommendations">
+                <span class="nav-symbol" aria-hidden="true">→</span><span>Recommendations</span>
+            </NavLink>
+        </div>
+    </nav>
+
+    <div class="nav-note">
+        <span class="nav-note__line"></span>
+        A private record of what was true, what changed, and what may come next.
+    </div>
+</div>

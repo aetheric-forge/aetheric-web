@@ -1,0 +1,284 @@
+.recommendations-page {
+    max-width: 62rem;
+    margin: 2.5rem auto;
+}
+
+.recommendations-header {
+    margin-bottom: 2rem;
+}
+
+.recommendations-header h1 {
+    margin-bottom: 0.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.04em;
+}
+
+.recommendations-header p:last-child,
+.section-heading p,
+.recommendations-state,
+.plan-reference,
+.confidence,
+.response-recorded {
+    color: var(--bs-secondary-color);
+}
+
+.recommendations-eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--bs-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.new-recommendation,
+.recommendation-card,
+.recommendations-empty {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 1rem;
+    background: var(--bs-body-bg);
+}
+
+.new-recommendation {
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.section-heading {
+    margin-bottom: 1.25rem;
+}
+
+.section-heading h2 {
+    margin-bottom: 0.25rem;
+    font-size: 1.35rem;
+}
+
+.section-heading p {
+    margin-bottom: 0;
+}
+
+.plans-needed,
+.recommendations-empty {
+    padding: 2.5rem 2rem;
+    text-align: center;
+}
+
+.recommendation-result {
+    margin: 1.25rem 0;
+}
+
+.candidate-editor {
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+}
+
+.candidate-editor legend {
+    float: none;
+    width: auto;
+    padding: 0 0.25rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.candidate-editor-row {
+    display: grid;
+    grid-template-columns: 13rem 12rem 1fr auto;
+    gap: 0.75rem;
+    align-items: start;
+    margin-bottom: 0.75rem;
+}
+
+.candidate-editor-row textarea {
+    min-height: 5rem;
+}
+
+.rationale-input {
+    min-height: 7rem;
+}
+
+.confidence-input {
+    max-width: 16rem;
+}
+
+.validation-error {
+    color: var(--bs-danger);
+    font-size: 0.875rem;
+}
+
+.recommendation-library {
+    margin-top: 2.5rem;
+}
+
+.recommendation-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.recommendation-card {
+    padding: 1.5rem;
+}
+
+.recommendation-card > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.recommendation-card h3 {
+    margin: 0.45rem 0 0;
+    font-size: 1.3rem;
+}
+
+.recommendation-card time,
+.history-meta {
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+}
+
+.response-state {
+    display: inline-flex;
+    padding: 0.22rem 0.55rem;
+    border-radius: 999px;
+    color: var(--bs-secondary-color);
+    background: var(--bs-secondary-bg);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.response-state.accepted {
+    color: var(--bs-success-text-emphasis);
+    background: var(--bs-success-bg-subtle);
+}
+
+.response-state.rejected {
+    color: var(--bs-danger-text-emphasis);
+    background: var(--bs-danger-bg-subtle);
+}
+
+.response-state.deferred {
+    color: var(--bs-warning-text-emphasis);
+    background: var(--bs-warning-bg-subtle);
+}
+
+.plan-reference {
+    margin: 1rem 0 0.35rem;
+    font-size: 0.88rem;
+}
+
+.rationale {
+    margin-bottom: 0.35rem;
+    font-size: 1.06rem;
+    white-space: pre-wrap;
+}
+
+.confidence {
+    font-size: 0.88rem;
+}
+
+.assumptions {
+    padding: 0.9rem 1rem;
+    margin: 1rem 0;
+    background: var(--bs-tertiary-bg);
+}
+
+.assumptions h4 {
+    margin-bottom: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.assumptions ul {
+    margin-bottom: 0;
+}
+
+.candidate-list {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: 1rem;
+}
+
+.candidate-option {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    cursor: pointer;
+}
+
+.candidate-option strong,
+.candidate-option small {
+    display: block;
+}
+
+.candidate-option small {
+    margin-top: 0.3rem;
+    color: var(--bs-secondary-color);
+}
+
+.response-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.response-recorded {
+    margin: 1rem 0 0;
+    font-size: 0.88rem;
+}
+
+.revise-recommendation,
+.recommendation-history {
+    margin-top: 1.25rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+
+.revise-recommendation summary,
+.recommendation-history summary {
+    padding-top: 1rem;
+    color: var(--bs-primary);
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.revise-recommendation form {
+    padding-top: 1rem;
+}
+
+.recommendation-history ol {
+    display: grid;
+    gap: 1.2rem;
+    margin: 1rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.history-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.recommendation-history li > p {
+    margin: 0.35rem 0;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 720px) {
+    .recommendations-page {
+        margin-top: 1rem;
+    }
+
+    .candidate-editor-row {
+        grid-template-columns: 1fr;
+    }
+
+    .recommendation-card > header,
+    .history-meta {
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+}

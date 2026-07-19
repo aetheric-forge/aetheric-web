@@ -1,0 +1,348 @@
+@page "/parallel-you/intentions"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using AethericForge.Runtime.Models.Knowledge.Authorities
+@using ParallelYou.Abstractions
+@using ParallelYou.Abstractions.Intention
+@using ParallelYou.Models.Intention
+@using ParallelYou.Web.Authentication
+@inject IIntentionService IntentionService
+@inject ICurrentIdentityAccessor CurrentIdentity
+@inject ICurrentPersonAccessor CurrentPerson
+@inject ILogger<Intentions> Logger
+
+<PageTitle>Intentions</PageTitle>
+
+<div class="intentions-page">
+    <header class="intentions-header">
+        <p class="intentions-eyebrow">Intention</p>
+        <h1>What do you mean to pursue?</h1>
+        <p>Preserve a direction before demanding a plan, schedule, or promise from it.</p>
+    </header>
+
+    <section class="new-intention" aria-labelledby="new-intention-title">
+        <div class="section-heading">
+            <h2 id="new-intention-title">Preserve an intention</h2>
+            <p>It may be precise, ambiguous, tentative, or still under consideration.</p>
+        </div>
+
+        <EditForm Model="newIntention"
+                  OnValidSubmit="CreateIntentionAsync"
+                  FormName="new-intention">
+            <DataAnnotationsValidator />
+
+            <div class="mb-3">
+                <label for="intention-description" class="form-label">Present direction</label>
+                <InputTextArea id="intention-description"
+                               class="form-control intention-description"
+                               @bind-Value="newIntention.Description"
+                               placeholder="Something you mean to preserve, pursue, explore, or bring about." />
+                <ValidationMessage For="() => newIntention.Description" />
+            </div>
+
+            <div class="form-check mb-3">
+                <InputCheckbox id="intention-adopted"
+                               class="form-check-input"
+                               @bind-Value="newIntention.IsAdopted" />
+                <label for="intention-adopted" class="form-check-label">
+                    I presently adopt this as one of my intentions.
+                </label>
+                <div class="form-text">
+                    Leave this clear to preserve a possible direction without claiming it as yours yet.
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" disabled="@isCreating">
+                @(isCreating ? "Preserving…" : "Preserve intention")
+            </button>
+        </EditForm>
+    </section>
+
+    @if (saveFailed)
+    {
+        <div class="alert alert-danger intention-result" role="alert">
+            That intention could not be preserved. Your writing is still here.
+        </div>
+    }
+
+    @if (saved)
+    {
+        <div class="alert alert-success intention-result" role="status">
+            <strong>Intention preserved.</strong> Earlier representations remain in its history.
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <p class="intentions-state" role="status">Gathering your intentions…</p>
+    }
+    else if (loadFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Your intentions could not be retrieved.
+        </div>
+    }
+    else if (intentions.Count == 0)
+    {
+        <div class="intentions-empty">
+            <h2>No intentions preserved yet</h2>
+            <p>A direction can matter before you know exactly how to follow it.</p>
+        </div>
+    }
+    else
+    {
+        <section class="intention-library" aria-labelledby="intention-library-title">
+            <div class="section-heading">
+                <h2 id="intention-library-title">Your present directions</h2>
+                <p>Revision changes the current representation without erasing what came before.</p>
+            </div>
+
+            <div class="intention-list">
+                @foreach (var intention in intentions)
+                {
+                    var intentionId = intention.Id;
+                    var revision = revisions[intentionId];
+
+                    <article class="intention-card" @key="intentionId">
+                        <header>
+                            <span class="adoption-state @(intention.Representation.IsAdopted ? "adopted" : "considering")">
+                                @(intention.Representation.IsAdopted ? "Adopted" : "Under consideration")
+                            </span>
+                            <time datetime="@intention.Representation.Provenance.Timestamp.ToString("O")">
+                                @FormatTimestamp(intention.Representation.Provenance.Timestamp)
+                            </time>
+                        </header>
+
+                        <p class="current-intention">@intention.Representation.Description</p>
+
+                        <details class="revise-intention">
+                            <summary>Revise this intention</summary>
+                            <EditForm Model="revision"
+                                      OnValidSubmit="() => ReviseIntentionAsync(intention)"
+                                      FormName="@($"revision-{intentionId:N}")">
+                                <DataAnnotationsValidator />
+
+                                <div class="mb-3">
+                                    <label for="@($"description-{intentionId:N}")" class="form-label">
+                                        Present direction
+                                    </label>
+                                    <InputTextArea id="@($"description-{intentionId:N}")"
+                                                   class="form-control intention-description"
+                                                   @bind-Value="revision.Description" />
+                                    <ValidationMessage For="() => revision.Description" />
+                                </div>
+
+                                <div class="form-check mb-3">
+                                    <InputCheckbox id="@($"adopted-{intentionId:N}")"
+                                                   class="form-check-input"
+                                                   @bind-Value="revision.IsAdopted" />
+                                    <label for="@($"adopted-{intentionId:N}")" class="form-check-label">
+                                        I presently adopt this intention.
+                                    </label>
+                                </div>
+
+                                <button type="submit"
+                                        class="btn btn-primary"
+                                        disabled="@savingIntentions.Contains(intentionId)">
+                                    @(savingIntentions.Contains(intentionId) ? "Preserving…" : "Preserve revision")
+                                </button>
+                            </EditForm>
+                        </details>
+
+                        @if (histories.TryGetValue(intentionId, out var history))
+                        {
+                            <details class="intention-history">
+                                <summary>Representation history (@history.Count)</summary>
+                                <ol>
+                                    @foreach (var representation in history)
+                                    {
+                                        <li>
+                                            <div class="history-meta">
+                                                <time datetime="@representation.Provenance.Timestamp.ToString("O")">
+                                                    @FormatTimestamp(representation.Provenance.Timestamp)
+                                                </time>
+                                                <span>
+                                                    @(representation.IsAdopted ? "Adopted" : "Under consideration")
+                                                </span>
+                                            </div>
+                                            <p>@representation.Description</p>
+                                        </li>
+                                    }
+                                </ol>
+                            </details>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private readonly List<IIntention> intentions = [];
+    private readonly Dictionary<Guid, List<IIntentionRepresentation>> histories = [];
+    private readonly Dictionary<Guid, IntentionInput> revisions = [];
+    private readonly HashSet<Guid> savingIntentions = [];
+    private IntentionInput newIntention = new();
+    private bool isLoading = true;
+    private bool isCreating;
+    private bool loadFailed;
+    private bool saveFailed;
+    private bool saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task CreateIntentionAsync()
+    {
+        isCreating = true;
+        saveFailed = false;
+        saved = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, IntentionAuthority.Context);
+            await IntentionService.CreateIntentionAsync(
+                person.Id,
+                CreateSubmission(newIntention),
+                authority);
+
+            newIntention = new IntentionInput();
+            await LoadAsync(showLoadingState: false);
+            saved = true;
+        }
+        catch (Exception exception)
+        {
+            saveFailed = true;
+            Logger.LogError(exception, "Intention could not be preserved");
+        }
+        finally
+        {
+            isCreating = false;
+        }
+    }
+
+    private async Task ReviseIntentionAsync(IIntention intention)
+    {
+        var intentionId = intention.Id;
+        var input = revisions[intentionId];
+        savingIntentions.Add(intentionId);
+        saveFailed = false;
+        saved = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, IntentionAuthority.Context);
+            var revision = await IntentionService.ReviseIntentionAsync(
+                person.Id,
+                intentionId,
+                CreateSubmission(input),
+                authority);
+            if (revision is null)
+            {
+                throw new InvalidOperationException(
+                    "The current intention representation could not be found.");
+            }
+
+            await LoadAsync(showLoadingState: false);
+            saved = true;
+        }
+        catch (Exception exception)
+        {
+            saveFailed = true;
+            Logger.LogError(
+                exception,
+                "Intention {IntentionId} could not be revised",
+                intentionId);
+        }
+        finally
+        {
+            savingIntentions.Remove(intentionId);
+        }
+    }
+
+    private async Task LoadAsync(bool showLoadingState = true)
+    {
+        if (showLoadingState)
+        {
+            isLoading = true;
+        }
+
+        loadFailed = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, IntentionAuthority.Context);
+            var loaded = await IntentionService.GetIntentionsAsync(
+                person.Id,
+                authority);
+
+            intentions.Clear();
+            intentions.AddRange(loaded);
+            histories.Clear();
+
+            foreach (var intention in intentions)
+            {
+                histories[intention.Id] = (await IntentionService.GetHistoryAsync(
+                    person.Id,
+                    intention.Id,
+                    authority)).ToList();
+            }
+
+            var currentIds = intentions.Select(intention => intention.Id).ToHashSet();
+            foreach (var intentionId in revisions.Keys
+                         .Where(id => !currentIds.Contains(id))
+                         .ToArray())
+            {
+                revisions.Remove(intentionId);
+            }
+
+            foreach (var intention in intentions)
+            {
+                revisions[intention.Id] = new IntentionInput
+                {
+                    Description = intention.Representation.Description,
+                    IsAdopted = intention.Representation.IsAdopted
+                };
+            }
+        }
+        catch (Exception exception)
+        {
+            loadFailed = true;
+            Logger.LogError(exception, "Intentions could not be loaded");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static IntentionSubmission CreateSubmission(IntentionInput input)
+        => new(
+            input.Description.Trim(),
+            new Provenance(
+                ProvenanceKind.Declared,
+                "Human declaration",
+                DateTimeOffset.UtcNow),
+            input.IsAdopted);
+
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+        => timestamp.ToString("MMM d, yyyy · HH:mm 'UTC'");
+
+    private sealed class IntentionInput
+    {
+        [Required(ErrorMessage = "Describe the direction you want to preserve.")]
+        [StringLength(100_000)]
+        public string Description { get; set; } = string.Empty;
+
+        public bool IsAdopted { get; set; } = true;
+    }
+}

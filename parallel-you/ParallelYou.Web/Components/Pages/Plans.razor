@@ -1,0 +1,489 @@
+@page "/parallel-you/plans"
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using AethericForge.Runtime.Models.Knowledge.Authorities
+@using ParallelYou.Abstractions
+@using ParallelYou.Abstractions.Intention
+@using ParallelYou.Abstractions.Plan
+@using ParallelYou.Models.Plan
+@using ParallelYou.Web.Authentication
+@inject IPlanningService PlanningService
+@inject IIntentionService IntentionService
+@inject ICurrentIdentityAccessor CurrentIdentity
+@inject ICurrentPersonAccessor CurrentPerson
+@inject ILogger<Plans> Logger
+
+<PageTitle>Plans</PageTitle>
+
+<div class="plans-page">
+    <header class="plans-header">
+        <p class="plans-eyebrow">Plan</p>
+        <h1>Consider a course forward</h1>
+        <p>A plan is a provisional way to serve an intention—not a command, prediction, or record of what occurred.</p>
+    </header>
+
+    @if (isLoading)
+    {
+        <p class="plans-state" role="status">Gathering your plans and intentions…</p>
+    }
+    else if (loadFailed)
+    {
+        <div class="alert alert-danger" role="alert">
+            Your planning context could not be retrieved.
+        </div>
+    }
+    else
+    {
+        <section class="new-plan" aria-labelledby="new-plan-title">
+            <div class="section-heading">
+                <h2 id="new-plan-title">Propose a plan</h2>
+                <p>Describe a useful course without pretending the future is settled.</p>
+            </div>
+
+            @if (adoptedIntentions.Count == 0)
+            {
+                <div class="intentions-needed">
+                    <p>A Plan must serve at least one adopted Intention.</p>
+                    <a class="btn btn-outline-primary" href="/parallel-you/intentions">Review intentions</a>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="newPlan" OnValidSubmit="CreatePlanAsync" FormName="new-plan">
+                    <DataAnnotationsValidator />
+
+                    <div class="mb-3">
+                        <label for="plan-name" class="form-label">Plan name</label>
+                        <InputText id="plan-name"
+                                   class="form-control"
+                                   @bind-Value="newPlan.DisplayName"
+                                   placeholder="A name that will help you recognize this proposal." />
+                        <ValidationMessage For="() => newPlan.DisplayName" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="plan-course" class="form-label">Proposed course</label>
+                        <InputTextArea id="plan-course"
+                                       class="form-control plan-course"
+                                       @bind-Value="newPlan.Course"
+                                       placeholder="What might you do, preserve, consider, or leave deliberately unresolved?" />
+                        <ValidationMessage For="() => newPlan.Course" />
+                    </div>
+
+                    @IntentionChoices(newPlan, "new-plan")
+
+                    @if (newPlanSelectionFailed)
+                    {
+                        <p class="selection-error">Choose at least one adopted Intention.</p>
+                    }
+
+                    @AcceptanceField(newPlan, "plan-accepted")
+
+                    <button type="submit" class="btn btn-primary" disabled="@isCreating">
+                        @(isCreating ? "Preserving…" : "Preserve proposal")
+                    </button>
+                </EditForm>
+            }
+        </section>
+
+        @if (saveFailed)
+        {
+            <div class="alert alert-danger plan-result" role="alert">
+                That Plan could not be preserved. Your writing is still here.
+            </div>
+        }
+
+        @if (saved)
+        {
+            <div class="alert alert-success plan-result" role="status">
+                <strong>Plan preserved.</strong> Earlier representations remain in its history.
+            </div>
+        }
+
+        @if (plans.Count == 0)
+        {
+            <div class="plans-empty">
+                <h2>No Plans preserved yet</h2>
+                <p>An Intention can remain meaningful without immediately acquiring a Plan.</p>
+            </div>
+        }
+        else
+        {
+            <section class="plan-library" aria-labelledby="plan-library-title">
+                <div class="section-heading">
+                    <h2 id="plan-library-title">Present Plans</h2>
+                    <p>Proposals and accepted Plans remain visibly distinct.</p>
+                </div>
+
+                <div class="plan-list">
+                    @foreach (var plan in plans)
+                    {
+                        var planId = plan.Id;
+                        var revision = revisions[planId];
+
+                        <article class="plan-card" @key="planId">
+                            <header>
+                                <div>
+                                    <span class="acceptance-state @(plan.Representation.IsAccepted ? "accepted" : "proposed")">
+                                        @(plan.Representation.IsAccepted ? "Accepted" : "Proposed")
+                                    </span>
+                                    <h3>@plan.Representation.DisplayName</h3>
+                                </div>
+                                <time datetime="@plan.Representation.Provenance.Timestamp.ToString("O")">
+                                    @FormatTimestamp(plan.Representation.Provenance.Timestamp)
+                                </time>
+                            </header>
+
+                            <p class="current-course">@plan.Representation.Course</p>
+                            @RelatedIntentions(plan.Representation.IntentionIds)
+
+                            <details class="revise-plan">
+                                <summary>Revise this Plan</summary>
+                                <EditForm Model="revision"
+                                          OnValidSubmit="() => RevisePlanAsync(plan)"
+                                          FormName="@($"revision-{planId:N}")">
+                                    <DataAnnotationsValidator />
+
+                                    <div class="mb-3">
+                                        <label for="@($"name-{planId:N}")" class="form-label">Plan name</label>
+                                        <InputText id="@($"name-{planId:N}")"
+                                                   class="form-control"
+                                                   @bind-Value="revision.DisplayName" />
+                                        <ValidationMessage For="() => revision.DisplayName" />
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="@($"course-{planId:N}")" class="form-label">Proposed course</label>
+                                        <InputTextArea id="@($"course-{planId:N}")"
+                                                       class="form-control plan-course"
+                                                       @bind-Value="revision.Course" />
+                                        <ValidationMessage For="() => revision.Course" />
+                                    </div>
+
+                                    @IntentionChoices(revision, $"revision-{planId:N}")
+
+                                    @if (selectionFailures.Contains(planId))
+                                    {
+                                        <p class="selection-error">Choose at least one adopted Intention.</p>
+                                    }
+
+                                    @AcceptanceField(revision, $"accepted-{planId:N}")
+
+                                    <button type="submit"
+                                            class="btn btn-primary"
+                                            disabled="@savingPlans.Contains(planId)">
+                                        @(savingPlans.Contains(planId) ? "Preserving…" : "Preserve revision")
+                                    </button>
+                                </EditForm>
+                            </details>
+
+                            @if (histories.TryGetValue(planId, out var history))
+                            {
+                                <details class="plan-history">
+                                    <summary>Representation history (@history.Count)</summary>
+                                    <ol>
+                                        @foreach (var representation in history)
+                                        {
+                                            <li>
+                                                <div class="history-meta">
+                                                    <time datetime="@representation.Provenance.Timestamp.ToString("O")">
+                                                        @FormatTimestamp(representation.Provenance.Timestamp)
+                                                    </time>
+                                                    <span>@(representation.IsAccepted ? "Accepted" : "Proposed")</span>
+                                                </div>
+                                                <h4>@representation.DisplayName</h4>
+                                                <p>@representation.Course</p>
+                                                @RelatedIntentions(representation.IntentionIds)
+                                            </li>
+                                        }
+                                    </ol>
+                                </details>
+                            }
+                        </article>
+                    }
+                </div>
+            </section>
+        }
+    }
+</div>
+
+@code {
+    private readonly List<IPlan> plans = [];
+    private readonly List<IIntention> intentions = [];
+    private readonly List<IIntention> adoptedIntentions = [];
+    private readonly Dictionary<Guid, List<IPlanRepresentation>> histories = [];
+    private readonly Dictionary<Guid, PlanInput> revisions = [];
+    private readonly HashSet<Guid> savingPlans = [];
+    private readonly HashSet<Guid> selectionFailures = [];
+    private PlanInput newPlan = new();
+    private bool newPlanSelectionFailed;
+    private bool isLoading = true;
+    private bool isCreating;
+    private bool loadFailed;
+    private bool saveFailed;
+    private bool saved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task CreatePlanAsync()
+    {
+        if (newPlan.IntentionIds.Count == 0)
+        {
+            newPlanSelectionFailed = true;
+            return;
+        }
+
+        isCreating = true;
+        newPlanSelectionFailed = false;
+        saveFailed = false;
+        saved = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, PlanAuthority.Context);
+            await PlanningService.CreatePlanAsync(
+                person.Id,
+                CreateSubmission(newPlan),
+                authority);
+
+            newPlan = new PlanInput();
+            await LoadAsync(showLoadingState: false);
+            saved = true;
+        }
+        catch (Exception exception)
+        {
+            saveFailed = true;
+            Logger.LogError(exception, "Plan could not be preserved");
+        }
+        finally
+        {
+            isCreating = false;
+        }
+    }
+
+    private async Task RevisePlanAsync(IPlan plan)
+    {
+        var planId = plan.Id;
+        var input = revisions[planId];
+        if (input.IntentionIds.Count == 0)
+        {
+            selectionFailures.Add(planId);
+            return;
+        }
+
+        savingPlans.Add(planId);
+        selectionFailures.Remove(planId);
+        saveFailed = false;
+        saved = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var authority = new KnowledgeAuthority(identity, PlanAuthority.Context);
+            var revision = await PlanningService.RevisePlanAsync(
+                person.Id,
+                planId,
+                CreateSubmission(input),
+                authority);
+            if (revision is null)
+            {
+                throw new InvalidOperationException(
+                    "The current Plan representation could not be found.");
+            }
+
+            await LoadAsync(showLoadingState: false);
+            saved = true;
+        }
+        catch (Exception exception)
+        {
+            saveFailed = true;
+            Logger.LogError(exception, "Plan {PlanId} could not be revised", planId);
+        }
+        finally
+        {
+            savingPlans.Remove(planId);
+        }
+    }
+
+    private async Task LoadAsync(bool showLoadingState = true)
+    {
+        if (showLoadingState)
+        {
+            isLoading = true;
+        }
+
+        loadFailed = false;
+
+        try
+        {
+            var identity = await CurrentIdentity.GetIdentityAsync();
+            var person = await CurrentPerson.GetPersonAsync();
+            var intentionAuthority = new KnowledgeAuthority(identity, IntentionAuthority.Context);
+            var planAuthority = new KnowledgeAuthority(identity, PlanAuthority.Context);
+            var loadedIntentions = await IntentionService.GetIntentionsAsync(
+                person.Id,
+                intentionAuthority);
+            var loadedPlans = await PlanningService.GetPlansAsync(
+                person.Id,
+                planAuthority);
+
+            intentions.Clear();
+            intentions.AddRange(loadedIntentions);
+            adoptedIntentions.Clear();
+            adoptedIntentions.AddRange(intentions.Where(intention =>
+                intention.Representation.IsAdopted));
+            plans.Clear();
+            plans.AddRange(loadedPlans);
+            histories.Clear();
+
+            foreach (var plan in plans)
+            {
+                histories[plan.Id] = (await PlanningService.GetHistoryAsync(
+                    person.Id,
+                    plan.Id,
+                    planAuthority)).ToList();
+            }
+
+            var currentIds = plans.Select(plan => plan.Id).ToHashSet();
+            foreach (var planId in revisions.Keys
+                         .Where(id => !currentIds.Contains(id))
+                         .ToArray())
+            {
+                revisions.Remove(planId);
+            }
+
+            foreach (var plan in plans)
+            {
+                revisions[plan.Id] = new PlanInput
+                {
+                    DisplayName = plan.Representation.DisplayName,
+                    Course = plan.Representation.Course,
+                    IntentionIds = plan.Representation.IntentionIds
+                        .Where(id => adoptedIntentions.Any(intention => intention.Id == id))
+                        .ToHashSet(),
+                    IsAccepted = plan.Representation.IsAccepted
+                };
+            }
+        }
+        catch (Exception exception)
+        {
+            loadFailed = true;
+            Logger.LogError(exception, "Plans could not be loaded");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private RenderFragment IntentionChoices(PlanInput input, string prefix) => @<fieldset class="intention-choices mb-3">
+            <legend>Intentions this Plan may serve</legend>
+            @foreach (var intention in adoptedIntentions)
+            {
+                var id = $"{prefix}-intention-{intention.Id:N}";
+                <div class="form-check">
+                    <input id="@id"
+                           class="form-check-input"
+                           type="checkbox"
+                           checked="@input.IntentionIds.Contains(intention.Id)"
+                           @onchange="args => SetIntentionSelection(input, intention.Id, args)" />
+                    <label for="@id" class="form-check-label">
+                        @intention.Representation.Description
+                    </label>
+                </div>
+            }
+        </fieldset>;
+
+    private RenderFragment AcceptanceField(PlanInput input, string id) => @<div class="form-check mb-3">
+            <InputCheckbox id="@id" class="form-check-input" @bind-Value="input.IsAccepted" />
+            <label for="@id" class="form-check-label">
+                I accept this Plan as a present basis for action.
+            </label>
+            <div class="form-text">
+                Leave this clear to preserve it as a proposal without adopting it.
+            </div>
+        </div>;
+
+    private RenderFragment RelatedIntentions(IReadOnlyCollection<Guid> intentionIds) => @<div class="related-intentions">
+            <span>Serves · current Intention wording</span>
+            <ul>
+                @foreach (var intentionId in intentionIds)
+                {
+                    <li>@GetIntentionDescription(intentionId)</li>
+                }
+            </ul>
+        </div>;
+
+    private void SetIntentionSelection(
+        PlanInput input,
+        Guid intentionId,
+        ChangeEventArgs args)
+    {
+        if (args.Value is true)
+        {
+            input.IntentionIds.Add(intentionId);
+        }
+        else
+        {
+            input.IntentionIds.Remove(intentionId);
+        }
+
+        if (input.IntentionIds.Count == 0)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(input, newPlan))
+        {
+            newPlanSelectionFailed = false;
+            return;
+        }
+
+        var revision = revisions.FirstOrDefault(pair =>
+            ReferenceEquals(pair.Value, input));
+        if (!revision.Equals(default(KeyValuePair<Guid, PlanInput>)))
+        {
+            selectionFailures.Remove(revision.Key);
+        }
+    }
+
+    private string GetIntentionDescription(Guid intentionId)
+        => intentions.FirstOrDefault(candidate => candidate.Id == intentionId)
+               ?.Representation.Description
+           ?? $"Intention {intentionId:N}";
+
+    private static PlanSubmission CreateSubmission(PlanInput input)
+        => new(
+            input.DisplayName.Trim(),
+            input.Course.Trim(),
+            input.IntentionIds.ToArray(),
+            new Provenance(
+                ProvenanceKind.Declared,
+                "Human-authored Plan",
+                DateTimeOffset.UtcNow),
+            input.IsAccepted);
+
+    private static string FormatTimestamp(DateTimeOffset timestamp)
+        => timestamp.ToString("MMM d, yyyy · HH:mm 'UTC'");
+
+    private sealed class PlanInput
+    {
+        [Required(ErrorMessage = "Give this Plan a recognizable name.")]
+        [StringLength(300)]
+        public string DisplayName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Describe the proposed course.")]
+        [StringLength(100_000)]
+        public string Course { get; set; } = string.Empty;
+
+        public HashSet<Guid> IntentionIds { get; set; } = [];
+
+        public bool IsAccepted { get; set; }
+    }
+}

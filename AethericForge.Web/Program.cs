@@ -40,6 +40,7 @@ app.MapStaticAssets();
 app.MapForgeCampusDiagnostics();
 app.MapForgeCampusAuthentication();
 app.MapRazorComponents<App>()
+    .AddAdditionalAssemblies(typeof(ParallelYou.Web.Components.Pages.Home).Assembly)
     .AddInteractiveServerRenderMode();
 
 app.Run();

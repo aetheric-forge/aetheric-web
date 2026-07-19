@@ -1,0 +1,186 @@
+.brand-row {
+    min-height: 5.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8rem;
+    color: var(--py-paper);
+    text-decoration: none;
+}
+
+.brand-mark {
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 50%;
+}
+
+.brand-mark span {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+    background: var(--py-cobalt-soft);
+    box-shadow: 0 0 0 0.3rem rgba(102, 136, 255, 0.14);
+}
+
+.brand-name {
+    font-family: var(--py-display);
+    font-size: 1.25rem;
+    letter-spacing: -0.025em;
+}
+
+.brand-name strong {
+    color: var(--py-cobalt-soft);
+    font-weight: 700;
+}
+
+.nav-toggle {
+    display: none;
+}
+
+.navbar-toggler {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.55rem;
+}
+
+.navbar-toggler span {
+    width: 1rem;
+    height: 1px;
+    background: var(--py-paper);
+}
+
+.nav-scrollable {
+    display: none;
+    padding: 1.2rem 0.8rem 1.5rem;
+}
+
+.nav-toggle:checked ~ .nav-scrollable {
+    display: block;
+}
+
+.nav-groups,
+.nav-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-groups {
+    gap: 1.45rem;
+}
+
+.nav-group {
+    gap: 0.2rem;
+}
+
+.nav-group__label {
+    padding: 0 0.8rem 0.4rem;
+    color: rgba(238, 235, 224, 0.45);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+::deep .nav-link {
+    position: relative;
+    min-height: 2.65rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.72rem;
+    border-radius: 0.55rem;
+    color: rgba(238, 235, 224, 0.7);
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+::deep .nav-link:hover {
+    color: var(--py-paper);
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateX(2px);
+}
+
+::deep .nav-link.active {
+    color: #fff;
+    background: rgba(100, 132, 255, 0.16);
+}
+
+::deep .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: -0.8rem;
+    top: 0.55rem;
+    bottom: 0.55rem;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--py-cobalt-soft);
+}
+
+.nav-symbol {
+    width: 1.65rem;
+    height: 1.65rem;
+    flex: 0 0 1.65rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    color: rgba(238, 235, 224, 0.62);
+    font-family: var(--py-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+::deep .nav-link.active .nav-symbol {
+    border-color: rgba(123, 151, 255, 0.55);
+    color: var(--py-cobalt-soft);
+}
+
+.nav-note {
+    margin: 2.25rem 0.8rem 0;
+    color: rgba(238, 235, 224, 0.42);
+    font-family: var(--py-display);
+    font-size: 0.78rem;
+    line-height: 1.55;
+}
+
+.nav-note__line {
+    width: 2.25rem;
+    height: 1px;
+    display: block;
+    margin-bottom: 0.85rem;
+    background: var(--py-cobalt-soft);
+    opacity: 0.65;
+}
+
+@media (min-width: 641px) {
+    .navbar-toggler {
+        display: none;
+    }
+
+    .nav-scrollable {
+        height: calc(100vh - 5.5rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow-y: auto;
+    }
+}

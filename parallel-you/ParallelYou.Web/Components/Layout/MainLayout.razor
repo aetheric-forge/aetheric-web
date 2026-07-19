@@ -1,0 +1,27 @@
+@inherits LayoutComponentBase
+
+<div class="workspace-shell">
+    <aside class="sidebar">
+        <NavMenu />
+    </aside>
+
+    <main class="workspace-main">
+        <header class="workspace-header">
+            <div class="workspace-context">
+                <span class="workspace-context__dot" aria-hidden="true"></span>
+                Private workspace
+            </div>
+            <LoginWidget />
+        </header>
+
+        <article class="content workspace-content">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

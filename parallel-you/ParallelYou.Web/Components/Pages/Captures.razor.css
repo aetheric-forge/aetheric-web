@@ -1,0 +1,96 @@
+.captures-page {
+    max-width: 58rem;
+    margin: 2.5rem auto;
+}
+
+.captures-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.captures-header h1 {
+    margin-bottom: 0.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.04em;
+}
+
+.captures-header p:last-child,
+.captures-state {
+    margin-bottom: 0;
+    color: var(--bs-secondary-color);
+}
+
+.captures-eyebrow {
+    margin-bottom: 0.5rem;
+    color: var(--bs-primary);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.captures-list {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.capture-card {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+}
+
+.capture-card summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    list-style: none;
+}
+
+.capture-card summary::-webkit-details-marker {
+    display: none;
+}
+
+.capture-card[open] summary {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.capture-title {
+    font-weight: 650;
+}
+
+.capture-card time {
+    flex: none;
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+}
+
+.capture-content {
+    padding: 1.25rem;
+    white-space: pre-wrap;
+}
+
+.captures-empty {
+    padding: 3rem 2rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: 1rem;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .captures-page {
+        margin-top: 1rem;
+    }
+
+    .captures-header,
+    .capture-card summary {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}

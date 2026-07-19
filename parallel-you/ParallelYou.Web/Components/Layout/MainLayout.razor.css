@@ -1,0 +1,104 @@
+.workspace-shell {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--py-canvas);
+}
+
+.workspace-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.sidebar {
+    background: var(--py-ink);
+    color: var(--py-paper);
+}
+
+.workspace-header {
+    min-height: 4.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem clamp(1.25rem, 4vw, 3.5rem);
+    border-bottom: 1px solid var(--py-line);
+    background: color-mix(in srgb, var(--py-canvas) 92%, transparent);
+    backdrop-filter: blur(12px);
+}
+
+.workspace-context {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--py-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.workspace-context__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--py-moss);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--py-moss) 15%, transparent);
+}
+
+.workspace-content {
+    width: 100%;
+    max-width: 80rem;
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4.5rem) clamp(1.25rem, 5vw, 4.5rem) 5rem;
+}
+
+@media (max-width: 640.98px) {
+    .workspace-header {
+        min-height: 4rem;
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+}
+
+@media (min-width: 641px) {
+    .workspace-shell {
+        flex-direction: row;
+    }
+
+    .sidebar {
+        width: 17.5rem;
+        flex: 0 0 17.5rem;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
+
+    .workspace-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: #fff3cd;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}

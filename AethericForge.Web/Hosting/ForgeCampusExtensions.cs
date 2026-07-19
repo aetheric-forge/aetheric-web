@@ -48,6 +48,20 @@ using Amazon.Runtime;
 using Amazon.S3;
 using MongoDB.Driver;
 using StackExchange.Redis;
+using ParallelYou.Abstractions;
+using ParallelYou.Abstractions.Capture;
+using ParallelYou.Abstractions.Intention;
+using ParallelYou.Abstractions.Plan;
+using ParallelYou.Abstractions.Recommendation;
+using ParallelYou.Abstractions.Reflection;
+using ParallelYou.Abstractions.Tracking;
+using ParallelYou.Services;
+using ParallelYou.Services.Capture;
+using ParallelYou.Services.Intention;
+using ParallelYou.Services.Plan;
+using ParallelYou.Services.Recommendation;
+using ParallelYou.Services.Reflection;
+using ParallelYou.Services.Tracking;
 
 namespace AethericForge.Web.Hosting;
 
@@ -237,7 +251,14 @@ public static class ForgeCampusExtensions
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
                 .With<IArtificer, Artificer>()
                 .With<IWorkbenchContext, WorkbenchContext>()
-                .With<IWorkbench, Workbench>();
+                .With<IWorkbench, Workbench>()
+                .With<ParallelYou.Abstractions.Person.IPersonService, ParallelYou.Services.Person.PersonService>()
+                .With<ICaptureService, CaptureService>()
+                .With<IReflectionService, ReflectionService>()
+                .With<ITrackingService, TrackingService>()
+                .With<IIntentionService, IntentionService>()
+                .With<IPlanningService, PlanningService>()
+                .With<IRecommendationService, RecommendationService>();
         });
 
         services.AddSingleton<ICampus>(serviceProvider =>
@@ -261,6 +282,17 @@ public static class ForgeCampusExtensions
 
             var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
             campus.Register<IWorkbench>(ActivatorUtilities.CreateInstance<Workbench>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
+
+            var parallelYouTemplate = campusTemplate with
+            {
+                Descriptor = new InstitutionDescriptor(
+                    "ParallelYou",
+                    new Version(1, 0, 0),
+                    "A private practice for preserving observations, reflection, and chosen direction.")
+            };
+            campus.Register<IParallelYou>(ActivatorUtilities.CreateInstance<ParallelYouInstitution>(
+                serviceProvider,
+                new ParallelYouContext(parallelYouTemplate, serviceProvider, campus)));
             
             return campus;
         });
@@ -303,6 +335,11 @@ public static class ForgeCampusExtensions
                     {
                         name = campus.Library.Context.Template.Descriptor.Name,
                         version = campus.Library.Context.Template.Descriptor.Version.ToString()
+                    },
+                    parallelYou = new
+                    {
+                        name = campus.Resolve<IParallelYou>().Context.Template.Descriptor.Name,
+                        version = campus.Resolve<IParallelYou>().Context.Template.Descriptor.Version.ToString()
                     }
                 }));
 

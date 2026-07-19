@@ -57,7 +57,10 @@ public static class ForgeAuthenticationExtensions
             });
 
         services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
-        services.AddScoped<ICurrentPersonAccessor, CurrentPersonAccessor>();
+        services.AddScoped<AethericForge.Web.Authentication.ICurrentPersonAccessor,
+            AethericForge.Web.Authentication.CurrentPersonAccessor>();
+        services.AddScoped<ParallelYou.Web.Authentication.ICurrentPersonAccessor,
+            ParallelYou.Web.Authentication.CurrentPersonAccessor>();
 
         return services;
     }
