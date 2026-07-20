@@ -229,7 +229,7 @@ public static class ForgeCampusExtensions
                 .With<ITeam<ILibraryClerk>>(_ => new Team<ILibraryClerk>(Array.Empty<ILibraryClerk>()))
                 .With<ILibrarian, Librarian>()
                 .With<ILibraryContext, LibraryContext>()
-                .With<ILibrary, Library>()
+                .With<ILibrary, global::AethericForge.Runtime.Institutions.Library.Library>()
                 .With<IPostProvider>(sp => new RabbitMqPostProvider( "ForgeCampus", 
                     BuildRabbitMqUrl(
                        sp.GetRequiredService<IConfiguration>())))
@@ -296,7 +296,9 @@ public static class ForgeCampusExtensions
             campus.Register<IArchive>(ActivatorUtilities.CreateInstance<Archive>(serviceProvider, new ArchiveContext(archiveTemplate, serviceProvider, campus)));
 
             var libraryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Library", campusTemplate.Descriptor.Version, "Library institution") };
-            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new LibraryContext(libraryTemplate, serviceProvider, campus)));
+            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<global::AethericForge.Runtime.Institutions.Library.Library>(
+                serviceProvider,
+                new LibraryContext(libraryTemplate, serviceProvider, campus)));
 
             var postOfficeTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("PostOffice", campusTemplate.Descriptor.Version, "Post Office institution") };
             campus.Register<IPostOffice>(ActivatorUtilities.CreateInstance<PostOffice>(serviceProvider, new PostOfficeContext(postOfficeTemplate, serviceProvider, campus)));
