@@ -26,6 +26,7 @@ using AethericForge.Runtime.Institutions.Registry;
 using AethericForge.Runtime.Institutions.Workbench;
 using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
+using AethericForge.Runtime.Models.Library.Articles;
 using AethericForge.Runtime.Providers.Archive.MongoDb;
 using AethericForge.Runtime.Providers.Archive.S3;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
@@ -210,6 +211,21 @@ public static class ForgeCampusExtensions
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()
                 .With<ILibraryService, LibraryService>()
+                .With(_ => new ArticleLibraryOptions
+                {
+                    KnowledgeScheme = "ForgeCampus",
+                    Authority = new InstitutionReference
+                    {
+                        Id = "forge-library",
+                        Name = "Library"
+                    },
+                    DefaultOrigin = new InstitutionReference
+                    {
+                        Id = "forge-campus",
+                        Name = "Forge Campus"
+                    }
+                })
+                .With<IArticleLibrary, ArticleLibrary>()
                 .With<ITeam<ILibraryClerk>>(_ => new Team<ILibraryClerk>(Array.Empty<ILibraryClerk>()))
                 .With<ILibrarian, Librarian>()
                 .With<ILibraryContext, LibraryContext>()
