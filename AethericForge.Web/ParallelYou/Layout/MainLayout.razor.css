@@ -1,9 +1,25 @@
+.campus-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid rgb(148 163 184 / 18%);
+    background: rgb(8 14 25 / 94%);
+    box-shadow: 0 1rem 3rem rgb(2 6 23 / 12%);
+    backdrop-filter: blur(18px);
+}
+
 .workspace-shell {
     position: relative;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     background: var(--py-canvas);
+}
+
+.institution-nav-collapse {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .workspace-main {
@@ -70,15 +86,50 @@
     .sidebar {
         width: 17.5rem;
         flex: 0 0 17.5rem;
-        height: 100vh;
+        height: calc(100vh - 4.75rem);
         position: sticky;
-        top: 0;
+        top: 4.75rem;
+        transition: width 180ms ease, flex-basis 180ms ease;
     }
 
     .workspace-header {
         position: sticky;
-        top: 0;
+        top: 4.75rem;
         z-index: 10;
+    }
+
+    .institution-nav-collapse:checked + .sidebar {
+        width: 4.75rem;
+        flex-basis: 4.75rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .brand-row {
+        padding-inline: 1.35rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .brand-name,
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-group__label,
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-link span:last-child,
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-note,
+    .institution-nav-collapse:checked + .sidebar ::deep .brand {
+        display: none;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .sidebar-collapser {
+        transform: rotate(180deg);
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-scrollable {
+        padding-inline: .65rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-groups {
+        gap: .5rem;
+    }
+
+    .institution-nav-collapse:checked + .sidebar ::deep .nav-link {
+        justify-content: center;
+        padding-inline: .45rem;
     }
 }
 

@@ -17,9 +17,31 @@
 
     <div class="site-nav__links">
         <a href="/#mission">Mission</a>
-        <a href="/projects">Projects</a>
-        <a href="/parallel-you">Parallel You</a>
-        <a href="/#resources">Resources</a>
+
+        <details class="site-nav__group">
+            <summary>Explore <span aria-hidden="true">⌄</span></summary>
+            <div class="site-nav__submenu">
+                <a href="/projects">
+                    <strong>Projects</strong>
+                    <small>Work growing on the Campus</small>
+                </a>
+                <a href="/#resources">
+                    <strong>Resources</strong>
+                    <small>Articles, videos, and documentation</small>
+                </a>
+            </div>
+        </details>
+
+        <details class="site-nav__group">
+            <summary>Institutions <span aria-hidden="true">⌄</span></summary>
+            <div class="site-nav__submenu">
+                <a href="/parallel-you">
+                    <strong>Parallel You</strong>
+                    <small>A private reflective workspace</small>
+                </a>
+            </div>
+        </details>
+
         <a href="/campus/apply">Join Campus</a>
 
         <AuthorizeView Context="auth">

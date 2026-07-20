@@ -61,6 +61,64 @@
     transition: color .18s ease;
 }
 
+.site-nav__group {
+    position: relative;
+}
+
+.site-nav__group summary {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--color-text-inverse-muted);
+    cursor: pointer;
+    font-size: .88rem;
+    font-weight: 650;
+    letter-spacing: .025em;
+    list-style: none;
+    transition: color .18s ease;
+}
+
+.site-nav__group summary::-webkit-details-marker { display: none; }
+.site-nav__group summary:hover,
+.site-nav__group[open] summary { color: var(--color-text-inverse); }
+.site-nav__group summary span { font-size: .75rem; transition: transform .18s ease; }
+.site-nav__group[open] summary span { transform: rotate(180deg); }
+
+.site-nav__submenu {
+    position: absolute;
+    top: calc(100% + 1rem);
+    left: 50%;
+    z-index: 2;
+    display: grid;
+    width: 18rem;
+    padding: .5rem;
+    transform: translateX(-50%);
+    border: 1px solid rgb(148 163 184 / 22%);
+    border-radius: .7rem;
+    background: #0d1727;
+    box-shadow: 0 1.25rem 3rem rgb(2 6 23 / 32%);
+}
+
+.site-nav__submenu::before {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    left: 0;
+    height: 1rem;
+    content: "";
+}
+
+.site-nav__submenu a {
+    display: grid;
+    gap: .1rem;
+    padding: .7rem .75rem;
+    border-radius: .45rem;
+}
+
+.site-nav__submenu a:hover { background: rgb(255 255 255 / 6%); }
+.site-nav__submenu strong { color: var(--color-text-inverse); font-size: .84rem; }
+.site-nav__submenu small { color: var(--color-text-inverse-muted); font-size: .72rem; font-weight: 500; }
+
 .site-nav__links form { margin: 0; }
 
 .site-nav__identity {
@@ -111,6 +169,20 @@ button.site-nav__account-action { cursor: pointer; }
     .site-nav__links { position: absolute; top: 100%; right: 0; left: 0; display: none; padding: 1rem 1.5rem 1.5rem; flex-direction: column; align-items: stretch; gap: .25rem; border-top: 1px solid rgb(148 163 184 / 18%); background: #080e19; }
     .site-nav__links a,
     .site-nav__account-action { padding: .75rem 0; }
+    .site-nav__group summary { padding: .75rem 0; }
+    .site-nav__submenu {
+        position: static;
+        width: auto;
+        padding: 0 0 .35rem .8rem;
+        transform: none;
+        border: 0;
+        border-left: 1px solid rgb(76 225 201 / 28%);
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .site-nav__submenu::before { display: none; }
+    .site-nav__submenu a { padding: .6rem .75rem; }
     .site-nav__identity { max-width: none; padding-top: .75rem; }
     .site-nav__toggle:checked ~ .site-nav__links { display: flex; }
 }
