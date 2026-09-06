@@ -37,16 +37,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="MongoDB.Driver">
-      <HintPath>..\..\..\.nuget\packages\mongodb.driver\3.5.0\lib\net6.0\MongoDB.Driver.dll</HintPath>
-    </Reference>
-    <Reference Include="StackExchange.Redis">
-      <HintPath>..\..\..\.nuget\packages\stackexchange.redis\2.8.24\lib\net8.0\StackExchange.Redis.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.10" />
+    <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
   </ItemGroup>
 
 </Project>
