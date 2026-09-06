@@ -192,7 +192,9 @@ public static class ForgeCampusExtensions
                 .With<IArchiveProvider>(sp => new S3ArchiveProvider(
                     sp.GetRequiredService<IAmazonS3>(),
                     "MinIO",
-                    "forge-campus-archive"))
+                    sp.GetRequiredService<IConfiguration>().GetValue(
+                        "S3:BucketName",
+                        "forge-campus-archive")))
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
