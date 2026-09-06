@@ -35,6 +35,10 @@
         <details class="site-nav__group">
             <summary>Institutions <span aria-hidden="true">⌄</span></summary>
             <div class="site-nav__submenu">
+                <a href="/library">
+                    <strong>Library</strong>
+                    <small>Authoritative articles and publications</small>
+                </a>
                 <a href="/parallel-you">
                     <strong>Parallel You</strong>
                     <small>A private reflective workspace</small>
@@ -53,14 +57,14 @@
                 </AuthorizeView>
 
                 <span class="site-nav__identity">@auth.User.Identity?.Name</span>
-                <form method="post" action="/account/logout">
+                <form method="post" action="/account/logout" data-enhance="false">
                     <AntiforgeryToken />
                     <button type="submit" class="site-nav__account-action">Sign out</button>
                 </form>
             </Authorized>
             <NotAuthorized>
                 <p>Not authorized</p>
-                <a class="site-nav__account-action" href="/account/login">Sign in</a>
+                <a class="site-nav__account-action" href="/account/login" data-enhance-nav="false">Sign in</a>
             </NotAuthorized>
         </AuthorizeView>
 
