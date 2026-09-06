@@ -6,15 +6,14 @@
             <span class="forge-login__identity">
                 @authenticationState.User.Identity?.Name
             </span>
-            <form method="post" action="/account/logout">
+            <form method="post" action="/account/logout" data-enhance="false">
                 <AntiforgeryToken />
                 <input type="hidden" name="returnUrl" value="@ReturnUrl" />
                 <button type="submit" class="btn btn-outline-secondary btn-sm">Log out</button>
             </form>
         </Authorized>
         <NotAuthorized>
-            <form method="post" action="/account/login">
-                <AntiforgeryToken />
+            <form method="get" action="/account/login" data-enhance="false">
                 <input type="hidden" name="returnUrl" value="@ReturnUrl" />
                 <button type="submit" class="btn btn-primary btn-sm">Log in</button>
             </form>
