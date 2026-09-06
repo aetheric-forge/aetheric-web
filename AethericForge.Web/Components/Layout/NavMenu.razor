@@ -57,14 +57,14 @@
                 </AuthorizeView>
 
                 <span class="site-nav__identity">@auth.User.Identity?.Name</span>
-                <form method="post" action="/account/logout">
+                <form method="post" action="/account/logout" data-enhance="false">
                     <AntiforgeryToken />
                     <button type="submit" class="site-nav__account-action">Sign out</button>
                 </form>
             </Authorized>
             <NotAuthorized>
                 <p>Not authorized</p>
-                <a class="site-nav__account-action" href="/account/login">Sign in</a>
+                <a class="site-nav__account-action" href="/account/login" data-enhance-nav="false">Sign in</a>
             </NotAuthorized>
         </AuthorizeView>
 
