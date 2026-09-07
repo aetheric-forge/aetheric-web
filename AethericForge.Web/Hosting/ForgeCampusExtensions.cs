@@ -195,6 +195,13 @@ public static class ForgeCampusExtensions
                     sp.GetRequiredService<IConfiguration>().GetValue(
                         "S3:BucketName",
                         "forge-campus-archive")))
+                .With<IArchiveProvider>(sp => new S3ArchiveProvider(
+                    sp.GetRequiredService<IAmazonS3>(),
+                    "ParallelYou",
+                    sp.GetRequiredService<IConfiguration>().GetValue(
+                        "S3:BucketName",
+                        "forge-campus-archive"),
+                    "parallel-you"))
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
@@ -209,6 +216,8 @@ public static class ForgeCampusExtensions
                         "MongoDb:DatabaseName")))
                 .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
                     sp.GetRequiredService<IMongoDatabase>(), "ForgeCampus", "knowledge"))
+                .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
+                    sp.GetRequiredService<IMongoDatabase>(), "parallel-you", "knowledge"))
                 .With<IKnowledgeService, KnowledgeService>()
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()
