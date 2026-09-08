@@ -119,6 +119,16 @@
 .site-nav__submenu strong { color: var(--color-text-inverse); font-size: .84rem; }
 .site-nav__submenu small { color: var(--color-text-inverse-muted); font-size: .72rem; font-weight: 500; }
 
+.site-nav__submenu-heading {
+    display: block;
+    padding: .6rem .75rem 0;
+    color: var(--color-text-inverse-muted);
+    font-size: .68rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
 .site-nav__links form { margin: 0; }
 
 .site-nav__identity {

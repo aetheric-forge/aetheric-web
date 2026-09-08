@@ -3,6 +3,7 @@ using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Authorities;
+using AethericForge.Runtime.Abstractions.Interfaces.Faculty.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Provisioning;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Services;
@@ -20,6 +21,7 @@ using AethericForge.Runtime.Institutions.Abstractions.Models;
 using AethericForge.Runtime.Institutions.Abstractions.Primitives;
 using AethericForge.Runtime.Institutions.Archive;
 using AethericForge.Runtime.Institutions.Campus;
+using AethericForge.Runtime.Institutions.Faculty;
 using AethericForge.Runtime.Institutions.Library;
 using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
@@ -34,6 +36,7 @@ using AethericForge.Runtime.Providers.Knowledge.MongoDb;
 using AethericForge.Runtime.Providers.Post.RabbitMq;
 using AethericForge.Runtime.Providers.Staging.Redis;
 using AethericForge.Runtime.Services.Archive;
+using AethericForge.Runtime.Services.Faculty;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Knowledge;
@@ -127,7 +130,27 @@ public static class ForgeCampusExtensions
         return !string.IsNullOrWhiteSpace(value)
             ? value
             : throw new InvalidOperationException($"{key} is required.");
-    }    
+    }
+
+    private static TFaculty RegisterFaculty<TFaculty>(
+        Campus campus,
+        InstitutionTemplate campusTemplate,
+        IServiceProvider serviceProvider,
+        string name,
+        string deanTitle,
+        Func<IFacultyContext, IDean, TFaculty> factory)
+        where TFaculty : class, IFaculty
+    {
+        var template = campusTemplate with
+        {
+            Descriptor = new InstitutionDescriptor(name, campusTemplate.Descriptor.Version, $"{name} faculty")
+        };
+        var context = new FacultyContext(template, serviceProvider, campus);
+        var dean = new Dean(deanTitle, new Team<IFacultyClerk>(Array.Empty<IFacultyClerk>()));
+        var faculty = factory(context, dean);
+        campus.Register<TFaculty>(faculty);
+        return faculty;
+    }
     
     private static AmazonS3Config BuildS3Config(IConfiguration configuration)
     {
@@ -318,7 +341,26 @@ public static class ForgeCampusExtensions
             campus.Register<IParallelYou>(ActivatorUtilities.CreateInstance<ParallelYouInstitution>(
                 serviceProvider,
                 new ParallelYouContext(parallelYouTemplate, serviceProvider, campus)));
-            
+
+            // Faculties are, for now, pure org/nav groupings - no institutions have been moved
+            // underneath them yet. See AethericForge.Web/Hosting/Faculties.cs for why each needs
+            // its own concrete type.
+            RegisterFaculty<IArchitectureFaculty>(
+                campus, campusTemplate, serviceProvider, "Architecture", "Principal Architect",
+                static (context, dean) => new ArchitectureFaculty(context, dean));
+            RegisterFaculty<IDesignFaculty>(
+                campus, campusTemplate, serviceProvider, "Design", "Director",
+                static (context, dean) => new DesignFaculty(context, dean));
+            RegisterFaculty<IEngineeringFaculty>(
+                campus, campusTemplate, serviceProvider, "Engineering", "Chief Engineer",
+                static (context, dean) => new EngineeringFaculty(context, dean));
+            RegisterFaculty<IManufacturingFaculty>(
+                campus, campusTemplate, serviceProvider, "Manufacturing", "Chief Fabricator",
+                static (context, dean) => new ManufacturingFaculty(context, dean));
+            RegisterFaculty<IOperationsFaculty>(
+                campus, campusTemplate, serviceProvider, "Operations", "Quartermaster",
+                static (context, dean) => new OperationsFaculty(context, dean));
+
             return campus;
         });
 
@@ -365,9 +407,24 @@ public static class ForgeCampusExtensions
                     {
                         name = campus.Resolve<IParallelYou>().Context.Template.Descriptor.Name,
                         version = campus.Resolve<IParallelYou>().Context.Template.Descriptor.Version.ToString()
+                    },
+                    faculties = new[]
+                    {
+                        FacultyStatus(campus.Resolve<IArchitectureFaculty>()),
+                        FacultyStatus(campus.Resolve<IDesignFaculty>()),
+                        FacultyStatus(campus.Resolve<IEngineeringFaculty>()),
+                        FacultyStatus(campus.Resolve<IManufacturingFaculty>()),
+                        FacultyStatus(campus.Resolve<IOperationsFaculty>())
                     }
                 }));
 
         return endpoints;
     }
+
+    private static object FacultyStatus(IFaculty faculty) => new
+    {
+        name = faculty.Context.Template.Descriptor.Name,
+        version = faculty.Context.Template.Descriptor.Version.ToString(),
+        dean = faculty.Dean.Title
+    };
 }
