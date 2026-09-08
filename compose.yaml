@@ -1,0 +1,14 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: aetheric-web:local
+    env_file:
+      - ${AETHERIC_ENV_FILE:-.env.local}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+    init: true
+    ports:
+      - "8080:8080"

@@ -5,3 +5,4 @@ bin/
 *.DotSettings.user
 .output.txt
 .env*
+!.env.example
