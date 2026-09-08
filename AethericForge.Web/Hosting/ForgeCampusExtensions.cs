@@ -17,6 +17,7 @@ using AdrCampus.Providers.Drafts.Workbench;
 using AdrCampus.Providers.Library;
 using AdrCampus.Providers.PostOffice;
 using AdrCampus.Web.Drafts;
+using AdrCampus.Web.Maintenance;
 using AdrCampus.Web.Members;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
@@ -513,7 +514,23 @@ public static class ForgeCampusExtensions
             GetRequiredSetting(
                 serviceProvider.GetRequiredService<IConfiguration>(),
                 "Organization:Id"))));
+        services.AddSingleton(serviceProvider =>
+        {
+            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+            return new OrganizationBootstrapConfiguration(
+                new OrganizationId(GetRequiredSetting(configuration, "Organization:Id")),
+                GetRequiredSetting(configuration, "Organization:DisplayName"),
+                GetRequiredSetting(configuration, "Keycloak:Authority"),
+                GetRequiredSetting(configuration, "Organization:MemberGroupId"),
+                GetRequiredSetting(configuration, "Organization:MaintainerGroupId"));
+        });
+        services.AddSingleton<OrganizationBootstrapHealth>();
+        services.AddScoped<OrganizationDisplayState>();
         services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IMaintenanceWorker, ExpiredDraftPurgeWorker>();
+        services.AddHostedService<OrganizationBootstrapHostedService>();
+        services.AddHostedService<MembershipSyncBackgroundService>();
+        services.AddHostedService<MaintenanceDispatchService>();
         
         return services;
     }

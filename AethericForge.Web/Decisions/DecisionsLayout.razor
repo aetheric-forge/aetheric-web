@@ -1,6 +1,30 @@
 @inherits LayoutComponentBase
 @layout MainLayout
 
+<nav class="decisions-nav" aria-label="Decisions navigation">
+    <div class="decisions-nav__group">
+        <span>Decision record</span>
+        <NavLink href="/decisions" Match="NavLinkMatch.All">Current</NavLink>
+        <NavLink href="/decisions/proposed">Proposed</NavLink>
+        <NavLink href="/decisions/historical">Historical</NavLink>
+        <NavLink href="/decisions/records">All records</NavLink>
+    </div>
+    <div class="decisions-nav__group">
+        <span>Your work</span>
+        <NavLink href="/decisions/drafts">My drafts</NavLink>
+        <NavLink href="/decisions/drafts/new">New ADR</NavLink>
+    </div>
+    <div class="decisions-nav__group">
+        <span>Organization</span>
+        <NavLink href="/decisions/members">Members</NavLink>
+        <AuthorizeView Policy="@IdentityPolicies.ActiveMaintainer">
+            <Authorized>
+                <NavLink href="/decisions/administration">Administration</NavLink>
+            </Authorized>
+        </AuthorizeView>
+    </div>
+</nav>
+
 <section class="decisions-page">
     @Body
 </section>
