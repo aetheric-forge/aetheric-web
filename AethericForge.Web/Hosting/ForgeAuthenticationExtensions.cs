@@ -41,6 +41,7 @@ public static class ForgeAuthenticationExtensions
             })
             .AddOpenIdConnect(options =>
             {
+                options.MapInboundClaims = false;
                 options.Authority = $"{authority}/realms/{realm}";
                 options.ClientId = keycloakSection["ClientId"];
                 options.ClientSecret = keycloakSection["ClientSecret"];

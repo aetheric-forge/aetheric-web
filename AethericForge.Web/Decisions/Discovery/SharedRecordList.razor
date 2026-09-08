@@ -86,7 +86,7 @@ else if (_result is { IsSuccess: true })
             if (!string.IsNullOrWhiteSpace(Direction) && !Enum.TryParse<SortDirection>(Direction, true, out _)) _parseInvalid = true;
             if (Page < 1 || (View != SharedRecordView.All && _statuses.Count > 0)) _parseInvalid = true;
             if (_parseInvalid) return;
-            var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync(); var subjectId = auth.User.FindFirst("sub")?.Value;
+            var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync(); var subjectId = auth.User.GetSubjectId();
             if (string.IsNullOrWhiteSpace(subjectId)) { _result = DiscoveryQueryResult.Unauthorized(new(Organization.Id, new MemberId("unavailable"), View)); return; }
             _memberId = new MemberId(subjectId);
             _result = await Discovery.BrowseAsync(new(Organization.Id, _memberId, View, _statuses, _sort, _direction, Page, _searchInput));

@@ -83,7 +83,7 @@ else
         try
         {
             var authentication = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var subjectId = authentication.User.FindFirst("sub")?.Value;
+            var subjectId = authentication.User.GetSubjectId();
             if (string.IsNullOrWhiteSpace(subjectId)) { _message = "Your signed-in identity could not be established."; return; }
             _maintainer = new(subjectId);
             _membership = await Observation.SynchronizeAsync(Organization.Id);

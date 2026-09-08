@@ -70,7 +70,7 @@
     {
         _result = await Observation.SynchronizeAsync(Organization.Id);
         var authentication = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var subjectId = authentication.User.FindFirst("sub")?.Value;
+        var subjectId = authentication.User.GetSubjectId();
         if (!string.IsNullOrWhiteSpace(subjectId))
         {
             _maintainer = new(subjectId);

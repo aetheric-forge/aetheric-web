@@ -16,7 +16,7 @@ else { <section class="draft-list" aria-label="Your ADR drafts">@foreach (var dr
     private IReadOnlyList<DraftSummary> _drafts = Array.Empty<DraftSummary>(); private bool _isLoading = true; private string? _errorMessage;
     protected override async Task OnInitializedAsync()
     {
-        try { var authentication = await AuthenticationStateProvider.GetAuthenticationStateAsync(); var subjectId = authentication.User.FindFirst("sub")?.Value; if (string.IsNullOrWhiteSpace(subjectId)) { _errorMessage = "Your signed-in identity could not be established."; return; } var result = await DraftService.ListMineAsync(Organization.Id, new MemberId(subjectId)); if (!result.IsAuthorized) { _errorMessage = "Current membership could not be established."; return; } _drafts = result.Drafts; }
+        try { var authentication = await AuthenticationStateProvider.GetAuthenticationStateAsync(); var subjectId = authentication.User.GetSubjectId(); if (string.IsNullOrWhiteSpace(subjectId)) { _errorMessage = "Your signed-in identity could not be established."; return; } var result = await DraftService.ListMineAsync(Organization.Id, new MemberId(subjectId)); if (!result.IsAuthorized) { _errorMessage = "Current membership could not be established."; return; } _drafts = result.Drafts; }
         finally { _isLoading = false; }
     }
 }

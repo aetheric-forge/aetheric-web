@@ -76,7 +76,7 @@ else
         try
         {
             var authentication = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var subjectId = authentication.User.FindFirst("sub")?.Value;
+            var subjectId = authentication.User.GetSubjectId();
             if (string.IsNullOrWhiteSpace(subjectId)) { _authorized = false; return; }
             _maintainer = new(subjectId);
             var membership = await Observation.SynchronizeAsync(Organization.Id);

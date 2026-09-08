@@ -19,7 +19,7 @@ public sealed class ActiveMemberAuthorizationHandler(MemberRosterService rosterS
         AuthorizationHandlerContext context,
         ActiveMemberRequirement requirement)
     {
-        var subjectId = context.User.FindFirst("sub")?.Value;
+        var subjectId = context.User.GetSubjectId();
         if (!string.IsNullOrWhiteSpace(subjectId) &&
             await rosterService.IsActiveMemberAsync(subjectId).ConfigureAwait(false))
         {
@@ -35,7 +35,7 @@ public sealed class ActiveMaintainerAuthorizationHandler(MemberRosterService ros
         AuthorizationHandlerContext context,
         ActiveMaintainerRequirement requirement)
     {
-        var subjectId = context.User.FindFirst("sub")?.Value;
+        var subjectId = context.User.GetSubjectId();
         if (string.IsNullOrWhiteSpace(subjectId))
         {
             return;

@@ -61,7 +61,7 @@ else
         try
         {
             var authentication = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-            var subjectId = authentication.User.FindFirst("sub")?.Value;
+            var subjectId = authentication.User.GetSubjectId();
             if (string.IsNullOrWhiteSpace(subjectId)) { _authorized = false; return; }
             var result = await History.ListAsync(Organization.Id, new(subjectId));
             _authorized = result.IsAuthorized;
