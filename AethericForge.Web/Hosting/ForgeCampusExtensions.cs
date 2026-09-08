@@ -75,6 +75,7 @@ using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
 using AethericForge.Web.Abstractions.Person;
+using AethericForge.Web.Decisions.Institution;
 using AethericForge.Web.Services;
 using Amazon;
 using Amazon.Runtime;
@@ -405,12 +406,20 @@ public static class ForgeCampusExtensions
                 serviceProvider,
                 new ParallelYouContext(parallelYouTemplate, serviceProvider, campus)));
 
-            // Faculties are, for now, pure org/nav groupings - no institutions have been moved
-            // underneath them yet. See AethericForge.Web/Hosting/Faculties.cs for why each needs
-            // its own concrete type.
-            RegisterFaculty<IArchitectureFaculty>(
+            var architectureFaculty = RegisterFaculty<IArchitectureFaculty>(
                 campus, campusTemplate, serviceProvider, "Architecture", "Principal Architect",
                 static (context, dean) => new ArchitectureFaculty(context, dean));
+
+            var decisionsTemplate = campusTemplate with
+            {
+                Descriptor = new InstitutionDescriptor(
+                    "Decisions",
+                    new Version(1, 0, 0),
+                    "Shared architectural decision records.")
+            };
+            architectureFaculty.Register<IDecisions>(new DecisionsInstitution(
+                new DecisionsContext(decisionsTemplate, serviceProvider, architectureFaculty)));
+
             RegisterFaculty<IDesignFaculty>(
                 campus, campusTemplate, serviceProvider, "Design", "Director",
                 static (context, dean) => new DesignFaculty(context, dean));
@@ -587,6 +596,9 @@ public static class ForgeCampusExtensions
     {
         name = faculty.Context.Template.Descriptor.Name,
         version = faculty.Context.Template.Descriptor.Version.ToString(),
-        dean = faculty.Dean.Title
+        dean = faculty.Dean.Title,
+        institutions = faculty is IArchitectureFaculty
+            ? new[] { faculty.Resolve<IDecisions>().Context.Template.Descriptor.Name }
+            : []
     };
 }
