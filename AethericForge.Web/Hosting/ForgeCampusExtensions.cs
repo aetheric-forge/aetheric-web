@@ -1,3 +1,23 @@
+using AdrCampus.Application.Administration;
+using AdrCampus.Application.Discovery;
+using AdrCampus.Application.Drafts;
+using AdrCampus.Application.Identity;
+using AdrCampus.Application.Maintenance;
+using AdrCampus.Application.Membership;
+using AdrCampus.Application.Proposals;
+using AdrCampus.Core.Administration;
+using AdrCampus.Core.Discovery;
+using AdrCampus.Core.Domain;
+using AdrCampus.Core.Drafts;
+using AdrCampus.Core.Maintenance;
+using AdrCampus.Core.Membership;
+using AdrCampus.Core.Proposals;
+using AdrCampus.Providers.Archive;
+using AdrCampus.Providers.Drafts.Workbench;
+using AdrCampus.Providers.Library;
+using AdrCampus.Providers.PostOffice;
+using AdrCampus.Web.Drafts;
+using AdrCampus.Web.Members;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
@@ -80,6 +100,11 @@ namespace AethericForge.Web.Hosting;
 
 public static class ForgeCampusExtensions 
 {
+    private const string DecisionsArchiveStore = "adr-campus";
+    private const string DecisionsKnowledgeScheme = "adr-campus";
+    private const string DecisionsWorkbenchStage = "adr-campus-workbench";
+    private const string DecisionsMaintenanceDomain = "adr-campus-maintenance";
+
     private static string BuildMongoUri(IConfiguration configuration)
     {
         var host = GetRequiredSetting(configuration, "MongoDb:Host");
@@ -234,6 +259,10 @@ public static class ForgeCampusExtensions
                         "S3:BucketName",
                         "forge-campus-archive"),
                     "parallel-you"))
+                .With<IArchiveProvider>(sp => new MongoDbArchiveProvider(
+                    sp.GetRequiredService<IMongoDatabase>(),
+                    DecisionsArchiveStore,
+                    "archive"))
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
@@ -256,6 +285,10 @@ public static class ForgeCampusExtensions
                     sp.GetRequiredService<IMongoDatabase>(), "ForgeCampus", "knowledge"))
                 .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
                     sp.GetRequiredService<IMongoDatabase>(), "parallel-you", "knowledge"))
+                .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
+                    sp.GetRequiredService<IMongoDatabase>(),
+                    DecisionsKnowledgeScheme,
+                    "knowledge"))
                 .With<IKnowledgeService, KnowledgeService>()
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()
@@ -282,6 +315,9 @@ public static class ForgeCampusExtensions
                 .With<IPostProvider>(sp => new RabbitMqPostProvider( "ForgeCampus", 
                     BuildRabbitMqUrl(
                        sp.GetRequiredService<IConfiguration>())))
+                .With<IPostProvider>(sp => new RabbitMqPostProvider(
+                    DecisionsMaintenanceDomain,
+                    BuildRabbitMqUrl(sp.GetRequiredService<IConfiguration>())))
                 .With<IPostService, PostService>()
                 .With<ITeam<IPostClerk>>(_ => new Team<IPostClerk>(Array.Empty<IPostClerk>()))
                 .With<IPostExchange, PostExchange>()
@@ -316,6 +352,9 @@ public static class ForgeCampusExtensions
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "IntentionCurrent"))
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "PlanCurrent"))
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "RecommendationCurrent"))                .With<IStagingService, StagingService>()
+                .With<IStagingProvider>(sp => new RedisStagingProvider(
+                    sp.GetRequiredService<IConnectionMultiplexer>(),
+                    DecisionsWorkbenchStage))
                 .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
                 .With<IArtificer, Artificer>()
@@ -425,6 +464,47 @@ public static class ForgeCampusExtensions
         services.AddSingleton<ForgeCampusHost>();
         services.AddHostedService<ForgeCampusHost>(serviceProvider =>
             serviceProvider.GetRequiredService<ForgeCampusHost>());
+
+        services.AddSingleton<IDraftRepository, WorkbenchDraftRepository>();
+        services.AddSingleton<IDraftRecoveryRepository>(serviceProvider =>
+            (WorkbenchDraftRepository)serviceProvider.GetRequiredService<IDraftRepository>());
+        services.AddSingleton<IExpiredDraftPurgeRepository>(serviceProvider =>
+            (WorkbenchDraftRepository)serviceProvider.GetRequiredService<IDraftRepository>());
+
+        services.AddSingleton<LibraryProposalRepository>(serviceProvider => new LibraryProposalRepository(
+            serviceProvider.GetRequiredService<ICampus>().Library,
+            serviceProvider.GetRequiredService<IDraftRepository>()));
+        services.AddSingleton<IProposalRepository>(serviceProvider =>
+            serviceProvider.GetRequiredService<LibraryProposalRepository>());
+        services.AddSingleton<ISharedRecordRepository>(serviceProvider =>
+            serviceProvider.GetRequiredService<LibraryProposalRepository>());
+
+        services.AddSingleton<IOrganizationAdministrationRepository, ArchiveOrganizationAdministrationRepository>();
+        services.AddSingleton<IMembershipRepository, ArchiveMembershipRepository>();
+        services.AddSingleton<IMaintenancePostOffice>(serviceProvider =>
+            new PostOfficeMaintenanceDispatcher(serviceProvider.GetRequiredService<ICampus>().PostOffice));
+
+        services.AddScoped<DraftApplicationService>();
+        services.AddScoped<ProposalApplicationService>();
+        services.AddScoped<DiscoveryApplicationService>();
+        services.AddScoped<OrganizationAdministrationService>();
+        services.AddScoped<DraftRecoveryApplicationService>();
+        services.AddScoped<IDraftRecoveryCoordinator>(serviceProvider =>
+            serviceProvider.GetRequiredService<DraftRecoveryApplicationService>());
+        services.AddScoped<MaintenanceApplicationService>();
+        services.AddScoped<AdministrationHistoryService>();
+        services.AddScoped<MembershipObservationService>();
+        services.AddHttpClient(MemberRosterService.HttpClientName);
+        services.AddSingleton<MemberRosterService>();
+        services.AddScoped<IMemberAuthority, KeycloakMemberAuthority>();
+        services.AddScoped<IMemberDisplayNameDirectory, KeycloakMemberDisplayNameDirectory>();
+        services.AddScoped<IDirectoryRosterSource, KeycloakDirectoryRosterSource>();
+        services.AddScoped<IOrganizationBootstrapVerifier, KeycloakOrganizationBootstrapVerifier>();
+        services.AddSingleton(serviceProvider => new CurrentOrganization(new OrganizationId(
+            GetRequiredSetting(
+                serviceProvider.GetRequiredService<IConfiguration>(),
+                "Organization:Id"))));
+        services.AddSingleton(TimeProvider.System);
         
         return services;
     }

@@ -1,4 +1,4 @@
-@page "/administration"
+@page "/decisions/administration"
 @attribute [Authorize(Policy = IdentityPolicies.ActiveMaintainer)]
 @using System.Security.Claims
 @using AdrCampus.Application.Maintenance
@@ -24,9 +24,9 @@
     </section>
 }
 <div class="card-grid">
-    <a class="feature-card" href="administration/recovery"><span class="card-kicker">Draft recovery</span><h2>Recover drafts</h2><p>Reassign private drafts whose authors have left the organization.</p></a>
-    <a class="feature-card" href="administration/settings"><span class="card-kicker">Organization</span><h2>Settings</h2><p>Manage the organization display name and view configured SSO authority.</p></a>
-    <a class="feature-card" href="administration/history"><span class="card-kicker">Audit</span><h2>Administration history</h2><p>Review application-owned membership and recovery events.</p></a>
+    <a class="feature-card" href="/decisions/administration/recovery"><span class="card-kicker">Draft recovery</span><h2>Recover drafts</h2><p>Reassign private drafts whose authors have left the organization.</p></a>
+    <a class="feature-card" href="/decisions/administration/settings"><span class="card-kicker">Organization</span><h2>Settings</h2><p>Manage the organization display name and view configured SSO authority.</p></a>
+    <a class="feature-card" href="/decisions/administration/history"><span class="card-kicker">Audit</span><h2>Administration history</h2><p>Review application-owned membership and recovery events.</p></a>
 </div>
 
 <section class="form-placeholder">

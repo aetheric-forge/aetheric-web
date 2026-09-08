@@ -1,6 +1,6 @@
-@page "/historical"
+@page "/decisions/historical"
 @using AdrCampus.Core.Discovery
-@using AdrCampus.Web.Components.Discovery
+@using AethericForge.Web.Decisions.Discovery
 <PageTitle>Historical decisions</PageTitle>
 <div class="page-header"><div><span class="eyebrow">Decision record</span><h1>Historical decisions</h1><p>Rejected proposals and decisions replaced by later ADRs.</p></div></div>
 <SharedRecordList View="SharedRecordView.Historical" ViewLabel="Historical decisions" EmptyTitle="No historical records" EmptyMessage="Shared ADRs exist, but none have been rejected or superseded." Sort="@Sort" Direction="@Direction" Page="@(Page ?? 1)" Search="@Query" />

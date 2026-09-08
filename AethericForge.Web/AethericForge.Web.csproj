@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\adr-campus\AdrCampus.Application\AdrCampus.Application.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Core\AdrCampus.Core.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Archive\AdrCampus.Providers.Archive.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Drafts.Workbench\AdrCampus.Providers.Drafts.Workbench.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Library\AdrCampus.Providers.Library.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.PostOffice\AdrCampus.Providers.PostOffice.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Models\ParallelYou.Models.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Services\ParallelYou.Services.csproj" />

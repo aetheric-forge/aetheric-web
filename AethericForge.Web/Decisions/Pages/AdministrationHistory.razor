@@ -1,4 +1,4 @@
-@page "/administration/history"
+@page "/decisions/administration/history"
 @attribute [Authorize(Policy = IdentityPolicies.ActiveMaintainer)]
 @using System.Security.Claims
 @using AdrCampus.Application.Administration
@@ -13,7 +13,7 @@
 <PageTitle>Administration history</PageTitle>
 <div class="page-header">
     <div><span class="eyebrow">Administration</span><h1>Administration history</h1><p>Application-owned organization, membership, and recovery events. This complements but does not replace the SSO control plane's own audit log.</p></div>
-    <a class="button button-secondary" href="administration">Administration</a>
+    <a class="button button-secondary" href="/decisions/administration">Administration</a>
 </div>
 
 @if (_loading)

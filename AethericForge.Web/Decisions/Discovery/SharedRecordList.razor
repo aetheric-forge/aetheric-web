@@ -21,11 +21,11 @@
 
 @if (View == SharedRecordView.All)
 {
-    <form class="filter-panel" method="get" action="records">
+    <form class="filter-panel" method="get" action="/decisions/records">
         <fieldset><legend>Status</legend>@foreach (var status in SharedStatuses) { <label><input type="checkbox" name="status" value="@status" checked="@_statuses.Contains(status)" /> @status</label> }</fieldset>
         @if (_sort is not null) { <input type="hidden" name="sort" value="@_sort.ToString()" /><input type="hidden" name="direction" value="@_direction.ToString()" /> }
         @if (!string.IsNullOrWhiteSpace(_searchInput)) { <input type="hidden" name="query" value="@_searchInput" /> }
-        <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><a class="button button-secondary" href="records">Clear filters</a></div>
+        <div class="filter-actions"><button class="button button-primary" type="submit">Apply filters</button><a class="button button-secondary" href="/decisions/records">Clear filters</a></div>
     </form>
 }
 
@@ -33,8 +33,8 @@
 else if (_parseInvalid || _result?.Status == DiscoveryQueryStatus.Invalid) { <section class="placeholder-panel" role="alert"><h2>Invalid result request</h2>@if (_result?.Errors.Count > 0) { <ul>@foreach (var error in _result.Errors) { <li>@error.Message</li> }</ul> } else { <p>One or more filters, sorting choices, or page values are not supported.</p> }<a class="button button-secondary" href="@BasePath">Clear controls</a></section> }
 else if (_result?.Status == DiscoveryQueryStatus.Unauthorized) { <section class="placeholder-panel" role="alert"><h2>Decision record unavailable</h2><p>Current organization membership could not be established.</p></section> }
 else if (_result?.Status == DiscoveryQueryStatus.Unavailable) { <section class="placeholder-panel" role="alert"><h2>Decision record temporarily unavailable</h2><p>No partial result set is being shown. Refresh the page to try again.</p></section> }
-else if (_result?.IsOrganizationEmpty == true) { <section class="empty-state"><span class="empty-icon" aria-hidden="true">A</span><h2>No shared ADRs yet</h2><p>Records become visible to the organization when an author proposes a complete draft.</p><a class="button button-secondary" href="drafts/new">Draft the first decision</a></section> }
-else if (_result?.IsViewEmpty == true) { <section class="placeholder-panel"><h2>@(string.IsNullOrEmpty(_result.Query.Search) ? EmptyTitle : "No matching shared ADRs")</h2><p>@(string.IsNullOrEmpty(_result.Query.Search) ? EmptyMessage : $"No records in this view contain “{_result.Query.Search}”.")</p>@if (!string.IsNullOrEmpty(_result.Query.Search)) { <a class="button button-secondary" href="@BuildUrl(page: 1, clearSearch: true)">Clear search</a> } else if (_statuses.Count > 0) { <a class="button button-secondary" href="records">Clear filters</a> }</section> }
+else if (_result?.IsOrganizationEmpty == true) { <section class="empty-state"><span class="empty-icon" aria-hidden="true">A</span><h2>No shared ADRs yet</h2><p>Records become visible to the organization when an author proposes a complete draft.</p><a class="button button-secondary" href="/decisions/drafts/new">Draft the first decision</a></section> }
+else if (_result?.IsViewEmpty == true) { <section class="placeholder-panel"><h2>@(string.IsNullOrEmpty(_result.Query.Search) ? EmptyTitle : "No matching shared ADRs")</h2><p>@(string.IsNullOrEmpty(_result.Query.Search) ? EmptyMessage : $"No records in this view contain “{_result.Query.Search}”.")</p>@if (!string.IsNullOrEmpty(_result.Query.Search)) { <a class="button button-secondary" href="@BuildUrl(page: 1, clearSearch: true)">Clear search</a> } else if (_statuses.Count > 0) { <a class="button button-secondary" href="/decisions/records">Clear filters</a> }</section> }
 else if (_result is { IsSuccess: true })
 {
     <div class="result-summary"><span><strong>@_result.TotalMatchingCount</strong> matching @(_result.TotalMatchingCount == 1 ? "record" : "records")</span><span>Page @_result.Query.Page of @_result.TotalPages</span></div>
@@ -72,7 +72,7 @@ else if (_result is { IsSuccess: true })
     [Parameter] public string? Search { get; set; }
     private static readonly AdrLifecycleStatus[] SharedStatuses = [AdrLifecycleStatus.Proposed, AdrLifecycleStatus.Accepted, AdrLifecycleStatus.Rejected, AdrLifecycleStatus.Superseded];
     private DiscoveryQueryResult? _result; private HashSet<AdrLifecycleStatus> _statuses = []; private SharedRecordSort? _sort; private SortDirection _direction = SortDirection.Descending; private MemberId? _memberId; private string _searchInput = string.Empty; private IReadOnlyList<SharedRecordItem> _suggestions = []; private bool _suggestionsHaveMore; private bool _suggesting; private CancellationTokenSource? _suggestionCancellation; private bool _parseInvalid; private bool _loading = true;
-    private string BasePath => View switch { SharedRecordView.Current => "", SharedRecordView.Proposed => "proposed", SharedRecordView.Historical => "historical", _ => "records" };
+    private string BasePath => View switch { SharedRecordView.Current => "/decisions", SharedRecordView.Proposed => "/decisions/proposed", SharedRecordView.Historical => "/decisions/historical", _ => "/decisions/records" };
 
     protected override async Task OnParametersSetAsync()
     {
@@ -113,10 +113,10 @@ else if (_result is { IsSuccess: true })
         var values = new List<string>(); foreach (var status in _statuses.OrderBy(value => value)) values.Add($"status={Uri.EscapeDataString(status.ToString())}");
         var selectedSort = sort ?? _sort; if (selectedSort is not null) { values.Add($"sort={selectedSort}"); values.Add($"direction={direction ?? _direction}"); }
         if (!clearSearch && !string.IsNullOrWhiteSpace(_searchInput)) values.Add($"query={Uri.EscapeDataString(_searchInput.Trim())}");
-        var selectedPage = page ?? Page; if (selectedPage > 1) values.Add($"page={selectedPage}"); var path = string.IsNullOrEmpty(BasePath) ? "/" : BasePath; return values.Count == 0 ? path : $"{path}?{string.Join("&", values)}";
+        var selectedPage = page ?? Page; if (selectedPage > 1) values.Add($"page={selectedPage}"); var path = BasePath; return values.Count == 0 ? path : $"{path}?{string.Join("&", values)}";
     }
     private void CancelSuggestions() { _suggestionCancellation?.Cancel(); _suggestionCancellation?.Dispose(); _suggestionCancellation = null; _suggesting = false; }
-    private string DetailUrl(AdrId id) { var relative = Navigation.ToBaseRelativePath(Navigation.Uri); var returnUrl = string.IsNullOrEmpty(relative) ? "/" : $"/{relative}"; return $"proposals/{id.Value:D}?returnUrl={Uri.EscapeDataString(returnUrl)}"; }
+    private string DetailUrl(AdrId id) { var relative = Navigation.ToBaseRelativePath(Navigation.Uri); var returnUrl = string.IsNullOrEmpty(relative) ? "/" : $"/{relative}"; return $"/decisions/proposals/{id.Value:D}?returnUrl={Uri.EscapeDataString(returnUrl)}"; }
     public void Dispose() => CancelSuggestions();
     private static string ShortId(AdrId id) => id.Value.ToString("N")[..8].ToUpperInvariant();
     private static string StatusClass(AdrLifecycleStatus status) => status switch { AdrLifecycleStatus.Accepted => "role-accepted", AdrLifecycleStatus.Rejected => "role-rejected", AdrLifecycleStatus.Superseded => "role-superseded", _ => "role-proposed" };
