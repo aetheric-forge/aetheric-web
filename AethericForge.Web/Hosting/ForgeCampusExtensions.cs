@@ -56,7 +56,6 @@ using AethericForge.Runtime.Institutions.Workbench;
 using AethericForge.Runtime.Models.Archive.Serialization;
 using AethericForge.Runtime.Models.Authorities;
 using AethericForge.Runtime.Models.Library.Articles;
-using AethericForge.Runtime.Providers.Archive.MongoDb;
 using AethericForge.Runtime.Providers.Archive.S3;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
 using AethericForge.Runtime.Providers.Knowledge.MongoDb;
@@ -261,10 +260,13 @@ public static class ForgeCampusExtensions
                         "S3:BucketName",
                         "forge-campus-archive"),
                     "parallel-you"))
-                .With<IArchiveProvider>(sp => new MongoDbArchiveProvider(
-                    sp.GetRequiredService<IMongoDatabase>(),
+                .With<IArchiveProvider>(sp => new S3ArchiveProvider(
+                    sp.GetRequiredService<IAmazonS3>(),
                     DecisionsArchiveStore,
-                    "archive"))
+                    sp.GetRequiredService<IConfiguration>().GetValue(
+                        "S3:BucketName",
+                        "forge-campus-archive"),
+                    "adr-campus"))
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
