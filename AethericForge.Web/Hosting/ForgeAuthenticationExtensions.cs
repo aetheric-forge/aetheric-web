@@ -45,6 +45,13 @@ public static class ForgeAuthenticationExtensions
                 options.ResponseType = OpenIdConnectResponseType.Code;
                 options.UsePkce = true;
                 options.SaveTokens = false;
+                // Defaults to UseIfAvailable, which silently switches to a PAR (RFC 9126) backchannel
+                // POST whenever Keycloak's discovery document advertises a PAR endpoint. Keycloak
+                // 26.1's PAR endpoint validates redirect_uri more strictly than its regular authorize
+                // endpoint, rejecting http://localhost redirect URIs that are otherwise correctly
+                // registered on the client - PKCE already covers what PAR would add here, so disable it
+                // rather than chase per-environment redirect_uri quirks through Keycloak.
+                options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
