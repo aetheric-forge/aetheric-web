@@ -16,6 +16,7 @@
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Faculty\AethericForge.Runtime.Institutions.Faculty.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Library\AethericForge.Runtime.Institutions.Library.csproj" />
+    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Maintenance\AethericForge.Runtime.Institutions.Maintenance.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.PostOffice\AethericForge.Runtime.Institutions.PostOffice.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Registry\AethericForge.Runtime.Institutions.Registry.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.InMemory\AethericForge.Runtime.Providers.Archive.InMemory.csproj" />
@@ -34,6 +35,7 @@
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Identity\AethericForge.Runtime.Services.Identity.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Knowledge\AethericForge.Runtime.Services.Knowledge.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Library\AethericForge.Runtime.Services.Library.csproj" />
+    <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Maintenance\AethericForge.Runtime.Services.Maintenance.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Post\AethericForge.Runtime.Services.Post.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Staging\AethericForge.Runtime.Services.Staging.csproj" />
   </ItemGroup>
