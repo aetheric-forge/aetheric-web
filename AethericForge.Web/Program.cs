@@ -1,5 +1,7 @@
+using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
 using AethericForge.Web.Components;
 using AethericForge.Web.Hosting;
+using AethericForge.Web.Maintenance;
 using AethericForge.Web.Membership;
 using AethericForge.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -19,6 +21,10 @@ builder.Services.AddSingleton<IMembershipApplicationStore, InMemoryMembershipApp
 builder.Services.AddSingleton<IMemberIdentityProvisioner, DevelopmentMemberIdentityProvisioner>();
 builder.Services.AddScoped<MembershipReviewService>();
 builder.Services.AddForgeCampus();
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IMaintenanceWorker, StaleMembershipApplicationsWorker>();
+builder.Services.AddHostedService<MaintenanceDispatchService>();
 
 var app = builder.Build();
 
