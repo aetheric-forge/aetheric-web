@@ -9,6 +9,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:8080
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - update-ca-certificates >/dev/null && exec dotnet AethericForge.Web.dll
     init: true
     ports:
       - "8080:8080"
+    volumes:
+      - ${STEP_CA_ROOT_CERT:-./.certificates/step-ca-root-ca.crt}:/usr/local/share/ca-certificates/step-ca-root-ca.crt:ro

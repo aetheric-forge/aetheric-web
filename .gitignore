@@ -6,3 +6,4 @@ bin/
 .output.txt
 .env*
 !.env.example
+.certificates/
