@@ -7,7 +7,7 @@ services:
     env_file:
       - ${AETHERIC_ENV_FILE:-.env.local}
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       ASPNETCORE_URLS: http://+:8080
     entrypoint:
       - /bin/sh
