@@ -4,3 +4,4 @@ bin/
 .idea/
 *.DotSettings.user
 .output.txt
+.env*
