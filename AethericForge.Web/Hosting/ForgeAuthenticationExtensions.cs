@@ -52,14 +52,6 @@ public static class ForgeAuthenticationExtensions
                 // registered on the client - PKCE already covers what PAR would add here, so disable it
                 // rather than chase per-environment redirect_uri quirks through Keycloak.
                 options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
-                // Correlation/nonce cookies default to SameSite=None + Secure=Always (the spec-required
-                // pairing). Browsers silently drop Secure cookies over plain http://, so the challenge
-                // cookie never round-trips when running over http (e.g. localhost) - "Correlation
-                // failed" on callback. Match the outer cookie scheme's policy above.
-                options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-                options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
-                options.NonceCookie.SameSite = SameSiteMode.Lax;
-                options.NonceCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.GetClaimsFromUserInfoEndpoint = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
