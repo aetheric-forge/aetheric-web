@@ -2,10 +2,12 @@ using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
 using AethericForge.Web.Components;
 using AethericForge.Web.Hosting;
 using AethericForge.Web.Maintenance;
+using AethericForge.Web.Maintenance.Jobs;
 using AethericForge.Web.Membership;
 using AethericForge.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using MongoDB.Driver;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +52,19 @@ builder.Services.AddForgeCampus();
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IMaintenanceWorker, StaleMembershipApplicationsWorker>();
+
+// A plain top-level IMongoDatabase, separate from the one built inside AddForgeCampus's institution
+// builder (that one is only resolvable through the Campus's own internal Context.Resolve<T>, not the
+// ambient DI container) - same reasoning as the dedicated Redis connection above for Data Protection.
+var mongoUrl = MongoUrl.Create(ForgeCampusExtensions.BuildMongoUri(builder.Configuration));
+builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(mongoUrl.DatabaseName));
+
+builder.Services.AddSingleton<ICredentialStore, MongoCredentialStore>();
+builder.Services.AddSingleton<IJobDefinitionStore, MongoJobDefinitionStore>();
+builder.Services.AddSingleton<IJobExecutor, SshJobExecutor>();
+builder.Services.AddSingleton<IJobExecutor, CodeJobExecutor>();
+builder.Services.AddSingleton<JobDispatcher>();
 builder.Services.AddHostedService<MaintenanceDispatchService>();
 
 var app = builder.Build();

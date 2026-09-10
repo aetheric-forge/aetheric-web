@@ -80,7 +80,7 @@ namespace AethericForge.Web.Hosting;
 
 public static class ForgeCampusExtensions 
 {
-    private static string BuildMongoUri(IConfiguration configuration)
+    internal static string BuildMongoUri(IConfiguration configuration)
     {
         var host = GetRequiredSetting(configuration, "MongoDb:Host");
         var username = GetRequiredSetting(configuration, "MongoDb:Username");
