@@ -529,7 +529,8 @@ public static class ForgeCampusExtensions
         services.AddSingleton<OrganizationBootstrapHealth>();
         services.AddScoped<OrganizationDisplayState>();
         services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<IMaintenanceWorker, ExpiredDraftPurgeWorker>();
+        services.AddSingleton<AdrCampus.Core.Maintenance.IMaintenanceWorker,
+            ExpiredDraftPurgeWorker>();
         services.AddHostedService<OrganizationBootstrapHostedService>();
         services.AddHostedService<MembershipSyncBackgroundService>();
         services.AddHostedService<MaintenanceDispatchService>();
