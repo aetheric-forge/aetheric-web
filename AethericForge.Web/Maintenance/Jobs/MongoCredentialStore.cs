@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
 namespace AethericForge.Web.Maintenance.Jobs;
@@ -21,7 +22,7 @@ public sealed class MongoCredentialStore : ICredentialStore
     private readonly TimeProvider _timeProvider;
 
     public MongoCredentialStore(
-        IMongoDatabase database,
+        [FromKeyedServices("Maintenance")] IMongoDatabase database,
         IDataProtectionProvider dataProtectionProvider,
         TimeProvider timeProvider)
     {

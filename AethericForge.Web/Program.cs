@@ -53,12 +53,19 @@ builder.Services.AddForgeCampus();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IMaintenanceWorker, StaleMembershipApplicationsWorker>();
 
-// A plain top-level IMongoDatabase, separate from the one built inside AddForgeCampus's institution
-// builder (that one is only resolvable through the Campus's own internal Context.Resolve<T>, not the
-// ambient DI container) - same reasoning as the dedicated Redis connection above for Data Protection.
-var mongoUrl = MongoUrl.Create(ForgeCampusExtensions.BuildMongoUri(builder.Configuration));
-builder.Services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoUrl));
-builder.Services.AddSingleton(sp => sp.GetRequiredService<IMongoClient>().GetDatabase(mongoUrl.DatabaseName));
+// A dedicated Mongo connection for Maintenance's job/credential stores, deliberately not the shared
+// "MongoDb:*" connection Archive/Knowledge/Decisions use - that one has grants scoped to the
+// institution that happens to have provisioned it (Decisions', in practice), not a genuinely
+// campus-wide connection, and assuming otherwise is exactly what broke this the first time. Keyed so
+// it can't accidentally be resolved as if it were that shared IMongoDatabase.
+var maintenanceMongoUrl = MongoUrl.Create(
+    ForgeCampusExtensions.BuildMongoUri(builder.Configuration, sectionPrefix: "Maintenance:MongoDb"));
+builder.Services.AddKeyedSingleton<IMongoClient>(
+    "Maintenance",
+    (_, _) => new MongoClient(maintenanceMongoUrl));
+builder.Services.AddKeyedSingleton<IMongoDatabase>(
+    "Maintenance",
+    (sp, _) => sp.GetRequiredKeyedService<IMongoClient>("Maintenance").GetDatabase(maintenanceMongoUrl.DatabaseName));
 
 builder.Services.AddSingleton<ICredentialStore, MongoCredentialStore>();
 builder.Services.AddSingleton<IJobDefinitionStore, MongoJobDefinitionStore>();

@@ -106,18 +106,25 @@ public static class ForgeCampusExtensions
     private const string DecisionsWorkbenchStage = "adr-campus-workbench";
     private const string DecisionsMaintenanceDomain = "adr-campus-maintenance";
 
-    internal static string BuildMongoUri(IConfiguration configuration)
+    /// <summary>
+    /// Builds a Mongo connection URI from a config section - defaults to the flat "MongoDb:*" keys
+    /// most institutions share, but a section prefix (e.g. "Maintenance:MongoDb") lets an institution
+    /// with its own dedicated database/credentials (its own grants, not assumed to be campus-wide)
+    /// opt out of that shared connection instead of silently reusing whichever institution happened
+    /// to provision it first.
+    /// </summary>
+    internal static string BuildMongoUri(IConfiguration configuration, string sectionPrefix = "MongoDb")
     {
-        var host = GetRequiredSetting(configuration, "MongoDb:Host");
-        var username = GetRequiredSetting(configuration, "MongoDb:Username");
-        var password = GetRequiredSetting(configuration, "MongoDb:Password");
-        var databaseName = GetRequiredSetting(configuration, "MongoDb:DatabaseName");
+        var host = GetRequiredSetting(configuration, $"{sectionPrefix}:Host");
+        var username = GetRequiredSetting(configuration, $"{sectionPrefix}:Username");
+        var password = GetRequiredSetting(configuration, $"{sectionPrefix}:Password");
+        var databaseName = GetRequiredSetting(configuration, $"{sectionPrefix}:DatabaseName");
         var authenticationDatabase = GetRequiredSetting(
             configuration,
-            "MongoDb:AuthenticationDatabase");
+            $"{sectionPrefix}:AuthenticationDatabase");
 
-        var port = configuration.GetValue<int?>("MongoDb:Port")
-                   ?? throw new InvalidOperationException("MongoDb:Port is required.");
+        var port = configuration.GetValue<int?>($"{sectionPrefix}:Port")
+                   ?? throw new InvalidOperationException($"{sectionPrefix}:Port is required.");
 
         var builder = new MongoUrlBuilder
         {
@@ -127,10 +134,10 @@ public static class ForgeCampusExtensions
             DatabaseName = databaseName,
             AuthenticationSource = authenticationDatabase,
             AuthenticationMechanism = configuration.GetValue<string>(
-                "MongoDb:AuthenticationMechanism",
+                $"{sectionPrefix}:AuthenticationMechanism",
                 "SCRAM-SHA-256"),
             DirectConnection = configuration.GetValue(
-                "MongoDb:DirectConnection",
+                $"{sectionPrefix}:DirectConnection",
                 true)
         };
 

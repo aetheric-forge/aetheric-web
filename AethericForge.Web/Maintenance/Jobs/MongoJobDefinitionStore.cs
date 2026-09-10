@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 
 namespace AethericForge.Web.Maintenance.Jobs;
@@ -7,7 +8,9 @@ public sealed class MongoJobDefinitionStore : IJobDefinitionStore
     private readonly IMongoCollection<JobDefinition> _collection;
     private readonly TimeProvider _timeProvider;
 
-    public MongoJobDefinitionStore(IMongoDatabase database, TimeProvider timeProvider)
+    public MongoJobDefinitionStore(
+        [FromKeyedServices("Maintenance")] IMongoDatabase database,
+        TimeProvider timeProvider)
     {
         _collection = database.GetCollection<JobDefinition>("maintenance-jobs");
         _timeProvider = timeProvider;
