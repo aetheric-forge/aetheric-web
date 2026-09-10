@@ -10,6 +10,7 @@
 
 <PageTitle>Membership Review</PageTitle>
 
+<AdminOnlyView>
 <main class="container py-5">
     <p class="text-uppercase">Forge Campus Registry</p>
     <h1>Membership applications</h1>
@@ -62,6 +63,7 @@
         </div>
     }
 </main>
+</AdminOnlyView>
 
 @code {
     private IReadOnlyList<MembershipApplication>? _applications;
