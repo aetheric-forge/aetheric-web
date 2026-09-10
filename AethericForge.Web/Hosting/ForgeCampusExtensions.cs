@@ -11,6 +11,7 @@ using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.IssueReports.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Security.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
@@ -26,6 +27,7 @@ using AethericForge.Runtime.Institutions.Campus;
 using AethericForge.Runtime.Institutions.Faculty;
 using AethericForge.Runtime.Institutions.Library;
 using AethericForge.Runtime.Institutions.IssueReports;
+using AethericForge.Runtime.Institutions.Security;
 using AethericForge.Runtime.Institutions.Maintenance;
 using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
@@ -46,6 +48,7 @@ using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Library;
 using AethericForge.Runtime.Services.IssueReports;
+using AethericForge.Runtime.Services.Security;
 using AethericForge.Runtime.Services.Maintenance;
 using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
@@ -238,6 +241,8 @@ public static class ForgeCampusExtensions
                 .With<ICaretaker, Caretaker>()
                 .With<ITeam<IIssueReportsClerk>>(_ => new Team<IIssueReportsClerk>(Array.Empty<IIssueReportsClerk>()))
                 .With<IWarden, Warden>()
+                .With<ITeam<ISecurityClerk>>(_ => new Team<ISecurityClerk>(Array.Empty<ISecurityClerk>()))
+                .With<ISentinel, Sentinel>()
                 .With<IArchiveVault, ArchiveVault>()
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
@@ -404,6 +409,16 @@ public static class ForgeCampusExtensions
                     serviceProvider,
                     issueReportsContext));
 
+            var securityTemplate = campusTemplate with
+            {
+                Descriptor = new InstitutionDescriptor("Security", campusTemplate.Descriptor.Version, "Security institution")
+            };
+            var securityContext = new SecurityContext(securityTemplate, serviceProvider, operations);
+            operations.Register<ISecurity>(
+                ActivatorUtilities.CreateInstance<global::AethericForge.Runtime.Institutions.Security.Security>(
+                    serviceProvider,
+                    securityContext));
+
             return campus;
         });
 
@@ -474,6 +489,13 @@ public static class ForgeCampusExtensions
                         name = campus.Resolve<IOperationsFaculty>().Resolve<IIssueReports>()
                             .Context.Template.Descriptor.Name,
                         version = campus.Resolve<IOperationsFaculty>().Resolve<IIssueReports>()
+                            .Context.Template.Descriptor.Version.ToString()
+                    },
+                    security = new
+                    {
+                        name = campus.Resolve<IOperationsFaculty>().Resolve<ISecurity>()
+                            .Context.Template.Descriptor.Name,
+                        version = campus.Resolve<IOperationsFaculty>().Resolve<ISecurity>()
                             .Context.Template.Descriptor.Version.ToString()
                     }
                 }));

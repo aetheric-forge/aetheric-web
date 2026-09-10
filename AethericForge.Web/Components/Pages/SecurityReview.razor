@@ -1,0 +1,27 @@
+@page "/campus/admin/security"
+@rendermode InteractiveServer
+@using AethericForge.Runtime.Institutions.Campus
+@using AethericForge.Runtime.Institutions.Security
+@using AethericForge.Web.Hosting
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
+@inject ICampus Campus
+
+<PageTitle>Security</PageTitle>
+
+<main class="container py-5">
+    <p class="text-uppercase">Operations Faculty</p>
+    <h1>Security</h1>
+
+    <div class="alert alert-secondary mt-4">
+        The Security institution is wired up, but there's no way to raise or review an incident or
+        audit finding yet - this page is a placeholder until that comes together.
+    </div>
+</main>
+
+@code {
+    // Confirms the institution resolves correctly (throws if the wiring ever regresses) without
+    // rendering anything from it yet - there's nothing to raise or review until a real UI lands.
+    protected override void OnInitialized() =>
+        _ = Campus.Resolve<IOperationsFaculty>().Resolve<ISecurity>();
+}
