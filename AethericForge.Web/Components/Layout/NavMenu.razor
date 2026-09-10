@@ -1,85 +1,59 @@
-﻿<nav class="site-nav" aria-label="Primary navigation">
-    <a class="site-nav__brand" href="/" aria-label="Aetheric Forge home">
-        <span class="site-nav__mark" aria-hidden="true">
-            <span></span>
-        </span>
-        <span class="site-nav__brand-text">
-            <strong>Aetheric Forge</strong>
-            <small>Open systems &amp; shared knowledge</small>
-        </span>
-    </a>
+﻿<nav class="sidebar-nav" aria-label="Primary navigation">
+    @if (IsAdministrator && !ViewAsUser)
+    {
+        <div class="sidebar-nav__banner">Administrator mode</div>
+    }
 
-    <input id="site-nav-toggle" class="site-nav__toggle" type="checkbox" />
-    <label class="site-nav__toggle-label" for="site-nav-toggle">
+    <input id="sidebar-nav-toggle" class="sidebar-nav__toggle" type="checkbox" />
+    <label class="sidebar-nav__toggle-label" for="sidebar-nav-toggle">
         <span class="visually-hidden">Toggle navigation</span>
         <span></span><span></span><span></span>
     </label>
 
-    <div class="site-nav__links">
-        <a href="/#mission">Mission</a>
+    <div class="sidebar-nav__links">
+        <div class="sidebar-nav__section">
+            <span class="sidebar-nav__heading">Explore</span>
+            <a href="/#mission">Mission</a>
+            <a href="/projects">Projects</a>
+            <a href="/#resources">Resources</a>
+        </div>
 
-        <details class="site-nav__group">
-            <summary>Explore <span aria-hidden="true">⌄</span></summary>
-            <div class="site-nav__submenu">
-                <a href="/projects">
-                    <strong>Projects</strong>
-                    <small>Work growing on the Campus</small>
-                </a>
-                <a href="/#resources">
-                    <strong>Resources</strong>
-                    <small>Articles, videos, and documentation</small>
-                </a>
+        <div class="sidebar-nav__section">
+            <span class="sidebar-nav__heading">Institutions</span>
+            <span class="sidebar-nav__subheading">Architecture &middot; Principal Architect</span>
+            <a href="/library">Library</a>
+
+            <span class="sidebar-nav__subheading">Design &middot; Director</span>
+            <span class="sidebar-nav__subheading">Engineering &middot; Chief Engineer</span>
+            <span class="sidebar-nav__subheading">Manufacturing &middot; Chief Fabricator</span>
+            <span class="sidebar-nav__subheading">Operations &middot; Quartermaster</span>
+
+            <a href="/parallel-you">Parallel You</a>
+        </div>
+
+        <div class="sidebar-nav__section">
+            <span class="sidebar-nav__heading">Campus</span>
+            <a href="/campus/apply">Join Campus</a>
+            <a href="https://github.com/aetheric-forge" target="_blank" rel="noreferrer">GitHub ↗</a>
+        </div>
+
+        @if (IsAdministrator && !ViewAsUser)
+        {
+            <div class="sidebar-nav__section">
+                <span class="sidebar-nav__heading">Administration</span>
+                <a href="/campus/admin/membership">Applications</a>
+                <a href="/campus/admin/maintenance">Maintenance</a>
+                <a href="/campus/admin/issue-reports">Issue Reports</a>
+                <a href="/campus/admin/security">Security</a>
             </div>
-        </details>
-
-        <details class="site-nav__group">
-            <summary>Institutions <span aria-hidden="true">⌄</span></summary>
-            <div class="site-nav__submenu">
-                <span class="site-nav__submenu-heading">Architecture &middot; Principal Architect</span>
-                <a href="/library">
-                    <strong>Library</strong>
-                    <small>Authoritative articles and publications</small>
-                </a>
-
-                <span class="site-nav__submenu-heading">Design &middot; Director</span>
-                <span class="site-nav__submenu-heading">Engineering &middot; Chief Engineer</span>
-                <span class="site-nav__submenu-heading">Manufacturing &middot; Chief Fabricator</span>
-                <span class="site-nav__submenu-heading">Operations &middot; Quartermaster</span>
-
-                <a href="/parallel-you">
-                    <strong>Parallel You</strong>
-                    <small>A private reflective workspace</small>
-                </a>
-            </div>
-        </details>
-
-        <a href="/campus/apply">Join Campus</a>
-
-        <AuthorizeView Context="auth">
-            <Authorized>
-                <AuthorizeView Policy="ForgeAdministrator" Context="administratorAuth">
-                    <Authorized>
-                        <a href="/campus/admin/membership">Applications</a>
-                        <a href="/campus/admin/maintenance">Maintenance</a>
-                        <a href="/campus/admin/issue-reports">Issue Reports</a>
-                        <a href="/campus/admin/security">Security</a>
-                    </Authorized>
-                </AuthorizeView>
-
-                <span class="site-nav__identity">@auth.User.Identity?.Name</span>
-                <form method="post" action="/account/logout" data-enhance="false">
-                    <AntiforgeryToken />
-                    <button type="submit" class="site-nav__account-action">Sign out</button>
-                </form>
-            </Authorized>
-            <NotAuthorized>
-                <p>Not authorized</p>
-                <a class="site-nav__account-action" href="/account/login" data-enhance-nav="false">Sign in</a>
-            </NotAuthorized>
-        </AuthorizeView>
-
-        <a class="site-nav__github" href="https://github.com/aetheric-forge" target="_blank" rel="noreferrer">
-            GitHub <span aria-hidden="true">↗</span>
-        </a>
+        }
     </div>
 </nav>
+
+@code {
+    [Parameter]
+    public bool IsAdministrator { get; set; }
+
+    [Parameter]
+    public bool ViewAsUser { get; set; }
+}

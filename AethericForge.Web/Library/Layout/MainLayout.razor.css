@@ -1,13 +1,3 @@
-.library-campus-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    border-bottom: 1px solid rgb(148 163 184 / 18%);
-    background: rgb(8 14 25 / 94%);
-    box-shadow: 0 1rem 3rem rgb(2 6 23 / 12%);
-    backdrop-filter: blur(18px);
-}
-
 .library-shell {
     min-height: 100vh;
     display: flex;
@@ -17,7 +7,7 @@
 .library-sidebar {
     width: 17.5rem;
     flex: 0 0 17.5rem;
-    min-height: calc(100vh - 4.75rem);
+    min-height: 100vh;
     background: var(--py-ink);
     color: var(--py-paper);
 }
@@ -29,7 +19,7 @@
 
 .library-workspace-header {
     position: sticky;
-    top: 4.75rem;
+    top: 0;
     z-index: 10;
     min-height: 4.5rem;
     display: flex;

@@ -1,13 +1,62 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@using AethericForge.Web.Hosting
+@using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAuthorizationService AuthorizationService
+@inject NavigationManager NavigationManager
 
-<div class="site-shell">
-    <header class="site-header">
-        <NavMenu />
-    </header>
+<div class="app-shell">
+    <aside class="app-sidebar">
+        <NavMenu IsAdministrator="_isAdministrator" ViewAsUser="_viewAsUser" />
+    </aside>
 
-    <main id="main-content">
-        @Body
-    </main>
+    <div class="app-main">
+        <header class="app-topbar">
+            <a class="app-topbar__brand" href="/" aria-label="Aetheric Forge home">
+                <span class="app-topbar__mark" aria-hidden="true"><span></span></span>
+                <strong>Aetheric Forge</strong>
+            </a>
+
+            <div class="app-topbar__spacer"></div>
+
+            <AuthorizeView Context="auth">
+                <Authorized>
+                    <div class="app-topbar__identity">
+                        <span class="app-topbar__name">@auth.User.Identity?.Name</span>
+                        @if (_isAdministrator)
+                        {
+                            <small class="app-topbar__role">@(_viewAsUser ? "Administrator · Viewing as user" : "Administrator")</small>
+                        }
+                    </div>
+
+                    @if (_isAdministrator)
+                    {
+                        <form method="post" action="/account/view-as-user">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="returnUrl" value="@_currentPath" />
+                            <button class="app-topbar__view-toggle" type="submit">
+                                @(_viewAsUser ? "Return to administrator view" : "View as user")
+                            </button>
+                        </form>
+                    }
+
+                    <form method="post" action="/account/logout" data-enhance="false">
+                        <AntiforgeryToken />
+                        <button type="submit" class="app-topbar__action">Sign out</button>
+                    </form>
+                </Authorized>
+                <NotAuthorized>
+                    <a class="app-topbar__action" href="/account/login" data-enhance-nav="false">Sign in</a>
+                </NotAuthorized>
+            </AuthorizeView>
+        </header>
+
+        <CascadingValue Value="_viewAsUser" Name="ViewAsUser">
+            <main id="main-content">
+                @Body
+            </main>
+        </CascadingValue>
+    </div>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
@@ -15,3 +64,34 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">✕</span>
 </div>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private bool _isAdministrator;
+    private bool _viewAsUser;
+    private string _currentPath = "/";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var result = await AuthorizationService.AuthorizeAsync(
+            authenticationState.User,
+            ForgeAuthorizationExtensions.AdministratorPolicy);
+        _isAdministrator = result.Succeeded;
+
+        // Read from a cookie, set by a plain form POST, rather than in-memory @onclick state: most of
+        // the site is static server-rendered with no SignalR circuit, so a live client-side toggle
+        // would silently do nothing on every non-interactive page. See
+        // ForgeAuthenticationExtensions.ToggleViewAsUserAsync.
+        var viewAsUserCookie = HttpContext?.Request.Cookies[ForgeAuthenticationExtensions.ViewAsUserCookieName];
+        _viewAsUser = _isAdministrator && viewAsUserCookie == "1";
+
+        _currentPath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        if (!_currentPath.StartsWith('/'))
+        {
+            _currentPath = "/" + _currentPath;
+        }
+    }
+}

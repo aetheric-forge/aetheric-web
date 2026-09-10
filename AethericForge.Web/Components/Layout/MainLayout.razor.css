@@ -1,17 +1,146 @@
-.site-shell {
+.app-shell {
+    display: flex;
     min-height: 100vh;
 }
 
-.site-header {
+.app-sidebar {
+    position: sticky;
+    top: 0;
+    flex-shrink: 0;
+    width: 16.5rem;
+    height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid rgb(148 163 184 / 18%);
+    background: rgb(8 14 25 / 96%);
+}
+
+.app-main {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+}
+
+.app-topbar {
     position: sticky;
     top: 0;
     z-index: 100;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: .85rem 1.5rem;
     border-bottom: 1px solid rgb(148 163 184 / 18%);
     background: rgb(8 14 25 / 88%);
     box-shadow: 0 1rem 3rem rgb(2 6 23 / 12%);
     backdrop-filter: blur(18px);
 }
 
+.app-topbar__brand {
+    display: none;
+    align-items: center;
+    gap: .6rem;
+    color: var(--color-text-inverse);
+    text-decoration: none;
+}
+
+.app-topbar__mark {
+    position: relative;
+    display: grid;
+    width: 1.6rem;
+    height: 1.6rem;
+    place-items: center;
+    transform: rotate(45deg);
+    border: 1px solid rgb(76 225 201 / 75%);
+    border-radius: .3rem;
+    background: linear-gradient(135deg, rgb(76 225 201 / 18%), rgb(125 104 255 / 18%));
+}
+
+.app-topbar__mark span {
+    width: .25rem;
+    height: .25rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+}
+
+.app-topbar__spacer {
+    flex: 1;
+}
+
+.app-topbar__identity {
+    display: grid;
+    gap: .05rem;
+    max-width: 12rem;
+    overflow: hidden;
+    text-align: right;
+}
+
+.app-topbar__name {
+    overflow: hidden;
+    color: var(--color-text-inverse);
+    font-size: .85rem;
+    font-weight: 650;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-topbar__role {
+    color: var(--color-text-inverse-muted);
+    font-size: .68rem;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.app-topbar__view-toggle {
+    padding: .4rem .75rem;
+    border: 1px solid rgb(76 225 201 / 45%);
+    border-radius: .4rem;
+    background: transparent;
+    color: var(--color-accent);
+    cursor: pointer;
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.app-topbar__action {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-accent);
+    cursor: pointer;
+    font: inherit;
+    font-size: .84rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.app-topbar form {
+    margin: 0;
+}
+
 #main-content {
     min-width: 0;
+    flex: 1;
+}
+
+@media (max-width: 52rem) {
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .app-sidebar {
+        position: static;
+        width: 100%;
+        height: auto;
+    }
+
+    .app-topbar__brand {
+        display: inline-flex;
+    }
+
+    .app-topbar__identity {
+        max-width: 8rem;
+    }
 }

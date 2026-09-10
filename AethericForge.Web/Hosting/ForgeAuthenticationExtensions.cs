@@ -14,6 +14,8 @@ namespace AethericForge.Web.Hosting;
 
 public static class ForgeAuthenticationExtensions
 {
+    public const string ViewAsUserCookieName = "ViewAsUser";
+
     public static IServiceCollection AddForgeCampusAuthentication(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -73,6 +75,8 @@ public static class ForgeAuthenticationExtensions
         endpoints.MapGet("/account/login", Login)
             .AllowAnonymous();
         endpoints.MapPost("/account/logout", LogoutAsync);
+        endpoints.MapPost("/account/view-as-user", ToggleViewAsUserAsync)
+            .RequireAuthorization(ForgeAuthorizationExtensions.AdministratorPolicy);
 
         return endpoints;
     }
@@ -113,6 +117,38 @@ public static class ForgeAuthenticationExtensions
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 OpenIdConnectDefaults.AuthenticationScheme
             ]);
+    }
+
+    private static async Task<IResult> ToggleViewAsUserAsync(
+        HttpContext context,
+        IAntiforgery antiforgery,
+        CancellationToken cancellationToken)
+    {
+        await antiforgery.ValidateRequestAsync(context);
+        var form = await context.Request.ReadFormAsync(cancellationToken);
+        var returnUrl = GetSafeReturnUrl(form["returnUrl"].ToString());
+
+        // A cookie + full-page-reload toggle rather than live client-side state, because most of the
+        // site is static server-rendered (no SignalR circuit) and only a handful of admin pages opt
+        // into InteractiveServer - an @onclick-driven toggle would silently do nothing on every static
+        // page. This mirrors the sign-in/out forms, which hit the same static/interactive constraint.
+        var isCurrentlyOn = context.Request.Cookies[ViewAsUserCookieName] == "1";
+        if (isCurrentlyOn)
+        {
+            context.Response.Cookies.Delete(ViewAsUserCookieName);
+        }
+        else
+        {
+            context.Response.Cookies.Append(ViewAsUserCookieName, "1", new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = context.Request.IsHttps,
+                Path = "/"
+            });
+        }
+
+        return Results.LocalRedirect(returnUrl);
     }
 
     private static async Task RegisterPrincipalAsync(TokenValidatedContext context)
