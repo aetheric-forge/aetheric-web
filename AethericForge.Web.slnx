@@ -38,4 +38,7 @@
     <Project Path="runtime/src/Services/AethericForge.Runtime.Services.Workbench/AethericForge.Runtime.Services.Workbench.csproj" />
     <Project Path="runtime/src/Tests/AethericForge.Runtime.Tests/AethericForge.Runtime.Tests.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/AethericForge.Web.Tests/AethericForge.Web.Tests.csproj" />
+  </Folder>
 </Solution>

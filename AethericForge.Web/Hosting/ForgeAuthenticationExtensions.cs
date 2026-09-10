@@ -20,7 +20,7 @@ public static class ForgeAuthenticationExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var keycloakSection = configuration.GetRequiredSection("Keycloak");
+        var keycloakSection = InstitutionServiceConfiguration.Resolve(configuration, "Registry", "Keycloak").GetRequiredSection("Keycloak");
         var authority = keycloakSection["Authority"];
         var realm = keycloakSection["Realm"];
 

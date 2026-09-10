@@ -25,12 +25,14 @@ builder.Services.AddRazorComponents()
 // PersistKeysToStackExchangeRedis invokes its factory delegate on every key-ring read/write, so a
 // lazily-created-but-shared multiplexer avoids reconnecting to Redis on every single Data Protection
 // operation (rather than opening a fresh connection each time).
+var redisConfiguration = InstitutionServiceConfiguration.Resolve(builder.Configuration, "ForgeCampus", "Redis");
 var dataProtectionRedis = new Lazy<IConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(new ConfigurationOptions
 {
-    EndPoints = { { builder.Configuration["Redis:Host"]!, builder.Configuration.GetValue<int?>("Redis:Port") ?? 6379 } },
-    Password = builder.Configuration["Redis:Password"],
-    Ssl = builder.Configuration.GetValue<bool>("Redis:Ssl"),
-    DefaultDatabase = builder.Configuration.GetValue<int?>("Redis:Database") ?? 0,
+    EndPoints = { { redisConfiguration["Redis:Host"]!, redisConfiguration.GetValue<int?>("Redis:Port") ?? 6379 } },
+    User = redisConfiguration["Redis:User"],
+    Password = redisConfiguration["Redis:Password"],
+    Ssl = redisConfiguration.GetValue<bool>("Redis:Ssl"),
+    DefaultDatabase = redisConfiguration.GetValue<int?>("Redis:Database") ?? 0,
     AbortOnConnectFail = false
 }));
 
@@ -53,13 +55,12 @@ builder.Services.AddForgeCampus();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IMaintenanceWorker, StaleMembershipApplicationsWorker>();
 
-// A dedicated Mongo connection for Maintenance's job/credential stores, deliberately not the shared
-// "MongoDb:*" connection Archive/Knowledge/Decisions use - that one has grants scoped to the
-// institution that happens to have provisioned it (Decisions', in practice), not a genuinely
-// campus-wide connection, and assuming otherwise is exactly what broke this the first time. Keyed so
-// it can't accidentally be resolved as if it were that shared IMongoDatabase.
+// Maintenance owns its job and encrypted-credential stores. Endpoint settings may fall back to
+// platform defaults, but credentials resolve only from Maintenance:MongoDb. A keyed client keeps
+// this connection separate from Library, ParallelYou, and Decisions.
 var maintenanceMongoUrl = MongoUrl.Create(
-    ForgeCampusExtensions.BuildMongoUri(builder.Configuration, sectionPrefix: "Maintenance:MongoDb"));
+    ForgeCampusExtensions.BuildMongoUri(
+        InstitutionServiceConfiguration.Resolve(builder.Configuration, "Maintenance", "MongoDb")));
 builder.Services.AddKeyedSingleton<IMongoClient>(
     "Maintenance",
     (_, _) => new MongoClient(maintenanceMongoUrl));
