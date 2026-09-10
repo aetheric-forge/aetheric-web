@@ -27,12 +27,12 @@ The resolver accepts explicitly supported scalar settings only. Opaque connectio
 | Archive | S3 for campus archive |
 | Library | MongoDb for campus knowledge |
 | PostOffice | RabbitMq for campus post |
-| Workbench | Redis for default staging |
-| ParallelYou | S3, MongoDb, Redis |
-| Decisions | S3, MongoDb, Redis, RabbitMq |
+| Workbench | Redis for all staging, including ParallelYou and Decisions |
+| ParallelYou | S3, MongoDb |
+| Decisions | S3, MongoDb, RabbitMq |
 | Maintenance | MongoDb for jobs and encrypted credential records |
 
-S3, MongoDB, and staging Redis clients use institution-keyed registrations, so applications cannot silently borrow another institution's client. Existing archive store names, knowledge schemes, and staging names remain the routing identifiers. Institutions may use a common endpoint, but operators must provision credentials and grants for each institution's intended resources. Configuration scoping alone does not create server-side access controls. Registry provides the shared identity capability; directory callers use Registry's identity service configuration.
+S3 and MongoDB clients use institution-keyed registrations. All staging Redis providers use the Workbench client and credentials; ParallelYou and Decisions access their stages through Workbench. Data Protection retains its separate ForgeCampus Redis connection. Existing archive store names, knowledge schemes, and staging names remain the routing identifiers. Institutions may use a common endpoint, but operators must provision credentials and grants for each institution's intended resources. Configuration scoping alone does not create server-side access controls. Registry provides the shared identity capability; directory callers use Registry's identity service configuration.
 
 Configuration is resolved when the host or client factory consumes it. Invalid credentials fail before that client connects. Existing singleton connections and OIDC options are not hot-reloaded; restart the host after rotating configuration.
 
@@ -53,5 +53,7 @@ Decisions__MongoDb__DatabaseName=decisions
 Decisions__MongoDb__Username=decisions-service
 Decisions__MongoDb__Password=<different-secret>
 ```
+
+Staging requires only `Workbench:Redis` credentials; remove obsolete `ParallelYou:Redis` and `Decisions:Redis` settings after deploying this change. Shared endpoint defaults remain under `Redis`. If the old scopes used different endpoints or databases, migrate their staging data into the Workbench Redis database before switching; stage names and key prefixes are unchanged.
 
 The updated `.env.example` lists all required credential scopes. Old flat-only deployments must migrate before running this version. No secrets are stored in checked-in appsettings, diagnostics, or exception messages.

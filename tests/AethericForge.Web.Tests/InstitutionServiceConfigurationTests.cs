@@ -98,6 +98,18 @@ public class InstitutionServiceConfigurationTests
         Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<MongoDB.Driver.IMongoClient>());
     }
 
+    [Fact]
+    public void CampusRegistersOnlyWorkbenchStagingRedisConnection()
+    {
+        var services = new ServiceCollection();
+        services.AddForgeCampus();
+
+        var connection = Assert.Single(services.Where(descriptor =>
+            descriptor.ServiceType == typeof(StackExchange.Redis.IConnectionMultiplexer)));
+        Assert.Equal("Workbench", connection.ServiceKey);
+        Assert.Equal(ServiceLifetime.Singleton, connection.Lifetime);
+    }
+
     [Theory]
     [InlineData("https://user:secret@example.com")]
     [InlineData("https://example.com?token=secret")]

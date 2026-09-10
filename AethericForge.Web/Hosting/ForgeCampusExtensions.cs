@@ -226,21 +226,20 @@ public static class ForgeCampusExtensions
                     "MongoDb:DatabaseName")));
         }
 
-        foreach (var institution in new[] { "Workbench", "ParallelYou", "Decisions" })
-            services.AddKeyedSingleton<IConnectionMultiplexer>(institution, (sp, _) =>
+        services.AddKeyedSingleton<IConnectionMultiplexer>("Workbench", (sp, _) =>
+        {
+            var configuration = InstitutionServiceConfiguration.Resolve(
+                sp.GetRequiredService<IConfiguration>(), "Workbench", "Redis");
+            return ConnectionMultiplexer.Connect(new ConfigurationOptions
             {
-                var configuration = InstitutionServiceConfiguration.Resolve(
-                    sp.GetRequiredService<IConfiguration>(), institution, "Redis");
-                return ConnectionMultiplexer.Connect(new ConfigurationOptions
-                {
-                    EndPoints = { { GetRequiredSetting(configuration, "Redis:Host"), configuration.GetValue<int?>("Redis:Port") ?? 6379 } },
-                    User = configuration["Redis:User"],
-                    Password = configuration["Redis:Password"],
-                    Ssl = configuration.GetValue<bool>("Redis:Ssl"),
-                    DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
-                    AbortOnConnectFail = false
-                });
+                EndPoints = { { GetRequiredSetting(configuration, "Redis:Host"), configuration.GetValue<int?>("Redis:Port") ?? 6379 } },
+                User = configuration["Redis:User"],
+                Password = configuration["Redis:Password"],
+                Ssl = configuration.GetValue<bool>("Redis:Ssl"),
+                DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
+                AbortOnConnectFail = false
             });
+        });
 
         services.AddInstitutionTemplate(builder =>
         {
@@ -339,14 +338,14 @@ public static class ForgeCampusExtensions
                 .With<IPostOfficeContext, PostOfficeContext>()
                 .With<IPostOffice, PostOffice>()
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "Default"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("ParallelYou"), "ReflectionMapping"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("ParallelYou"), "TrackingCurrent"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("ParallelYou"), "IntentionCurrent"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("ParallelYou"), "PlanCurrent"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("ParallelYou"), "RecommendationCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "ReflectionMapping"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "TrackingCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "IntentionCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "PlanCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "RecommendationCurrent"))
                 .With<IStagingService, StagingService>()
                 .With<IStagingProvider>(sp => new RedisStagingProvider(
-                    sp.GetRequiredKeyedService<IConnectionMultiplexer>("Decisions"),
+                    sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"),
                     DecisionsWorkbenchStage))
                 .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
