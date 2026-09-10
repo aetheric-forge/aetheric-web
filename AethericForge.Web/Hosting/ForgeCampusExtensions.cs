@@ -144,20 +144,26 @@ public static class ForgeCampusExtensions
         return builder.ToMongoUrl().ToString();
     }
 
-    private static string BuildRabbitMqUrl(IConfiguration configuration)
+    /// <summary>
+    /// Defaults to the flat "RabbitMq:*" keys most institutions share, but a section prefix (e.g.
+    /// "Maintenance:RabbitMq") lets an institution with its own dedicated broker credentials (its own
+    /// grants, not assumed to be campus-wide) opt out of that shared connection - same reasoning as
+    /// BuildMongoUri's sectionPrefix.
+    /// </summary>
+    internal static string BuildRabbitMqUrl(IConfiguration configuration, string sectionPrefix = "RabbitMq")
     {
-        var useSsl = configuration.GetValue("RabbitMq:Ssl", false);
+        var useSsl = configuration.GetValue($"{sectionPrefix}:Ssl", false);
         var builder = new UriBuilder
         {
             Scheme = useSsl ? "amqps" : "amqp",
-            Host = GetRequiredSetting(configuration, "RabbitMq:Host"),
-            Port = configuration.GetValue<int?>("RabbitMq:Port")
+            Host = GetRequiredSetting(configuration, $"{sectionPrefix}:Host"),
+            Port = configuration.GetValue<int?>($"{sectionPrefix}:Port")
                    ?? (useSsl ? 5671 : 5672),
-            UserName = GetRequiredSetting(configuration, "RabbitMq:Username"),
-            Password = GetRequiredSetting(configuration, "RabbitMq:Password"),
+            UserName = GetRequiredSetting(configuration, $"{sectionPrefix}:Username"),
+            Password = GetRequiredSetting(configuration, $"{sectionPrefix}:Password"),
             Path = Uri.EscapeDataString(GetRequiredSetting(
                 configuration,
-                "RabbitMq:VirtualHost"))
+                $"{sectionPrefix}:VirtualHost"))
         };
 
         return builder.Uri.ToString();
@@ -194,27 +200,33 @@ public static class ForgeCampusExtensions
         return faculty;
     }
     
-    private static AmazonS3Config BuildS3Config(IConfiguration configuration)
+    /// <summary>
+    /// Defaults to the flat "S3:*" keys most institutions share, but a section prefix (e.g.
+    /// "Maintenance:S3") lets an institution with its own dedicated bucket/credentials (its own
+    /// grants, not assumed to be campus-wide) opt out of that shared connection - same reasoning as
+    /// BuildMongoUri's sectionPrefix.
+    /// </summary>
+    internal static AmazonS3Config BuildS3Config(IConfiguration configuration, string sectionPrefix = "S3")
     {
         return new AmazonS3Config
         {
-            ServiceURL = GetRequiredSetting(configuration, "S3:ServiceUrl"),
-            ForcePathStyle = configuration.GetValue("S3:ForcePathStyle", true),
+            ServiceURL = GetRequiredSetting(configuration, $"{sectionPrefix}:ServiceUrl"),
+            ForcePathStyle = configuration.GetValue($"{sectionPrefix}:ForcePathStyle", true),
             AuthenticationRegion = configuration.GetValue(
-                "S3:AuthenticationRegion",
+                $"{sectionPrefix}:AuthenticationRegion",
                 "us-east-1")
         };
     }
 
-    private static IAmazonS3 BuildS3Client(IConfiguration configuration)
+    internal static IAmazonS3 BuildS3Client(IConfiguration configuration, string sectionPrefix = "S3")
     {
         var credentials = new BasicAWSCredentials(
-            GetRequiredSetting(configuration, "S3:AccessKey"),
-            GetRequiredSetting(configuration, "S3:SecretKey"));
+            GetRequiredSetting(configuration, $"{sectionPrefix}:AccessKey"),
+            GetRequiredSetting(configuration, $"{sectionPrefix}:SecretKey"));
 
         return new AmazonS3Client(
             credentials,
-            BuildS3Config(configuration));
+            BuildS3Config(configuration, sectionPrefix));
     }
     
     public static IServiceCollection AddForgeCampus(this IServiceCollection services)
