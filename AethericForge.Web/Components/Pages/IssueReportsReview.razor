@@ -1,0 +1,27 @@
+@page "/campus/admin/issue-reports"
+@rendermode InteractiveServer
+@using AethericForge.Runtime.Institutions.Campus
+@using AethericForge.Runtime.Institutions.IssueReports
+@using AethericForge.Web.Hosting
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
+@inject ICampus Campus
+
+<PageTitle>Issue Reports</PageTitle>
+
+<main class="container py-5">
+    <p class="text-uppercase">Operations Faculty</p>
+    <h1>Issue Reports</h1>
+
+    <div class="alert alert-secondary mt-4">
+        The Issue Reports institution is wired up, but there's no way to submit or review a report
+        yet - this page is a placeholder until that comes together.
+    </div>
+</main>
+
+@code {
+    // Confirms the institution resolves correctly (throws if the wiring ever regresses) without
+    // rendering anything from it yet - there's nothing to submit or review until a real UI lands.
+    protected override void OnInitialized() =>
+        _ = Campus.Resolve<IOperationsFaculty>().Resolve<IIssueReports>();
+}
