@@ -101,13 +101,12 @@ namespace AethericForge.Web.Hosting;
 
 public static class ForgeCampusExtensions 
 {
-    internal static string BuildMongoUri(IConfiguration configuration)
     private const string DecisionsArchiveStore = "adr-campus";
     private const string DecisionsKnowledgeScheme = "adr-campus";
     private const string DecisionsWorkbenchStage = "adr-campus-workbench";
     private const string DecisionsMaintenanceDomain = "adr-campus-maintenance";
 
-    private static string BuildMongoUri(IConfiguration configuration)
+    internal static string BuildMongoUri(IConfiguration configuration)
     {
         var host = GetRequiredSetting(configuration, "MongoDb:Host");
         var username = GetRequiredSetting(configuration, "MongoDb:Username");
