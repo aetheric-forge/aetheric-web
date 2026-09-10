@@ -6,6 +6,8 @@ public static class ForgeAuthorizationExtensions
 {
     public const string AdministratorPolicy = "ForgeAdministrator";
     public const string AdministratorGroup = "/forge-admins";
+    private const string MappedGroupsClaim =
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/groups";
 
     public static IServiceCollection AddForgeAuthorization(
         this IServiceCollection services,
@@ -25,7 +27,12 @@ public static class ForgeAuthorizationExtensions
     }
 
     private static bool HasAdministratorGroup(ClaimsPrincipal user) =>
-        user.FindAll("groups").Any(claim =>
+        user.Claims
+            .Where(claim =>
+                string.Equals(claim.Type, "groups", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(claim.Type, MappedGroupsClaim, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(claim.Type, ClaimTypes.GroupSid, StringComparison.OrdinalIgnoreCase))
+            .Any(claim =>
             string.Equals(claim.Value, AdministratorGroup, StringComparison.OrdinalIgnoreCase) ||
             string.Equals(claim.Value, AdministratorGroup.TrimStart('/'), StringComparison.OrdinalIgnoreCase));
 

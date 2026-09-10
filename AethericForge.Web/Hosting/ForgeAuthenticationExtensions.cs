@@ -35,6 +35,7 @@ public static class ForgeAuthenticationExtensions
                 options.Cookie.SameSite = SameSiteMode.Lax;
                 options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
                 options.LoginPath = "/account/login";
+                options.AccessDeniedPath = "/account/access-denied";
                 options.SlidingExpiration = true;
             })
             .AddOpenIdConnect(options =>
