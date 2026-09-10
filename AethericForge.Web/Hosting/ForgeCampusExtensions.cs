@@ -10,6 +10,7 @@ using AethericForge.Runtime.Abstractions.Interfaces.Identity.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.IssueReports.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
@@ -24,6 +25,7 @@ using AethericForge.Runtime.Institutions.Archive;
 using AethericForge.Runtime.Institutions.Campus;
 using AethericForge.Runtime.Institutions.Faculty;
 using AethericForge.Runtime.Institutions.Library;
+using AethericForge.Runtime.Institutions.IssueReports;
 using AethericForge.Runtime.Institutions.Maintenance;
 using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
@@ -43,6 +45,7 @@ using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Library;
+using AethericForge.Runtime.Services.IssueReports;
 using AethericForge.Runtime.Services.Maintenance;
 using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
@@ -233,6 +236,8 @@ public static class ForgeCampusExtensions
                 .With<IArchivist, Archivist>()
                 .With<ITeam<IMaintenanceClerk>>(_ => new Team<IMaintenanceClerk>(Array.Empty<IMaintenanceClerk>()))
                 .With<ICaretaker, Caretaker>()
+                .With<ITeam<IIssueReportsClerk>>(_ => new Team<IIssueReportsClerk>(Array.Empty<IIssueReportsClerk>()))
+                .With<IWarden, Warden>()
                 .With<IArchiveVault, ArchiveVault>()
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
@@ -389,6 +394,16 @@ public static class ForgeCampusExtensions
                     serviceProvider,
                     maintenanceContext));
 
+            var issueReportsTemplate = campusTemplate with
+            {
+                Descriptor = new InstitutionDescriptor("Issue Reports", campusTemplate.Descriptor.Version, "Issue Reports institution")
+            };
+            var issueReportsContext = new IssueReportsContext(issueReportsTemplate, serviceProvider, operations);
+            operations.Register<IIssueReports>(
+                ActivatorUtilities.CreateInstance<global::AethericForge.Runtime.Institutions.IssueReports.IssueReports>(
+                    serviceProvider,
+                    issueReportsContext));
+
             return campus;
         });
 
@@ -452,6 +467,13 @@ public static class ForgeCampusExtensions
                         name = campus.Resolve<IOperationsFaculty>().Resolve<IMaintenance>()
                             .Context.Template.Descriptor.Name,
                         version = campus.Resolve<IOperationsFaculty>().Resolve<IMaintenance>()
+                            .Context.Template.Descriptor.Version.ToString()
+                    },
+                    issueReports = new
+                    {
+                        name = campus.Resolve<IOperationsFaculty>().Resolve<IIssueReports>()
+                            .Context.Template.Descriptor.Name,
+                        version = campus.Resolve<IOperationsFaculty>().Resolve<IIssueReports>()
                             .Context.Template.Descriptor.Version.ToString()
                     }
                 }));
