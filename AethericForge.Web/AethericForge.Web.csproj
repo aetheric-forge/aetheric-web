@@ -20,6 +20,7 @@
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Maintenance\AethericForge.Runtime.Institutions.Maintenance.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.PostOffice\AethericForge.Runtime.Institutions.PostOffice.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Registry\AethericForge.Runtime.Institutions.Registry.csproj" />
+    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Security\AethericForge.Runtime.Institutions.Security.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.InMemory\AethericForge.Runtime.Providers.Archive.InMemory.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.MongoDb\AethericForge.Runtime.Providers.Archive.MongoDb.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.S3\AethericForge.Runtime.Providers.Archive.S3.csproj" />
@@ -39,6 +40,7 @@
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Library\AethericForge.Runtime.Services.Library.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Maintenance\AethericForge.Runtime.Services.Maintenance.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Post\AethericForge.Runtime.Services.Post.csproj" />
+    <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Security\AethericForge.Runtime.Services.Security.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Staging\AethericForge.Runtime.Services.Staging.csproj" />
   </ItemGroup>
 
