@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\adr-campus\AdrCampus.Application\AdrCampus.Application.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Core\AdrCampus.Core.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Archive\AdrCampus.Providers.Archive.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Drafts.Workbench\AdrCampus.Providers.Drafts.Workbench.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Library\AdrCampus.Providers.Library.csproj" />
+    <ProjectReference Include="..\adr-campus\AdrCampus.Providers.PostOffice\AdrCampus.Providers.PostOffice.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Models\ParallelYou.Models.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Services\ParallelYou.Services.csproj" />
@@ -22,7 +28,6 @@
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Registry\AethericForge.Runtime.Institutions.Registry.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Security\AethericForge.Runtime.Institutions.Security.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.InMemory\AethericForge.Runtime.Providers.Archive.InMemory.csproj" />
-    <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.MongoDb\AethericForge.Runtime.Providers.Archive.MongoDb.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Archive.S3\AethericForge.Runtime.Providers.Archive.S3.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Identity.InMemory\AethericForge.Runtime.Providers.Identity.InMemory.csproj" />
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Identity.Keycloak\AethericForge.Runtime.Providers.Identity.Keycloak.csproj" />
