@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Authorization
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IAuthorizationService AuthorizationService
+@inject NavigationManager NavigationManager
 
 <div class="app-shell">
     <aside class="app-sidebar">
@@ -30,9 +31,13 @@
 
                     @if (_isAdministrator)
                     {
-                        <button class="app-topbar__view-toggle" type="button" @onclick="ToggleViewAsUser">
-                            @(_viewAsUser ? "Return to administrator view" : "View as user")
-                        </button>
+                        <form method="post" action="/account/view-as-user">
+                            <AntiforgeryToken />
+                            <input type="hidden" name="returnUrl" value="@_currentPath" />
+                            <button class="app-topbar__view-toggle" type="submit">
+                                @(_viewAsUser ? "Return to administrator view" : "View as user")
+                            </button>
+                        </form>
                     }
 
                     <form method="post" action="/account/logout" data-enhance="false">
@@ -61,8 +66,12 @@
 </div>
 
 @code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
     private bool _isAdministrator;
     private bool _viewAsUser;
+    private string _currentPath = "/";
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,7 +80,18 @@
             authenticationState.User,
             ForgeAuthorizationExtensions.AdministratorPolicy);
         _isAdministrator = result.Succeeded;
-    }
 
-    private void ToggleViewAsUser() => _viewAsUser = !_viewAsUser;
+        // Read from a cookie, set by a plain form POST, rather than in-memory @onclick state: most of
+        // the site is static server-rendered with no SignalR circuit, so a live client-side toggle
+        // would silently do nothing on every non-interactive page. See
+        // ForgeAuthenticationExtensions.ToggleViewAsUserAsync.
+        var viewAsUserCookie = HttpContext?.Request.Cookies[ForgeAuthenticationExtensions.ViewAsUserCookieName];
+        _viewAsUser = _isAdministrator && viewAsUserCookie == "1";
+
+        _currentPath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        if (!_currentPath.StartsWith('/'))
+        {
+            _currentPath = "/" + _currentPath;
+        }
+    }
 }
