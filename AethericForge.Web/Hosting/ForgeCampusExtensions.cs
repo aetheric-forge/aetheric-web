@@ -106,7 +106,7 @@ public static class ForgeCampusExtensions
     private const string DecisionsWorkbenchStage = "adr-campus-workbench";
     private const string DecisionsMaintenanceDomain = "adr-campus-maintenance";
 
-    private static string BuildMongoUri(IConfiguration configuration)
+    internal static string BuildMongoUri(IConfiguration configuration)
     {
         var host = GetRequiredSetting(configuration, "MongoDb:Host");
         var username = GetRequiredSetting(configuration, "MongoDb:Username");
@@ -137,7 +137,7 @@ public static class ForgeCampusExtensions
         return builder.ToMongoUrl().ToString();
     }
 
-    private static string BuildRabbitMqUrl(IConfiguration configuration)
+    internal static string BuildRabbitMqUrl(IConfiguration configuration)
     {
         var useSsl = configuration.GetValue("RabbitMq:Ssl", false);
         var builder = new UriBuilder
@@ -187,7 +187,7 @@ public static class ForgeCampusExtensions
         return faculty;
     }
     
-    private static AmazonS3Config BuildS3Config(IConfiguration configuration)
+    internal static AmazonS3Config BuildS3Config(IConfiguration configuration)
     {
         return new AmazonS3Config
         {
@@ -199,7 +199,7 @@ public static class ForgeCampusExtensions
         };
     }
 
-    private static IAmazonS3 BuildS3Client(IConfiguration configuration)
+    internal static IAmazonS3 BuildS3Client(IConfiguration configuration)
     {
         var credentials = new BasicAWSCredentials(
             GetRequiredSetting(configuration, "S3:AccessKey"),
@@ -212,6 +212,35 @@ public static class ForgeCampusExtensions
     
     public static IServiceCollection AddForgeCampus(this IServiceCollection services)
     {
+        foreach (var institution in new[] { "Archive", "ParallelYou", "Decisions" })
+            services.AddKeyedSingleton<IAmazonS3>(institution, (sp, _) => BuildS3Client(
+                InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "S3")));
+
+        foreach (var institution in new[] { "Library", "ParallelYou", "Decisions" })
+        {
+            services.AddKeyedSingleton<IMongoClient>(institution, (sp, _) => new MongoClient(BuildMongoUri(
+                InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb"))));
+            services.AddKeyedSingleton<IMongoDatabase>(institution, (sp, _) =>
+                sp.GetRequiredKeyedService<IMongoClient>(institution).GetDatabase(GetRequiredSetting(
+                    InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb"),
+                    "MongoDb:DatabaseName")));
+        }
+
+        services.AddKeyedSingleton<IConnectionMultiplexer>("Workbench", (sp, _) =>
+        {
+            var configuration = InstitutionServiceConfiguration.Resolve(
+                sp.GetRequiredService<IConfiguration>(), "Workbench", "Redis");
+            return ConnectionMultiplexer.Connect(new ConfigurationOptions
+            {
+                EndPoints = { { GetRequiredSetting(configuration, "Redis:Host"), configuration.GetValue<int?>("Redis:Port") ?? 6379 } },
+                User = configuration["Redis:User"],
+                Password = configuration["Redis:Password"],
+                Ssl = configuration.GetValue<bool>("Redis:Ssl"),
+                DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
+                AbortOnConnectFail = false
+            });
+        });
+
         services.AddInstitutionTemplate(builder =>
         {
             builder.WithDescriptor(
@@ -223,17 +252,9 @@ public static class ForgeCampusExtensions
                 .With<IPersonService, PersonService>()
                 .With<IIdentityRegistry, IdentityRegistry>()
                 .With<HttpClient, HttpClient>()
-                .With<KeycloakOptions>(sp => new KeycloakOptions
-                {
-                    ClientId =  sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:ClientId")
-                                   ?? throw new InvalidOperationException("Keycloak:ClientId is required"),
-                    Realm =  sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:Realm")
-                                   ?? throw new InvalidOperationException("Keycloak:Realm is required"),
-                    Authority = sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:Authority")
-                                ?? throw new InvalidOperationException("Keycloak:Authority is required"),
-                    ClientSecret = sp.GetRequiredService<IConfiguration>().GetValue<string>("Keycloak:ClientSecret")
-                                   ?? throw new InvalidOperationException("Keycloak:ClientSecret is required")
-                })
+                .With<KeycloakOptions>(sp => InstitutionServiceConfiguration.Resolve(
+                    sp.GetRequiredService<IConfiguration>(), "Registry", "Keycloak")
+                    .GetSection("Keycloak").Get<KeycloakOptions>()!)
                 .With<IIdentityProvider, KeycloakIdentityProvider>()
                 .With<IRegistryService, RegistryService>()
                 .With<ITeam<IRegistryClerk>>(_ => new Team<IRegistryClerk>(Array.Empty<IRegistryClerk>()))
@@ -241,29 +262,23 @@ public static class ForgeCampusExtensions
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
                 .With<IArchiveSerializer, JsonArchiveSerializer>()
-                .With<AWSCredentials>(sp => new BasicAWSCredentials(
-                    sp.GetRequiredService<IConfiguration>().GetValue<string>("S3:AccessKey"),
-                    sp.GetRequiredService<IConfiguration>().GetValue<string>("S3:SecretKey")))
-                .With<IAmazonS3>(sp => new AmazonS3Client(
-                    sp.GetRequiredService<AWSCredentials>(), 
-                    BuildS3Config(sp.GetRequiredService<IConfiguration>())))
                 .With<IArchiveProvider>(sp => new S3ArchiveProvider(
-                    sp.GetRequiredService<IAmazonS3>(),
+                    sp.GetRequiredKeyedService<IAmazonS3>("Archive"),
                     "MinIO",
-                    sp.GetRequiredService<IConfiguration>().GetValue(
+                    InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "Archive", "S3").GetValue(
                         "S3:BucketName",
                         "forge-campus-archive")))
                 .With<IArchiveProvider>(sp => new S3ArchiveProvider(
-                    sp.GetRequiredService<IAmazonS3>(),
+                    sp.GetRequiredKeyedService<IAmazonS3>("ParallelYou"),
                     "ParallelYou",
-                    sp.GetRequiredService<IConfiguration>().GetValue(
+                    InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "ParallelYou", "S3").GetValue(
                         "S3:BucketName",
                         "forge-campus-archive"),
                     "parallel-you"))
                 .With<IArchiveProvider>(sp => new S3ArchiveProvider(
-                    sp.GetRequiredService<IAmazonS3>(),
+                    sp.GetRequiredKeyedService<IAmazonS3>("Decisions"),
                     DecisionsArchiveStore,
-                    sp.GetRequiredService<IConfiguration>().GetValue(
+                    InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "Decisions", "S3").GetValue(
                         "S3:BucketName",
                         "forge-campus-archive"),
                     "adr-campus"))
@@ -279,18 +294,12 @@ public static class ForgeCampusExtensions
                 .With<IArchiveVault, ArchiveVault>()
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
-                .With<IMongoClient>(sp => new MongoClient(BuildMongoUri(sp.GetRequiredService<IConfiguration>())))
-                .With<IMongoDatabase>(sp => sp
-                    .GetRequiredService<IMongoClient>()
-                    .GetDatabase(GetRequiredSetting(
-                        sp.GetRequiredService<IConfiguration>(),
-                        "MongoDb:DatabaseName")))
                 .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
-                    sp.GetRequiredService<IMongoDatabase>(), "ForgeCampus", "knowledge"))
+                    sp.GetRequiredKeyedService<IMongoDatabase>("Library"), "ForgeCampus", "knowledge"))
                 .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
-                    sp.GetRequiredService<IMongoDatabase>(), "parallel-you", "knowledge"))
+                    sp.GetRequiredKeyedService<IMongoDatabase>("ParallelYou"), "parallel-you", "knowledge"))
                 .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
-                    sp.GetRequiredService<IMongoDatabase>(),
+                    sp.GetRequiredKeyedService<IMongoDatabase>("Decisions"),
                     DecisionsKnowledgeScheme,
                     "knowledge"))
                 .With<IKnowledgeService, KnowledgeService>()
@@ -318,46 +327,25 @@ public static class ForgeCampusExtensions
                 .With<ILibrary, global::AethericForge.Runtime.Institutions.Library.Library>()
                 .With<IPostProvider>(sp => new RabbitMqPostProvider( "ForgeCampus", 
                     BuildRabbitMqUrl(
-                       sp.GetRequiredService<IConfiguration>())))
+                       InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "PostOffice", "RabbitMq"))))
                 .With<IPostProvider>(sp => new RabbitMqPostProvider(
                     DecisionsMaintenanceDomain,
-                    BuildRabbitMqUrl(sp.GetRequiredService<IConfiguration>())))
+                    BuildRabbitMqUrl(InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "Decisions", "RabbitMq"))))
                 .With<IPostService, PostService>()
                 .With<ITeam<IPostClerk>>(_ => new Team<IPostClerk>(Array.Empty<IPostClerk>()))
                 .With<IPostExchange, PostExchange>()
                 .With<IPostmaster, Postmaster>()
                 .With<IPostOfficeContext, PostOfficeContext>()
                 .With<IPostOffice, PostOffice>()
-                .With<IConnectionMultiplexer>(serviceProvider =>
-                {
-                    var configuration =
-                        serviceProvider.GetRequiredService<IConfiguration>();
-
-                    var options = new ConfigurationOptions
-                    {
-                        EndPoints =
-                        {
-                            {
-                                GetRequiredSetting(configuration, "Redis:Host"),
-                                configuration.GetValue<int?>("Redis:Port") ?? 6379
-                            }
-                        },
-                        Password = configuration["Redis:Password"],
-                        Ssl = configuration.GetValue<bool>("Redis:Ssl"),
-                        DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
-                        AbortOnConnectFail = false
-                    };
-
-                    return ConnectionMultiplexer.Connect(options);
-                })                
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "Default"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "ReflectionMapping"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "TrackingCurrent"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "IntentionCurrent"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "PlanCurrent"))
-                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "RecommendationCurrent"))                .With<IStagingService, StagingService>()
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "Default"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "ReflectionMapping"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "TrackingCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "IntentionCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "PlanCurrent"))
+                .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"), "RecommendationCurrent"))
+                .With<IStagingService, StagingService>()
                 .With<IStagingProvider>(sp => new RedisStagingProvider(
-                    sp.GetRequiredService<IConnectionMultiplexer>(),
+                    sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"),
                     DecisionsWorkbenchStage))
                 .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
@@ -522,7 +510,7 @@ public static class ForgeCampusExtensions
             return new OrganizationBootstrapConfiguration(
                 new OrganizationId(GetRequiredSetting(configuration, "Organization:Id")),
                 GetRequiredSetting(configuration, "Organization:DisplayName"),
-                GetRequiredSetting(configuration, "Keycloak:Authority"),
+                GetRequiredSetting(InstitutionServiceConfiguration.Resolve(configuration, "Registry", "Keycloak"), "Keycloak:Authority"),
                 GetRequiredSetting(configuration, "Organization:MemberGroupId"),
                 GetRequiredSetting(configuration, "Organization:MaintainerGroupId"));
         });

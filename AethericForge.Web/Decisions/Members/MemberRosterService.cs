@@ -1,3 +1,4 @@
+using AethericForge.Web.Hosting;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Directory;
 using AethericForge.Runtime.Models.Identity.Directory;
 using AethericForge.Runtime.Providers.Identity.Keycloak;
@@ -53,7 +54,7 @@ public sealed class MemberRosterService(
 
     public async Task<MemberRosterResult> GetCurrentAsync(CancellationToken cancellationToken = default)
     {
-        var freshnessLifetime = configuration.GetSection("Keycloak").Get<KeycloakOptions>()?.DirectoryFreshnessLifetime
+        var freshnessLifetime = InstitutionServiceConfiguration.Resolve(configuration, "Registry", "Keycloak").GetSection("Keycloak").Get<KeycloakOptions>()?.DirectoryFreshnessLifetime
             ?? TimeSpan.FromMinutes(1);
 
         if (TryGetFreshCache(freshnessLifetime, out var cached))
@@ -99,7 +100,7 @@ public sealed class MemberRosterService(
     {
         try
         {
-            var keycloak = configuration.GetSection("Keycloak").Get<KeycloakOptions>() ?? new KeycloakOptions();
+            var keycloak = InstitutionServiceConfiguration.Resolve(configuration, "Registry", "Keycloak").GetSection("Keycloak").Get<KeycloakOptions>() ?? new KeycloakOptions();
             var groups = configuration.GetSection("Organization").Get<OrganizationDirectoryOptions>()
                 ?? new OrganizationDirectoryOptions();
             var memberGroupId = Required(groups.MemberGroupId, "Organization:MemberGroupId");
