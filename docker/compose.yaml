@@ -1,7 +1,7 @@
 services:
   web:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile
     image: aetheric-web:local
     env_file:
@@ -15,7 +15,10 @@ services:
     command:
       - update-ca-certificates >/dev/null && exec dotnet AethericForge.Web.dll
     init: true
+    extra_hosts:
+      - "sso-dev.aethericforge.ca:host-gateway"
+      - "sso.aethericforge.ca:host-gateway"
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8090:8080"
     volumes:
       - ${STEP_CA_ROOT_CERT:-./.certificates/step-ca-root-ca.crt}:/usr/local/share/ca-certificates/step-ca-root-ca.crt:ro
