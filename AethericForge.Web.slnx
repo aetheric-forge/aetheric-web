@@ -7,6 +7,11 @@
     <Project Path="parallel-you/ParallelYou.Models/ParallelYou.Models.csproj" />
     <Project Path="parallel-you/ParallelYou.Services/ParallelYou.Services.csproj" />
   </Folder>
+  <Folder Name="/Application/Talent/">
+    <Project Path="talent-campus/TalentCampus.Core/TalentCampus.Core.csproj" />
+    <Project Path="talent-campus/TalentCampus.Institutions.Talent/TalentCampus.Institutions.Talent.csproj" />
+    <Project Path="talent-campus/TalentCampus.Providers.MongoDb/TalentCampus.Providers.MongoDb.csproj" />
+  </Folder>
   <Folder Name="/Runtime/">
     <Project Path="runtime/src/Abstractions/Interfaces/AethericForge.Runtime.Abstractions.Interfaces/AethericForge.Runtime.Abstractions.Interfaces.csproj" />
     <Project Path="runtime/src/Institutions/AethericForge.Runtime.Institutions.Abstractions/AethericForge.Runtime.Institutions.Abstractions.csproj" />
@@ -40,5 +45,7 @@
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="tests/AethericForge.Web.Tests/AethericForge.Web.Tests.csproj" />
+    <Project Path="talent-campus/TalentCampus.Core.Tests/TalentCampus.Core.Tests.csproj" />
+    <Project Path="talent-campus/TalentCampus.Institutions.Talent.Tests/TalentCampus.Institutions.Talent.Tests.csproj" />
   </Folder>
 </Solution>

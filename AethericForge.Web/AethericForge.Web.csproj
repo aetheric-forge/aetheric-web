@@ -18,6 +18,9 @@
     <ProjectReference Include="..\parallel-you\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Models\ParallelYou.Models.csproj" />
     <ProjectReference Include="..\parallel-you\ParallelYou.Services\ParallelYou.Services.csproj" />
+    <ProjectReference Include="..\talent-campus\TalentCampus.Core\TalentCampus.Core.csproj" />
+    <ProjectReference Include="..\talent-campus\TalentCampus.Institutions.Talent\TalentCampus.Institutions.Talent.csproj" />
+    <ProjectReference Include="..\talent-campus\TalentCampus.Providers.MongoDb\TalentCampus.Providers.MongoDb.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Archive\AethericForge.Runtime.Institutions.Archive.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Faculty\AethericForge.Runtime.Institutions.Faculty.csproj" />

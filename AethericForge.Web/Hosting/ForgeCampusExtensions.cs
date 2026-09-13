@@ -99,6 +99,11 @@ using ParallelYou.Services.Plan;
 using ParallelYou.Services.Recommendation;
 using ParallelYou.Services.Reflection;
 using ParallelYou.Services.Tracking;
+using TalentCampus.Core.Personas;
+using TalentCampus.Core.Recruitment;
+using TalentCampus.Core.Roles;
+using TalentCampus.Institutions.Talent;
+using TalentCampus.Providers.MongoDb;
 
 namespace AethericForge.Web.Hosting;
 
@@ -238,7 +243,7 @@ public static class ForgeCampusExtensions
             services.AddKeyedSingleton<IAmazonS3>(institution, (sp, _) => BuildS3Client(
                 InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "S3")));
 
-        foreach (var institution in new[] { "Library", "ParallelYou", "Decisions" })
+        foreach (var institution in new[] { "Library", "ParallelYou", "Decisions", "Talent" })
         {
             services.AddKeyedSingleton<IMongoClient>(institution, (sp, _) => new MongoClient(BuildMongoUri(
                 InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb"))));
@@ -381,7 +386,15 @@ public static class ForgeCampusExtensions
                 .With<ITrackingService, TrackingService>()
                 .With<IIntentionService, IntentionService>()
                 .With<IPlanningService, PlanningService>()
-                .With<IRecommendationService, RecommendationService>();
+                .With<IRecommendationService, RecommendationService>()
+                .With<ITalentSteward>(sp => new MongoTalentSteward(sp.GetRequiredKeyedService<IMongoDatabase>("Talent")))
+                .With<IPersonaDirectory>(sp => new MongoPersonaDirectory(sp.GetRequiredKeyedService<IMongoDatabase>("Talent")))
+                .With<IRecruitmentOffice>(sp => new MongoRecruitmentOffice(
+                    sp.GetRequiredKeyedService<IMongoDatabase>("Talent"),
+                    sp.GetRequiredService<ITalentSteward>(),
+                    sp.GetRequiredService<IPersonaDirectory>(),
+                    sp.GetRequiredService<IConfiguration>()
+                        .GetSection("Talent:Recruitment:DecisionsOffices").Get<DecisionsDestination[]>() ?? []));
         });
 
         services.AddSingleton<ICampus>(serviceProvider =>
@@ -433,9 +446,21 @@ public static class ForgeCampusExtensions
             architectureFaculty.Register<IDecisions>(new DecisionsInstitution(
                 new DecisionsContext(decisionsTemplate, serviceProvider, architectureFaculty)));
 
-            RegisterFaculty<IDesignFaculty>(
+            var designFaculty = RegisterFaculty<IDesignFaculty>(
                 campus, campusTemplate, serviceProvider, "Design", "Director",
                 static (context, dean) => new DesignFaculty(context, dean));
+
+            var talentTemplate = campusTemplate with
+            {
+                Descriptor = new InstitutionDescriptor(
+                    "Talent",
+                    new Version(0, 1, 0),
+                    "Defines roles and stewards evidence-based talent lifecycles.")
+            };
+            designFaculty.Register<ITalent>(new global::TalentCampus.Institutions.Talent.Talent(
+                new TalentContext(talentTemplate, serviceProvider, designFaculty),
+                serviceProvider.GetRequiredService<ITalentSteward>()));
+
             RegisterFaculty<IEngineeringFaculty>(
                 campus, campusTemplate, serviceProvider, "Engineering", "Chief Engineer",
                 static (context, dean) => new EngineeringFaculty(context, dean));
@@ -639,8 +664,11 @@ public static class ForgeCampusExtensions
         name = faculty.Context.Template.Descriptor.Name,
         version = faculty.Context.Template.Descriptor.Version.ToString(),
         dean = faculty.Dean.Title,
-        institutions = faculty is IArchitectureFaculty
-            ? new[] { faculty.Resolve<IDecisions>().Context.Template.Descriptor.Name }
-            : []
+        institutions = faculty switch
+        {
+            IArchitectureFaculty => new[] { faculty.Resolve<IDecisions>().Context.Template.Descriptor.Name },
+            IDesignFaculty => new[] { faculty.Resolve<ITalent>().Context.Template.Descriptor.Name },
+            _ => []
+        }
     };
 }

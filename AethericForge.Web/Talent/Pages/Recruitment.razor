@@ -1,0 +1,137 @@
+@page "/talent/recruitment"
+@rendermode InteractiveServer
+@using TalentCampus.Core.Recruitment
+@using TalentCampus.Core.Roles
+@using TalentCampus.Core.Personas
+@inject IRecruitmentOffice Office
+@inject ITalentSteward Roles
+@inject IPersonaDirectory Personas
+@inject ILogger<Recruitment> Logger
+
+<PageTitle>Recruitment Office — Talent</PageTitle>
+<h1>Recruitment Office</h1>
+<p>Register human candidates or consider an existing AI persona for a role.</p>
+@if (error is not null) { <p class="alert alert-danger" role="alert">@error</p> }
+@if (notice is not null) { <p class="alert alert-success" role="status">@notice</p> }
+<h2>Register a human candidate</h2>
+<form @onsubmit="Register" @onsubmit:preventDefault>
+    <div class="mb-3"><label for="candidate-name">Candidate name</label><input id="candidate-name" class="form-control" @bind="name" required /></div>
+    <div class="mb-3"><label for="candidate-background">Relevant background</label><textarea id="candidate-background" class="form-control" @bind="background" required></textarea></div>
+    <button class="btn btn-primary" type="submit">Register candidate</button>
+</form>
+<h2 class="mt-4">Registered candidates</h2>
+@if (humans.Count == 0) { <p>No human candidates registered yet.</p> }
+@foreach (var human in humans)
+{
+    <article class="card p-3 mb-3" @key="human.Id"><h3>@human.Name</h3><p style="white-space:pre-wrap">@human.Background</p></article>
+}
+<h2 class="mt-4">Prepare a consideration</h2>
+<p>Save a snapshot for the selected Decisions office. PostOffice delivery is coming next; prepared considerations have not been sent or decided.</p>
+@if (roles.Count == 0) { <p><a href="/talent/roles">Define a role</a> before preparing a consideration.</p> }
+@if (destinations.Count == 0) { <p role="alert">No Decisions offices are configured. Configure an office before preparing a consideration.</p> }
+<form @onsubmit="Prepare" @onsubmit:preventDefault>
+    <div class="mb-3"><label for="consideration-role">Role</label><select id="consideration-role" class="form-select" @bind="roleId" required>
+        <option value="">Select a role</option>
+        @foreach (var role in roles) { <option value="@role.Id.Value">@role.Name</option> }
+    </select></div>
+    <div class="mb-3"><label for="participant-kind">Talent type</label><select id="participant-kind" class="form-select" @bind="kind" @bind:after="ClearParticipant">
+        <option value="@ParticipantKind.Human">Human candidate</option><option value="@ParticipantKind.AiPersona">AI persona</option>
+    </select></div>
+    <div class="mb-3"><label for="participant">Candidate or persona</label><select id="participant" class="form-select" @bind="participantId" required>
+        <option value="">Select talent</option>
+        @if (kind == ParticipantKind.Human) { @foreach (var human in humans) { <option value="@human.Id">@human.Name</option> } }
+        else { @foreach (var persona in personas) { <option value="@persona.Id">@persona.Name</option> } }
+    </select></div>
+    <div class="mb-3"><label for="evidence">Evidence of suitability</label><textarea id="evidence" class="form-control" @bind="evidence" required></textarea></div>
+    <div class="mb-3"><label for="recommendation">Recommendation</label><textarea id="recommendation" class="form-control" @bind="recommendation" required></textarea></div>
+    <div class="mb-3"><label for="destination">Decisions office</label><select id="destination" class="form-select" @bind="destination" required>
+        <option value="">Select a Decisions office</option>
+        @foreach (var office in destinations) { <option value="@office.Id">@office.Name</option> }
+    </select></div>
+    <button class="btn btn-primary" type="submit" disabled="@(roles.Count == 0 || destinations.Count == 0)">Prepare consideration</button>
+</form>
+<h2 class="mt-4">Prepared considerations</h2>
+@if (considerations.Count == 0) { <p>No considerations prepared yet.</p> }
+@foreach (var item in considerations.Reverse())
+{
+    <article class="card p-3 mb-3" @key="item.Id">
+        <h3>@item.Participant.Name — @item.Role.Name</h3>
+        <p>Prepared · Not sent · @item.PreparedAt.ToString("u")</p>
+        <dl>
+            <dt>Decisions office</dt><dd>@item.Destination.Name</dd>
+            <dt>Evidence</dt><dd style="white-space:pre-wrap">@item.Evidence</dd>
+            <dt>Recommendation</dt><dd style="white-space:pre-wrap">@item.Recommendation</dd>
+        </dl>
+        <details><summary>Saved role and talent details</summary>
+            <h4>Role: @item.Role.Name</h4>
+            <p style="white-space:pre-wrap">@item.Role.Purpose</p>
+            <dl>
+                <dt>Responsibilities</dt><dd style="white-space:pre-wrap">@item.Role.Responsibilities</dd>
+                <dt>Required capabilities</dt><dd>@string.Join(" · ", item.Role.RequiredCapabilities)</dd>
+                <dt>Success criteria</dt><dd style="white-space:pre-wrap">@item.Role.SuccessCriteria</dd>
+                <dt>Talent type</dt><dd>@(item.Participant.Kind == ParticipantKind.Human ? "Human candidate" : "AI persona")</dd>
+                @if (item.Participant.Kind == ParticipantKind.Human)
+                { <dt>Background</dt><dd style="white-space:pre-wrap">@item.Participant.Background</dd> }
+                else
+                {
+                    <dt>Purpose</dt><dd style="white-space:pre-wrap">@item.Participant.Purpose</dd>
+                    <dt>Working style</dt><dd style="white-space:pre-wrap">@item.Participant.WorkingStyle</dd>
+                    <dt>Strengths</dt><dd style="white-space:pre-wrap">@item.Participant.Strengths</dd>
+                    <dt>Boundaries</dt><dd style="white-space:pre-wrap">@item.Participant.Boundaries</dd>
+                }
+            </dl>
+        </details>
+    </article>
+}
+@code {
+    private string name = "", background = "", roleId = "", participantId = "", evidence = "", recommendation = "", destination = "";
+    private ParticipantKind kind;
+    private string? error, notice;
+    private IReadOnlyCollection<HumanCandidate> humans = [];
+    private IReadOnlyCollection<RoleDefinition> roles = [];
+    private IReadOnlyCollection<PersonaDefinition> personas = [];
+    private IReadOnlyCollection<DecisionsDestination> destinations = [];
+    private IReadOnlyCollection<Consideration> considerations = [];
+    protected override void OnInitialized()
+    {
+        try
+        {
+            humans = Office.ListHumans(); considerations = Office.ListConsiderations();
+            roles = Roles.ListRoles(); personas = Personas.List(); destinations = Office.ListDestinations();
+        }
+        catch (Exception ex) { Failure(ex); }
+    }
+    private void ClearParticipant() => participantId = "";
+    private void Register()
+    {
+        error = notice = null;
+        try
+        {
+            var saved = Office.RegisterHuman(name, background);
+            humans = humans.Append(saved).ToArray(); name = background = "";
+            notice = "Candidate registered.";
+        }
+        catch (ArgumentException ex) { error = ex.Message; }
+        catch (Exception ex) { Failure(ex); }
+    }
+    private void Prepare()
+    {
+        error = notice = null;
+        try
+        {
+            if (!Guid.TryParse(roleId, out var role) || !Guid.TryParse(participantId, out var participant))
+                throw new ArgumentException("Select a role and a candidate or persona.");
+            var saved = Office.Prepare(role, kind, participant, evidence, recommendation, destination);
+            considerations = considerations.Append(saved).ToArray();
+            roleId = participantId = evidence = recommendation = destination = "";
+            notice = "Consideration prepared. It has not been sent to the Decisions office.";
+        }
+        catch (ArgumentException ex) { error = ex.Message; }
+        catch (Exception ex) { Failure(ex); }
+    }
+    private void Failure(Exception ex)
+    {
+        Logger.LogError(ex, "Recruitment storage operation failed");
+        error = "Recruitment data could not be loaded or saved. Check local storage and reload the page. Your entries have been kept.";
+    }
+}
