@@ -21,6 +21,7 @@
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Archive\AethericForge.Runtime.Institutions.Archive.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Faculty\AethericForge.Runtime.Institutions.Faculty.csproj" />
+    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Governance\AethericForge.Runtime.Institutions.Governance.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.IssueReports\AethericForge.Runtime.Institutions.IssueReports.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Library\AethericForge.Runtime.Institutions.Library.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Maintenance\AethericForge.Runtime.Institutions.Maintenance.csproj" />
@@ -39,6 +40,7 @@
     <ProjectReference Include="..\runtime\src\Providers\AethericForge.Runtime.Providers.Staging.Redis\AethericForge.Runtime.Providers.Staging.Redis.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Archive\AethericForge.Runtime.Services.Archive.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Faculty\AethericForge.Runtime.Services.Faculty.csproj" />
+    <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Governance\AethericForge.Runtime.Services.Governance.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Identity\AethericForge.Runtime.Services.Identity.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.IssueReports\AethericForge.Runtime.Services.IssueReports.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Knowledge\AethericForge.Runtime.Services.Knowledge.csproj" />

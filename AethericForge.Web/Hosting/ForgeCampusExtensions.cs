@@ -25,6 +25,7 @@ using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Authorities;
 using AethericForge.Runtime.Abstractions.Interfaces.Faculty.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Governance.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Provisioning;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Services;
@@ -46,6 +47,7 @@ using AethericForge.Runtime.Institutions.Abstractions.Primitives;
 using AethericForge.Runtime.Institutions.Archive;
 using AethericForge.Runtime.Institutions.Campus;
 using AethericForge.Runtime.Institutions.Faculty;
+using AethericForge.Runtime.Institutions.Governance;
 using AethericForge.Runtime.Institutions.Library;
 using AethericForge.Runtime.Institutions.IssueReports;
 using AethericForge.Runtime.Institutions.Security;
@@ -63,6 +65,7 @@ using AethericForge.Runtime.Providers.Post.RabbitMq;
 using AethericForge.Runtime.Providers.Staging.Redis;
 using AethericForge.Runtime.Services.Archive;
 using AethericForge.Runtime.Services.Faculty;
+using AethericForge.Runtime.Services.Governance;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Knowledge;
@@ -185,6 +188,25 @@ public static class ForgeCampusExtensions
         var faculty = factory(context, dean);
         campus.Register<TFaculty>(faculty);
         return faculty;
+    }
+
+    private static TGovernanceBoard RegisterGovernanceBoard<TGovernanceBoard>(
+        Campus campus,
+        InstitutionTemplate campusTemplate,
+        IServiceProvider serviceProvider,
+        string name,
+        Func<IGovernanceContext, ICouncil, TGovernanceBoard> factory)
+        where TGovernanceBoard : class, IGovernanceBoard
+    {
+        var template = campusTemplate with
+        {
+            Descriptor = new InstitutionDescriptor(name, campusTemplate.Descriptor.Version, $"{name} board")
+        };
+        var context = new GovernanceContext(template, serviceProvider, campus);
+        var council = new Council(new Team<ICouncilMember>(Array.Empty<ICouncilMember>()));
+        var board = factory(context, council);
+        campus.Register<TGovernanceBoard>(board);
+        return board;
     }
     
     internal static AmazonS3Config BuildS3Config(IConfiguration configuration)
@@ -423,6 +445,18 @@ public static class ForgeCampusExtensions
             var operations = RegisterFaculty<IOperationsFaculty>(
                 campus, campusTemplate, serviceProvider, "Operations", "Quartermaster",
                 static (context, dean) => new OperationsFaculty(context, dean));
+            RegisterFaculty<IFinanceFaculty>(
+                campus, campusTemplate, serviceProvider, "Finance", "Chief Accountant",
+                static (context, dean) => new FinanceFaculty(context, dean));
+            RegisterFaculty<IInsuranceFaculty>(
+                campus, campusTemplate, serviceProvider, "Insurance", "Chief Underwriter",
+                static (context, dean) => new InsuranceFaculty(context, dean));
+            RegisterFaculty<IFederationFaculty>(
+                campus, campusTemplate, serviceProvider, "Federation", "Envoy",
+                static (context, dean) => new FederationFaculty(context, dean));
+            RegisterGovernanceBoard<IGovernanceBoard>(
+                campus, campusTemplate, serviceProvider, "Governance",
+                static (context, council) => new GovernanceBoard(context, council));
 
             // The first institution actually nested under a Faculty rather than sitting flat on
             // Campus - Context.Parent is `operations`, not `campus`, and it's registered on
