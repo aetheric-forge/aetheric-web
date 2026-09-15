@@ -2,12 +2,10 @@ using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
 using AethericForge.Web.Components;
 using AethericForge.Web.Hosting;
 using AethericForge.Web.Maintenance;
-using AethericForge.Web.Maintenance.Jobs;
 using AethericForge.Web.Membership;
 using AethericForge.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
-using MongoDB.Driver;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,27 +51,11 @@ builder.Services.AddScoped<MembershipReviewService>();
 builder.Services.AddForgeCampus();
 
 builder.Services.AddSingleton(TimeProvider.System);
+// This worker moves to aetheric-admin in Phase 2, once IMembershipApplicationStore is promoted
+// to a real shared store - for now it's registered but has no dispatch loop to run through
+// (the Maintenance Institution/Caretaker mechanism moved to aetheric-admin in Phase 1), so it's
+// temporarily inert rather than deleted outright.
 builder.Services.AddSingleton<IMaintenanceWorker, StaleMembershipApplicationsWorker>();
-
-// Maintenance owns its job and encrypted-credential stores. Endpoint settings may fall back to
-// platform defaults, but credentials resolve only from Maintenance:MongoDb. A keyed client keeps
-// this connection separate from Library, ParallelYou, and Decisions.
-var maintenanceMongoUrl = MongoUrl.Create(
-    ForgeCampusExtensions.BuildMongoUri(
-        InstitutionServiceConfiguration.Resolve(builder.Configuration, "Maintenance", "MongoDb")));
-builder.Services.AddKeyedSingleton<IMongoClient>(
-    "Maintenance",
-    (_, _) => new MongoClient(maintenanceMongoUrl));
-builder.Services.AddKeyedSingleton<IMongoDatabase>(
-    "Maintenance",
-    (sp, _) => sp.GetRequiredKeyedService<IMongoClient>("Maintenance").GetDatabase(maintenanceMongoUrl.DatabaseName));
-
-builder.Services.AddSingleton<ICredentialStore, MongoCredentialStore>();
-builder.Services.AddSingleton<IJobDefinitionStore, MongoJobDefinitionStore>();
-builder.Services.AddSingleton<IJobExecutor, SshJobExecutor>();
-builder.Services.AddSingleton<IJobExecutor, CodeJobExecutor>();
-builder.Services.AddSingleton<JobDispatcher>();
-builder.Services.AddHostedService<MaintenanceDispatchService>();
 
 var app = builder.Build();
 

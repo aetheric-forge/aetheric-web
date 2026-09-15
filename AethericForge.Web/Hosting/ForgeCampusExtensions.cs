@@ -34,7 +34,6 @@ using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.IssueReports.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Security.Services;
-using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Providers;
@@ -51,7 +50,6 @@ using AethericForge.Runtime.Institutions.Governance;
 using AethericForge.Runtime.Institutions.Library;
 using AethericForge.Runtime.Institutions.IssueReports;
 using AethericForge.Runtime.Institutions.Security;
-using AethericForge.Runtime.Institutions.Maintenance;
 using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
 using AethericForge.Runtime.Institutions.Workbench;
@@ -72,7 +70,6 @@ using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Library;
 using AethericForge.Runtime.Services.IssueReports;
 using AethericForge.Runtime.Services.Security;
-using AethericForge.Runtime.Services.Maintenance;
 using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
@@ -312,8 +309,6 @@ public static class ForgeCampusExtensions
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
-                .With<ITeam<IMaintenanceClerk>>(_ => new Team<IMaintenanceClerk>(Array.Empty<IMaintenanceClerk>()))
-                .With<ICaretaker, Caretaker>()
                 .With<ITeam<IIssueReportsClerk>>(_ => new Team<IIssueReportsClerk>(Array.Empty<IIssueReportsClerk>()))
                 .With<IWarden, Warden>()
                 .With<ITeam<ISecurityClerk>>(_ => new Team<ISecurityClerk>(Array.Empty<ISecurityClerk>()))
@@ -483,20 +478,6 @@ public static class ForgeCampusExtensions
                 campus, campusTemplate, serviceProvider, "Governance",
                 static (context, council) => new GovernanceBoard(context, council));
 
-            // The first institution actually nested under a Faculty rather than sitting flat on
-            // Campus - Context.Parent is `operations`, not `campus`, and it's registered on
-            // `operations`, so it resolves via the parent-chain walk InstitutionBase already
-            // provides (proven generically by AethericForge.Runtime.Tests.Faculty.FacultyTests).
-            var maintenanceTemplate = campusTemplate with
-            {
-                Descriptor = new InstitutionDescriptor("Maintenance", campusTemplate.Descriptor.Version, "Maintenance institution")
-            };
-            var maintenanceContext = new MaintenanceContext(maintenanceTemplate, serviceProvider, operations);
-            operations.Register<IMaintenance>(
-                ActivatorUtilities.CreateInstance<global::AethericForge.Runtime.Institutions.Maintenance.Maintenance>(
-                    serviceProvider,
-                    maintenanceContext));
-
             var issueReportsTemplate = campusTemplate with
             {
                 Descriptor = new InstitutionDescriptor("Issue Reports", campusTemplate.Descriptor.Version, "Issue Reports institution")
@@ -629,16 +610,6 @@ public static class ForgeCampusExtensions
                         FacultyStatus(campus.Resolve<IEngineeringFaculty>()),
                         FacultyStatus(campus.Resolve<IManufacturingFaculty>()),
                         FacultyStatus(campus.Resolve<IOperationsFaculty>())
-                    },
-                    maintenance = new
-                    {
-                        // Nested under Operations rather than a direct Campus child, so it's
-                        // resolved from the Faculty instance, not the Campus - Resolve<T> only
-                        // walks up the parent chain from the caller, never down into children.
-                        name = campus.Resolve<IOperationsFaculty>().Resolve<IMaintenance>()
-                            .Context.Template.Descriptor.Name,
-                        version = campus.Resolve<IOperationsFaculty>().Resolve<IMaintenance>()
-                            .Context.Template.Descriptor.Version.ToString()
                     },
                     issueReports = new
                     {
