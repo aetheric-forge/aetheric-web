@@ -27,7 +27,6 @@
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Governance\AethericForge.Runtime.Institutions.Governance.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.IssueReports\AethericForge.Runtime.Institutions.IssueReports.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Library\AethericForge.Runtime.Institutions.Library.csproj" />
-    <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Maintenance\AethericForge.Runtime.Institutions.Maintenance.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.PostOffice\AethericForge.Runtime.Institutions.PostOffice.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Registry\AethericForge.Runtime.Institutions.Registry.csproj" />
     <ProjectReference Include="..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Security\AethericForge.Runtime.Institutions.Security.csproj" />
@@ -48,18 +47,15 @@
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.IssueReports\AethericForge.Runtime.Services.IssueReports.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Knowledge\AethericForge.Runtime.Services.Knowledge.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Library\AethericForge.Runtime.Services.Library.csproj" />
-    <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Maintenance\AethericForge.Runtime.Services.Maintenance.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Post\AethericForge.Runtime.Services.Post.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Security\AethericForge.Runtime.Services.Security.csproj" />
     <ProjectReference Include="..\runtime\src\Services\AethericForge.Runtime.Services.Staging\AethericForge.Runtime.Services.Staging.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Cronos" Version="0.9.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="10.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="3.5.0" />
-    <PackageReference Include="SSH.NET" Version="2026.0.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
   </ItemGroup>
 
