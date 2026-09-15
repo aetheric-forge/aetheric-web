@@ -1,12 +1,19 @@
-using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
+using AethericContracts.Membership;
 using AethericForge.Web.Components;
 using AethericForge.Web.Hosting;
-using AethericForge.Web.Maintenance;
 using AethericForge.Web.Membership;
 using AethericForge.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Driver;
 using StackExchange.Redis;
+
+// MongoDB.Driver 3.x removed its old implicit Guid-serialization default - without this, any Guid-
+// keyed write throws "GuidSerializer cannot serialize a Guid when GuidRepresentation is Unspecified."
+// Must run before any Mongo store is constructed.
+BsonSerializer.RegisterSerializer(new MongoDB.Bson.Serialization.Serializers.GuidSerializer(GuidRepresentation.Standard));
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,17 +52,25 @@ builder.Services.AddForgeAuthorization(builder.Environment, builder.Configuratio
 builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddScoped<IHomePageService, HomePageService>();
-builder.Services.AddSingleton<IMembershipApplicationStore, InMemoryMembershipApplicationStore>();
+
+// Shared with aetheric-admin via the aetheric-contracts submodule - this app creates applications
+// through the public Join Campus form, aetheric-admin reads/flags them (StaleMembershipApplicationsWorker).
+var membershipMongoUrl = MongoUrl.Create(
+    ForgeCampusExtensions.BuildMongoUri(
+        InstitutionServiceConfiguration.Resolve(builder.Configuration, "Membership", "MongoDb")));
+builder.Services.AddKeyedSingleton<IMongoClient>(
+    "Membership",
+    (_, _) => new MongoClient(membershipMongoUrl));
+builder.Services.AddKeyedSingleton<IMongoDatabase>(
+    "Membership",
+    (sp, _) => sp.GetRequiredKeyedService<IMongoClient>("Membership").GetDatabase(membershipMongoUrl.DatabaseName));
+builder.Services.AddSingleton<IMembershipApplicationStore, MongoMembershipApplicationStore>();
+
 builder.Services.AddSingleton<IMemberIdentityProvisioner, DevelopmentMemberIdentityProvisioner>();
 builder.Services.AddScoped<MembershipReviewService>();
 builder.Services.AddForgeCampus();
 
 builder.Services.AddSingleton(TimeProvider.System);
-// This worker moves to aetheric-admin in Phase 2, once IMembershipApplicationStore is promoted
-// to a real shared store - for now it's registered but has no dispatch loop to run through
-// (the Maintenance Institution/Caretaker mechanism moved to aetheric-admin in Phase 1), so it's
-// temporarily inert rather than deleted outright.
-builder.Services.AddSingleton<IMaintenanceWorker, StaleMembershipApplicationsWorker>();
 
 var app = builder.Build();
 

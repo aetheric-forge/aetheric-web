@@ -1,3 +1,5 @@
+using AethericContracts.Membership;
+
 namespace AethericForge.Web.Membership;
 
 public sealed class MembershipReviewService(
