@@ -81,6 +81,7 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Forge.Primitives.MongoDb;
+using Forge.Primitives.Redis;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using ParallelYou.Abstractions;
@@ -223,17 +224,10 @@ public static class ForgeCampusExtensions
 
         services.AddKeyedSingleton<IConnectionMultiplexer>("Workbench", (sp, _) =>
         {
-            var configuration = InstitutionServiceConfiguration.Resolve(
-                sp.GetRequiredService<IConfiguration>(), "Workbench", "Redis");
-            return ConnectionMultiplexer.Connect(new ConfigurationOptions
-            {
-                EndPoints = { { GetRequiredSetting(configuration, "Redis:Host"), configuration.GetValue<int?>("Redis:Port") ?? 6379 } },
-                User = configuration["Redis:User"],
-                Password = configuration["Redis:Password"],
-                Ssl = configuration.GetValue<bool>("Redis:Ssl"),
-                DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
-                AbortOnConnectFail = false
-            });
+            var options = InstitutionServiceConfiguration.Resolve(
+                    sp.GetRequiredService<IConfiguration>(), "Workbench", "Redis")
+                .GetSection("Redis").Get<RedisOptions>()!;
+            return ConnectionMultiplexer.Connect(options.ToConfigurationOptions());
         });
 
         services.AddInstitutionTemplate(builder =>

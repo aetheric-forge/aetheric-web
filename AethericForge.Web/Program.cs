@@ -4,6 +4,7 @@ using AethericForge.Web.Hosting;
 using AethericForge.Web.Membership;
 using AethericForge.Web.Services;
 using Forge.Primitives.MongoDb;
+using Forge.Primitives.Redis;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using StackExchange.Redis;
@@ -28,16 +29,12 @@ builder.Services.AddRazorComponents()
 // PersistKeysToStackExchangeRedis invokes its factory delegate on every key-ring read/write, so a
 // lazily-created-but-shared multiplexer avoids reconnecting to Redis on every single Data Protection
 // operation (rather than opening a fresh connection each time).
-var redisConfiguration = InstitutionServiceConfiguration.Resolve(builder.Configuration, "ForgeCampus", "Redis");
-var dataProtectionRedis = new Lazy<IConnectionMultiplexer>(() => ConnectionMultiplexer.Connect(new ConfigurationOptions
-{
-    EndPoints = { { redisConfiguration["Redis:Host"]!, redisConfiguration.GetValue<int?>("Redis:Port") ?? 6379 } },
-    User = redisConfiguration["Redis:User"],
-    Password = redisConfiguration["Redis:Password"],
-    Ssl = redisConfiguration.GetValue<bool>("Redis:Ssl"),
-    DefaultDatabase = redisConfiguration.GetValue<int?>("Redis:Database") ?? 0,
-    AbortOnConnectFail = false
-}));
+var dataProtectionRedisOptions = InstitutionServiceConfiguration
+    .Resolve(builder.Configuration, "ForgeCampus", "Redis")
+    .GetSection("Redis")
+    .Get<RedisOptions>()!;
+var dataProtectionRedis = new Lazy<IConnectionMultiplexer>(
+    () => ConnectionMultiplexer.Connect(dataProtectionRedisOptions.ToConfigurationOptions()));
 
 builder.Services.AddDataProtection()
     .SetApplicationName("AethericForge.Web")

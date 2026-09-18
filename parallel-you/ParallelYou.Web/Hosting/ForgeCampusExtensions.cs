@@ -50,6 +50,7 @@ using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
 using Forge.Primitives.MongoDb;
+using Forge.Primitives.Redis;
 using MongoDB.Driver;
 using StackExchange.Redis;
 
@@ -127,26 +128,10 @@ public static class ForgeCampusExtensions
                 .With<ILibrary, Library>()
                 .With<IConnectionMultiplexer>(serviceProvider =>
                 {
-                    var configuration =
-                        serviceProvider.GetRequiredService<IConfiguration>();
-
-                    var options = new ConfigurationOptions
-                    {
-                        EndPoints =
-                        {
-                            {
-                                GetRequiredSetting(configuration, "Redis:Host"),
-                                configuration.GetValue<int?>("Redis:Port") ?? 6379
-                            }
-                        },
-                        Password = configuration["Redis:Password"],
-                        Ssl = configuration.GetValue<bool>("Redis:Ssl"),
-                        DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
-                        AbortOnConnectFail = false
-                    };
-
-                    return ConnectionMultiplexer.Connect(options);
-                })                
+                    var options = serviceProvider.GetRequiredService<IConfiguration>()
+                        .GetSection("Redis").Get<RedisOptions>()!;
+                    return ConnectionMultiplexer.Connect(options.ToConfigurationOptions());
+                })
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "ReflectionMapping"))
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "TrackingCurrent"))
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "IntentionCurrent"))
