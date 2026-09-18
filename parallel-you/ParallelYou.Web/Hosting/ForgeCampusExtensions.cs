@@ -159,15 +159,19 @@ public static class ForgeCampusExtensions
 
             var campus = new Campus(campusContext);
 
-            var registryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Registry", campusTemplate.Descriptor.Version, "Registry institution") };
-            campus.Register<IRegistry>(ActivatorUtilities.CreateInstance<Registry>(serviceProvider, new RegistryContext(registryTemplate, serviceProvider, campus)));
-            
-            var libraryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Library", campusTemplate.Descriptor.Version, "Library institution") };
-            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new LibraryContext(libraryTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IRegistry, Registry, RegistryContext>(
+                campusTemplate, serviceProvider, "Registry",
+                static (template, sp, parent) => new RegistryContext(template, sp, parent));
 
-            var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
-            campus.Register<IWorkbench>(ActivatorUtilities.CreateInstance<Workbench>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
-            
+            campus.RegisterInstitution<ILibrary, Library, LibraryContext>(
+                campusTemplate, serviceProvider, "Library",
+                static (template, sp, parent) => new LibraryContext(template, sp, parent));
+
+            campus.RegisterInstitution<IWorkbench, Workbench, WorkbenchContext>(
+                campusTemplate, serviceProvider, "Workbench",
+                static (template, sp, parent) => new WorkbenchContext(template, sp, parent));
+
+
             return campus;
         });
 

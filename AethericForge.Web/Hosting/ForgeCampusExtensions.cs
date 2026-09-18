@@ -143,26 +143,6 @@ public static class ForgeCampusExtensions
             : throw new InvalidOperationException($"{key} is required.");
     }
 
-    private static TFaculty RegisterFaculty<TFaculty>(
-        Campus campus,
-        InstitutionTemplate campusTemplate,
-        IServiceProvider serviceProvider,
-        string name,
-        string deanTitle,
-        Func<IFacultyContext, IDean, TFaculty> factory)
-        where TFaculty : class, IFaculty
-    {
-        var template = campusTemplate with
-        {
-            Descriptor = new InstitutionDescriptor(name, campusTemplate.Descriptor.Version, $"{name} faculty")
-        };
-        var context = new FacultyContext(template, serviceProvider, campus);
-        var dean = new Dean(deanTitle, new Team<IFacultyClerk>(Array.Empty<IFacultyClerk>()));
-        var faculty = factory(context, dean);
-        campus.Register<TFaculty>(faculty);
-        return faculty;
-    }
-
     private static TGovernanceBoard RegisterGovernanceBoard<TGovernanceBoard>(
         Campus campus,
         InstitutionTemplate campusTemplate,
@@ -364,22 +344,25 @@ public static class ForgeCampusExtensions
 
             var campus = new Campus(campusContext);
 
-            var registryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Registry", campusTemplate.Descriptor.Version, "Registry institution") };
-            campus.Register<IRegistry>(ActivatorUtilities.CreateInstance<Registry>(serviceProvider, new RegistryContext(registryTemplate, serviceProvider, campus)));
-            
-            var archiveTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Archive", campusTemplate.Descriptor.Version, "Archive institution") };
-            campus.Register<IArchive>(ActivatorUtilities.CreateInstance<Archive>(serviceProvider, new ArchiveContext(archiveTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IRegistry, Registry, RegistryContext>(
+                campusTemplate, serviceProvider, "Registry",
+                static (template, sp, parent) => new RegistryContext(template, sp, parent));
 
-            var libraryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Library", campusTemplate.Descriptor.Version, "Library institution") };
-            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<global::AethericForge.Runtime.Institutions.Library.Library>(
-                serviceProvider,
-                new LibraryContext(libraryTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IArchive, Archive, ArchiveContext>(
+                campusTemplate, serviceProvider, "Archive",
+                static (template, sp, parent) => new ArchiveContext(template, sp, parent));
 
-            var postOfficeTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("PostOffice", campusTemplate.Descriptor.Version, "Post Office institution") };
-            campus.Register<IPostOffice>(ActivatorUtilities.CreateInstance<PostOffice>(serviceProvider, new PostOfficeContext(postOfficeTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<ILibrary, global::AethericForge.Runtime.Institutions.Library.Library, LibraryContext>(
+                campusTemplate, serviceProvider, "Library",
+                static (template, sp, parent) => new LibraryContext(template, sp, parent));
 
-            var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
-            campus.Register<IWorkbench>(ActivatorUtilities.CreateInstance<Workbench>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IPostOffice, PostOffice, PostOfficeContext>(
+                campusTemplate, serviceProvider, "PostOffice",
+                static (template, sp, parent) => new PostOfficeContext(template, sp, parent));
+
+            campus.RegisterInstitution<IWorkbench, Workbench, WorkbenchContext>(
+                campusTemplate, serviceProvider, "Workbench",
+                static (template, sp, parent) => new WorkbenchContext(template, sp, parent));
 
             var parallelYouTemplate = campusTemplate with
             {
@@ -392,8 +375,8 @@ public static class ForgeCampusExtensions
                 serviceProvider,
                 new ParallelYouContext(parallelYouTemplate, serviceProvider, campus)));
 
-            var architectureFaculty = RegisterFaculty<IArchitectureFaculty>(
-                campus, campusTemplate, serviceProvider, "Architecture", "Principal Architect",
+            var architectureFaculty = campus.RegisterFaculty<IArchitectureFaculty>(
+                campusTemplate, serviceProvider, "Architecture", "Principal Architect",
                 static (context, dean) => new ArchitectureFaculty(context, dean));
 
             var decisionsTemplate = campusTemplate with
@@ -406,8 +389,8 @@ public static class ForgeCampusExtensions
             architectureFaculty.Register<IDecisions>(new DecisionsInstitution(
                 new DecisionsContext(decisionsTemplate, serviceProvider, architectureFaculty)));
 
-            var designFaculty = RegisterFaculty<IDesignFaculty>(
-                campus, campusTemplate, serviceProvider, "Design", "Director",
+            var designFaculty = campus.RegisterFaculty<IDesignFaculty>(
+                campusTemplate, serviceProvider, "Design", "Director",
                 static (context, dean) => new DesignFaculty(context, dean));
 
             var talentTemplate = campusTemplate with
@@ -421,23 +404,23 @@ public static class ForgeCampusExtensions
                 new TalentContext(talentTemplate, serviceProvider, designFaculty),
                 serviceProvider.GetRequiredService<ITalentSteward>()));
 
-            RegisterFaculty<IEngineeringFaculty>(
-                campus, campusTemplate, serviceProvider, "Engineering", "Chief Engineer",
+            campus.RegisterFaculty<IEngineeringFaculty>(
+                campusTemplate, serviceProvider, "Engineering", "Chief Engineer",
                 static (context, dean) => new EngineeringFaculty(context, dean));
-            RegisterFaculty<IManufacturingFaculty>(
-                campus, campusTemplate, serviceProvider, "Manufacturing", "Chief Fabricator",
+            campus.RegisterFaculty<IManufacturingFaculty>(
+                campusTemplate, serviceProvider, "Manufacturing", "Chief Fabricator",
                 static (context, dean) => new ManufacturingFaculty(context, dean));
-            var operations = RegisterFaculty<IOperationsFaculty>(
-                campus, campusTemplate, serviceProvider, "Operations", "Quartermaster",
+            var operations = campus.RegisterFaculty<IOperationsFaculty>(
+                campusTemplate, serviceProvider, "Operations", "Quartermaster",
                 static (context, dean) => new OperationsFaculty(context, dean));
-            RegisterFaculty<IFinanceFaculty>(
-                campus, campusTemplate, serviceProvider, "Finance", "Chief Accountant",
+            campus.RegisterFaculty<IFinanceFaculty>(
+                campusTemplate, serviceProvider, "Finance", "Chief Accountant",
                 static (context, dean) => new FinanceFaculty(context, dean));
-            RegisterFaculty<IInsuranceFaculty>(
-                campus, campusTemplate, serviceProvider, "Insurance", "Chief Underwriter",
+            campus.RegisterFaculty<IInsuranceFaculty>(
+                campusTemplate, serviceProvider, "Insurance", "Chief Underwriter",
                 static (context, dean) => new InsuranceFaculty(context, dean));
-            RegisterFaculty<IFederationFaculty>(
-                campus, campusTemplate, serviceProvider, "Federation", "Envoy",
+            campus.RegisterFaculty<IFederationFaculty>(
+                campusTemplate, serviceProvider, "Federation", "Envoy",
                 static (context, dean) => new FederationFaculty(context, dean));
             RegisterGovernanceBoard<IGovernanceBoard>(
                 campus, campusTemplate, serviceProvider, "Governance",
