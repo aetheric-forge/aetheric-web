@@ -80,6 +80,7 @@ using AethericForge.Web.Services;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using Forge.Primitives.MongoDb;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using ParallelYou.Abstractions;
@@ -110,37 +111,6 @@ public static class ForgeCampusExtensions
     private const string DecisionsKnowledgeScheme = "adr-campus";
     private const string DecisionsWorkbenchStage = "adr-campus-workbench";
     private const string DecisionsMaintenanceDomain = "adr-campus-maintenance";
-
-    internal static string BuildMongoUri(IConfiguration configuration)
-    {
-        var host = GetRequiredSetting(configuration, "MongoDb:Host");
-        var username = GetRequiredSetting(configuration, "MongoDb:Username");
-        var password = GetRequiredSetting(configuration, "MongoDb:Password");
-        var databaseName = GetRequiredSetting(configuration, "MongoDb:DatabaseName");
-        var authenticationDatabase = GetRequiredSetting(
-            configuration,
-            "MongoDb:AuthenticationDatabase");
-
-        var port = configuration.GetValue<int?>("MongoDb:Port")
-                   ?? throw new InvalidOperationException("MongoDb:Port is required.");
-
-        var builder = new MongoUrlBuilder
-        {
-            Server = new MongoServerAddress(host, port),
-            Username = username,
-            Password = password,
-            DatabaseName = databaseName,
-            AuthenticationSource = authenticationDatabase,
-            AuthenticationMechanism = configuration.GetValue<string>(
-                "MongoDb:AuthenticationMechanism",
-                "SCRAM-SHA-256"),
-            DirectConnection = configuration.GetValue(
-                "MongoDb:DirectConnection",
-                true)
-        };
-
-        return builder.ToMongoUrl().ToString();
-    }
 
     internal static string BuildRabbitMqUrl(IConfiguration configuration)
     {
@@ -242,8 +212,9 @@ public static class ForgeCampusExtensions
 
         foreach (var institution in new[] { "Library", "ParallelYou", "Decisions", "Talent" })
         {
-            services.AddKeyedSingleton<IMongoClient>(institution, (sp, _) => new MongoClient(BuildMongoUri(
-                InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb"))));
+            services.AddKeyedSingleton<IMongoClient>(institution, (sp, _) => new MongoClient(
+                InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb")
+                    .GetSection("MongoDb").Get<MongoOptions>()!.ToConnectionString()));
             services.AddKeyedSingleton<IMongoDatabase>(institution, (sp, _) =>
                 sp.GetRequiredKeyedService<IMongoClient>(institution).GetDatabase(GetRequiredSetting(
                     InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb"),

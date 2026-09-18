@@ -3,17 +3,15 @@ using AethericForge.Web.Components;
 using AethericForge.Web.Hosting;
 using AethericForge.Web.Membership;
 using AethericForge.Web.Services;
+using Forge.Primitives.MongoDb;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Driver;
 using StackExchange.Redis;
 
 // MongoDB.Driver 3.x removed its old implicit Guid-serialization default - without this, any Guid-
 // keyed write throws "GuidSerializer cannot serialize a Guid when GuidRepresentation is Unspecified."
 // Must run before any Mongo store is constructed.
-BsonSerializer.RegisterSerializer(new MongoDB.Bson.Serialization.Serializers.GuidSerializer(GuidRepresentation.Standard));
+MongoBsonSetup.EnsureGuidRepresentationRegistered();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,15 +53,11 @@ builder.Services.AddScoped<IHomePageService, HomePageService>();
 
 // Shared with aetheric-admin via the aetheric-contracts submodule - this app creates applications
 // through the public Join Campus form, aetheric-admin reads/flags them (StaleMembershipApplicationsWorker).
-var membershipMongoUrl = MongoUrl.Create(
-    ForgeCampusExtensions.BuildMongoUri(
-        InstitutionServiceConfiguration.Resolve(builder.Configuration, "Membership", "MongoDb")));
-builder.Services.AddKeyedSingleton<IMongoClient>(
-    "Membership",
-    (_, _) => new MongoClient(membershipMongoUrl));
-builder.Services.AddKeyedSingleton<IMongoDatabase>(
-    "Membership",
-    (sp, _) => sp.GetRequiredKeyedService<IMongoClient>("Membership").GetDatabase(membershipMongoUrl.DatabaseName));
+var membershipMongoOptions = InstitutionServiceConfiguration
+    .Resolve(builder.Configuration, "Membership", "MongoDb")
+    .GetSection("MongoDb")
+    .Get<MongoOptions>()!;
+builder.Services.AddKeyedMongoClient("Membership", membershipMongoOptions);
 builder.Services.AddSingleton<IMembershipApplicationStore, MongoMembershipApplicationStore>();
 
 builder.Services.AddSingleton<IMemberIdentityProvisioner, DevelopmentMemberIdentityProvisioner>();

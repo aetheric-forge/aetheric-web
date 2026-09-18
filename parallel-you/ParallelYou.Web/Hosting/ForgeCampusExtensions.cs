@@ -49,6 +49,7 @@ using AethericForge.Runtime.Services.Library;
 using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
+using Forge.Primitives.MongoDb;
 using MongoDB.Driver;
 using StackExchange.Redis;
 
@@ -56,34 +57,6 @@ namespace ParallelYou.Web.Hosting;
 
 public static class ForgeCampusExtensions 
 {
-    private static string BuildMongoUri(IConfiguration configuration)
-    {
-        var host = GetRequiredSetting(configuration, "MongoDb:Host");
-        var username = GetRequiredSetting(configuration, "MongoDb:Username");
-        var password = GetRequiredSetting(configuration, "MongoDb:Password");
-        var databaseName = GetRequiredSetting(configuration, "MongoDb:DatabaseName");
-        var authenticationDatabase = GetRequiredSetting(
-            configuration,
-            "MongoDb:AuthenticationDatabase");
-
-        var port = configuration.GetValue<int?>("MongoDb:Port")
-                   ?? throw new InvalidOperationException("MongoDb:Port is required.");
-
-        var builder = new MongoUrlBuilder
-        {
-            Server = new MongoServerAddress(host, port),
-            Username = username,
-            Password = password,
-            DatabaseName = databaseName,
-            AuthenticationSource = authenticationDatabase,
-            DirectConnection = configuration.GetValue(
-                "MongoDb:DirectConnection",
-                true)
-        };
-
-        return builder.ToMongoUrl().ToString();
-    }
-    
     private static string GetRequiredSetting(
         IConfiguration configuration,
         string key)
@@ -135,7 +108,8 @@ public static class ForgeCampusExtensions
                 .With<IArchivist, Archivist>()
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
-                .With<IMongoClient>(sp => new MongoClient(BuildMongoUri(sp.GetRequiredService<IConfiguration>())))
+                .With<IMongoClient>(sp => new MongoClient(sp.GetRequiredService<IConfiguration>()
+                    .GetSection("MongoDb").Get<MongoOptions>()!.ToConnectionString()))
                 .With<IMongoDatabase>(sp => sp
                     .GetRequiredService<IMongoClient>()
                     .GetDatabase(GetRequiredSetting(
