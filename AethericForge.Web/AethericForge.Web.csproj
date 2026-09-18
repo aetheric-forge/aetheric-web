@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\primitives\src\Primitives.MongoDb\Primitives.MongoDb.csproj" />
+    <ProjectReference Include="..\primitives\src\Primitives.Redis\Primitives.Redis.csproj" />
     <ProjectReference Include="..\contracts\src\AethericContracts.Membership\AethericContracts.Membership.csproj" />
     <ProjectReference Include="..\adr-campus\AdrCampus.Application\AdrCampus.Application.csproj" />
     <ProjectReference Include="..\adr-campus\AdrCampus.Core\AdrCampus.Core.csproj" />
