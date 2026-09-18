@@ -17,6 +17,7 @@
       <ProjectReference Include="..\ParallelYou.Models\ParallelYou.Models.csproj" />
       <ProjectReference Include="..\ParallelYou.Services\ParallelYou.Services.csproj" />
       <ProjectReference Include="..\..\runtime\src\Institutions\AethericForge.Runtime.Institutions.Campus\AethericForge.Runtime.Institutions.Campus.csproj" />
+      <ProjectReference Include="..\..\primitives\src\Primitives.MongoDb\Primitives.MongoDb.csproj" />
     </ItemGroup>
 
     <ItemGroup>
