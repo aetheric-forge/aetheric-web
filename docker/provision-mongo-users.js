@@ -6,6 +6,7 @@ const users = [
   { user: "forge-library", pwd: "c9c0febef9932731a3cc0052879839f708c349fb0e9d19e239e619b1675182d4", db: "library" },
   { user: "forge-parallel-you", pwd: "2ef2251af990ac5bf61651ef98a129e40cf7eee2cb5fbdca0f6fff79b99d5049", db: "parallel-you" },
   { user: "forge-decisions", pwd: "e8269d4764652470d8f1424f82fb7466d4aa1396189be773239175e329029db5", db: "decisions" },
+  { user: "forge-talent", pwd: "fe5ca0b9029ad2cba048c834b8b08bcf0c92e184a012bccc713b53f7e5b04d53", db: "talent" },
   { user: "forge-maintenance", pwd: "edfd9d1244e562831e4a792d32198b500fea6e900cc82726d40e658ae1bc0d71", db: "maintenance" },
 ];
 

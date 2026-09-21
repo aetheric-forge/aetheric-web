@@ -49,6 +49,8 @@ using AethericForge.Runtime.Services.Library;
 using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
+using Forge.Primitives.MongoDb;
+using Forge.Primitives.Redis;
 using MongoDB.Driver;
 using StackExchange.Redis;
 
@@ -56,34 +58,6 @@ namespace ParallelYou.Web.Hosting;
 
 public static class ForgeCampusExtensions 
 {
-    private static string BuildMongoUri(IConfiguration configuration)
-    {
-        var host = GetRequiredSetting(configuration, "MongoDb:Host");
-        var username = GetRequiredSetting(configuration, "MongoDb:Username");
-        var password = GetRequiredSetting(configuration, "MongoDb:Password");
-        var databaseName = GetRequiredSetting(configuration, "MongoDb:DatabaseName");
-        var authenticationDatabase = GetRequiredSetting(
-            configuration,
-            "MongoDb:AuthenticationDatabase");
-
-        var port = configuration.GetValue<int?>("MongoDb:Port")
-                   ?? throw new InvalidOperationException("MongoDb:Port is required.");
-
-        var builder = new MongoUrlBuilder
-        {
-            Server = new MongoServerAddress(host, port),
-            Username = username,
-            Password = password,
-            DatabaseName = databaseName,
-            AuthenticationSource = authenticationDatabase,
-            DirectConnection = configuration.GetValue(
-                "MongoDb:DirectConnection",
-                true)
-        };
-
-        return builder.ToMongoUrl().ToString();
-    }
-    
     private static string GetRequiredSetting(
         IConfiguration configuration,
         string key)
@@ -135,7 +109,8 @@ public static class ForgeCampusExtensions
                 .With<IArchivist, Archivist>()
                 .With<IArchiveContext, ArchiveContext>()
                 .With<IArchive, Archive>()
-                .With<IMongoClient>(sp => new MongoClient(BuildMongoUri(sp.GetRequiredService<IConfiguration>())))
+                .With<IMongoClient>(sp => new MongoClient(sp.GetRequiredService<IConfiguration>()
+                    .GetSection("MongoDb").Get<MongoOptions>()!.ToConnectionString()))
                 .With<IMongoDatabase>(sp => sp
                     .GetRequiredService<IMongoClient>()
                     .GetDatabase(GetRequiredSetting(
@@ -153,26 +128,10 @@ public static class ForgeCampusExtensions
                 .With<ILibrary, Library>()
                 .With<IConnectionMultiplexer>(serviceProvider =>
                 {
-                    var configuration =
-                        serviceProvider.GetRequiredService<IConfiguration>();
-
-                    var options = new ConfigurationOptions
-                    {
-                        EndPoints =
-                        {
-                            {
-                                GetRequiredSetting(configuration, "Redis:Host"),
-                                configuration.GetValue<int?>("Redis:Port") ?? 6379
-                            }
-                        },
-                        Password = configuration["Redis:Password"],
-                        Ssl = configuration.GetValue<bool>("Redis:Ssl"),
-                        DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
-                        AbortOnConnectFail = false
-                    };
-
-                    return ConnectionMultiplexer.Connect(options);
-                })                
+                    var options = serviceProvider.GetRequiredService<IConfiguration>()
+                        .GetSection("Redis").Get<RedisOptions>()!;
+                    return ConnectionMultiplexer.Connect(options.ToConfigurationOptions());
+                })
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "ReflectionMapping"))
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "TrackingCurrent"))
                 .With<IStagingProvider>(sp => new RedisStagingProvider(sp.GetRequiredService<IConnectionMultiplexer>(), "IntentionCurrent"))
@@ -200,15 +159,19 @@ public static class ForgeCampusExtensions
 
             var campus = new Campus(campusContext);
 
-            var registryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Registry", campusTemplate.Descriptor.Version, "Registry institution") };
-            campus.Register<IRegistry>(ActivatorUtilities.CreateInstance<Registry>(serviceProvider, new RegistryContext(registryTemplate, serviceProvider, campus)));
-            
-            var libraryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Library", campusTemplate.Descriptor.Version, "Library institution") };
-            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<Library>(serviceProvider, new LibraryContext(libraryTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IRegistry, Registry, RegistryContext>(
+                campusTemplate, serviceProvider, "Registry",
+                static (template, sp, parent) => new RegistryContext(template, sp, parent));
 
-            var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
-            campus.Register<IWorkbench>(ActivatorUtilities.CreateInstance<Workbench>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
-            
+            campus.RegisterInstitution<ILibrary, Library, LibraryContext>(
+                campusTemplate, serviceProvider, "Library",
+                static (template, sp, parent) => new LibraryContext(template, sp, parent));
+
+            campus.RegisterInstitution<IWorkbench, Workbench, WorkbenchContext>(
+                campusTemplate, serviceProvider, "Workbench",
+                static (template, sp, parent) => new WorkbenchContext(template, sp, parent));
+
+
             return campus;
         });
 

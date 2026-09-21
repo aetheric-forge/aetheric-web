@@ -1,0 +1,91 @@
+@page "/talent/personas"
+@rendermode InteractiveServer
+@using TalentCampus.Core.Personas
+@inject IPersonaDirectory Directory
+@inject ILogger<Personas> Logger
+
+<PageTitle>AI Persona Development — Talent</PageTitle>
+<h1>AI Persona Development</h1>
+<p>Describe AI talent that may be considered for different roles. Saving a persona does not create or run an agent.</p>
+@if (error is not null)
+{
+    <p role="alert" class="alert alert-danger">@error</p>
+}
+@if (notice is not null)
+{
+    <p role="status" class="alert alert-success">@notice</p>
+}
+<form @onsubmit="Save" @onsubmit:preventDefault>
+    <div class="mb-3">
+        <label for="persona-name">Name</label>
+        <input id="persona-name" class="form-control" @bind="name" required />
+    </div>
+    <div class="mb-3">
+        <label for="persona-purpose">Purpose</label>
+        <textarea id="persona-purpose" class="form-control" @bind="purpose" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="persona-style">Working style</label>
+        <textarea id="persona-style" class="form-control" @bind="workingStyle" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="persona-strengths">Strengths</label>
+        <textarea id="persona-strengths" class="form-control" @bind="strengths" required></textarea>
+    </div>
+    <div class="mb-3">
+        <label for="persona-boundaries">Boundaries</label>
+        <textarea id="persona-boundaries" class="form-control" @bind="boundaries" required></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit">Save persona</button>
+</form>
+<h2 class="mt-4">Defined personas</h2>
+@if (personas.Count == 0)
+{
+    <p>No personas defined yet.</p>
+}
+@foreach (var persona in personas)
+{
+    <article class="card p-3 mb-3" @key="persona.Id">
+        <h3>@persona.Name</h3>
+        <dl>
+            <dt>Purpose</dt><dd style="white-space:pre-wrap">@persona.Purpose</dd>
+            <dt>Working style</dt><dd style="white-space:pre-wrap">@persona.WorkingStyle</dd>
+            <dt>Strengths</dt><dd style="white-space:pre-wrap">@persona.Strengths</dd>
+            <dt>Boundaries</dt><dd style="white-space:pre-wrap">@persona.Boundaries</dd>
+        </dl>
+    </article>
+}
+
+@code {
+    private string name = "", purpose = "", workingStyle = "", strengths = "", boundaries = "";
+    private string? error, notice;
+    private IReadOnlyCollection<PersonaDefinition> personas = [];
+
+    protected override void OnInitialized()
+    {
+        try { personas = Directory.List(); }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unable to load personas");
+            error = "Personas could not be loaded. Check storage before continuing.";
+        }
+    }
+
+    private void Save()
+    {
+        error = notice = null;
+        try
+        {
+            var saved = Directory.Create(name, purpose, workingStyle, strengths, boundaries);
+            personas = personas.Append(saved).ToArray();
+            name = purpose = workingStyle = strengths = boundaries = "";
+            notice = "Persona saved.";
+        }
+        catch (ArgumentException) { error = "Complete every field before saving the persona."; }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unable to save persona");
+            error = "The persona could not be saved. Check storage access and try again. Your entries have been kept.";
+        }
+    }
+}

@@ -1,0 +1,21 @@
+@page "/talent"
+@using TalentCampus.Core.Roles
+@inject ITalentSteward Steward
+
+<PageTitle>Talent</PageTitle>
+
+<h1>Talent</h1>
+
+<p>Define the roles the Campus needs and steward the human and artificial talent trusted to fill them.</p>
+
+<section>
+    <dl>
+        <dt>Defined roles</dt>
+        <dd>@Steward.ListRoles().Count</dd>
+    </dl>
+</section>
+
+<p><a href="/talent/roles">Open Role Designer</a></p>
+<p><a href="/talent/personas">Develop AI personas</a></p>
+<p><a href="/talent/recruitment">Open Recruitment Office</a></p>
+<p>Coming next: PostOffice delivery and Decisions.</p>

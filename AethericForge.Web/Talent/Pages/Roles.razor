@@ -1,0 +1,53 @@
+@page "/talent/roles"
+@rendermode InteractiveServer
+@using TalentCampus.Core.Roles
+@inject ITalentSteward Steward
+@inject ILogger<Roles> Logger
+
+<PageTitle>Role Designer — Talent</PageTitle>
+<h1>Role Designer</h1>
+<p>Describe the work needed. Roles can be filled by human or AI talent.</p>
+@if (error is not null) { <p role="alert" class="alert alert-danger">@error</p> }
+@if (notice is not null) { <p role="status" class="alert alert-success">@notice</p> }
+<form @onsubmit="Save" @onsubmit:preventDefault>
+    <div class="mb-3"><label for="role-name">Name</label><input id="role-name" class="form-control" @bind="name" required /></div>
+    <div class="mb-3"><label for="role-purpose">Purpose</label><textarea id="role-purpose" class="form-control" @bind="purpose" required></textarea></div>
+    <div class="mb-3"><label for="role-responsibilities">Responsibilities</label><textarea id="role-responsibilities" class="form-control" @bind="responsibilities" required></textarea></div>
+    <div class="mb-3"><label for="role-capabilities">Required capabilities (one per line)</label><textarea id="role-capabilities" class="form-control" @bind="capabilities" required></textarea></div>
+    <div class="mb-3"><label for="role-success">Success criteria</label><textarea id="role-success" class="form-control" @bind="successCriteria" required></textarea></div>
+    <button class="btn btn-primary" type="submit">Save role</button>
+</form>
+<h2 class="mt-4">Defined roles</h2>
+@if (roles.Count == 0) { <p>No roles defined yet.</p> }
+@foreach (var role in roles)
+{
+    <article class="card p-3 mb-3">
+        <h3>@role.Name</h3><p>@role.Purpose</p>
+        <dl><dt>Responsibilities</dt><dd style="white-space:pre-wrap">@role.Responsibilities</dd>
+        <dt>Required capabilities</dt><dd>@string.Join(" · ", role.RequiredCapabilities)</dd>
+        <dt>Success criteria</dt><dd style="white-space:pre-wrap">@role.SuccessCriteria</dd></dl>
+    </article>
+}
+@code {
+    private string name = "", purpose = "", responsibilities = "", capabilities = "", successCriteria = "";
+    private string? error, notice;
+    private IReadOnlyCollection<RoleDefinition> roles = [];
+    protected override void OnInitialized()
+    {
+        try { roles = Steward.ListRoles(); }
+        catch (Exception ex) { Logger.LogError(ex, "Unable to load roles"); error = "Roles could not be loaded. Check storage before continuing."; }
+    }
+    private void Save()
+    {
+        error = notice = null;
+        try
+        {
+            Steward.DefineRole(name, purpose, capabilities.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries), responsibilities, successCriteria);
+            name = purpose = responsibilities = capabilities = successCriteria = "";
+            notice = "Role saved.";
+            roles = Steward.ListRoles();
+        }
+        catch (ArgumentException) { error = "Complete every field and provide at least one capability."; }
+        catch (Exception ex) { Logger.LogError(ex, "Unable to save role"); error = "The role could not be saved. Check storage access and try again."; }
+    }
+}

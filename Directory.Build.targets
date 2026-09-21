@@ -1,0 +1,18 @@
+<Project>
+  <!--
+    aetheric-forge/primitives is checked out twice in this tree: once directly (primitives/) and
+    once transitively through contracts/primitives/ (aetheric-contracts has its own primitives
+    submodule for the same GuidSerializer-gate reason). Left unredirected, this app and
+    AethericContracts.Membership end up with two independently-built copies of
+    Forge.Primitives.MongoDb - different assemblies despite identical source, which silently fail
+    to satisfy each other's types at DI-resolution time (or .NET just picks whichever copy lands
+    in the output directory last, depending on build order). Redirecting the reference by project
+    name, from this repo's own Directory.Build.targets, makes AethericContracts.Membership consume
+    this repo's own top-level primitives submodule instead of its own nested one, regardless of
+    how deeply that project is reached in the build graph.
+  -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'AethericContracts.Membership'">
+    <ProjectReference Remove="../../primitives/src/Primitives.MongoDb/Primitives.MongoDb.csproj" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)primitives/src/Primitives.MongoDb/Primitives.MongoDb.csproj" />
+  </ItemGroup>
+</Project>

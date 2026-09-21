@@ -14,6 +14,9 @@ public interface IDesignFaculty : IFaculty;
 public interface IEngineeringFaculty : IFaculty;
 public interface IManufacturingFaculty : IFaculty;
 public interface IOperationsFaculty : IFaculty;
+public interface IFinanceFaculty : IFaculty;
+public interface IInsuranceFaculty : IFaculty;
+public interface IFederationFaculty : IFaculty;
 
 public sealed class ArchitectureFaculty(IFacultyContext context, IDean dean)
     : InstitutionBase(context), IArchitectureFaculty
@@ -45,6 +48,27 @@ public sealed class ManufacturingFaculty(IFacultyContext context, IDean dean)
 
 public sealed class OperationsFaculty(IFacultyContext context, IDean dean)
     : InstitutionBase(context), IOperationsFaculty
+{
+    public new IFacultyContext Context => (IFacultyContext)base.Context;
+    public IDean Dean { get; } = dean ?? throw new ArgumentNullException(nameof(dean));
+}
+
+public sealed class FinanceFaculty(IFacultyContext context, IDean dean)
+    : InstitutionBase(context), IFinanceFaculty
+{
+    public new IFacultyContext Context => (IFacultyContext)base.Context;
+    public IDean Dean { get; } = dean ?? throw new ArgumentNullException(nameof(dean));
+}
+
+public sealed class InsuranceFaculty(IFacultyContext context, IDean dean)
+    : InstitutionBase(context), IInsuranceFaculty
+{
+    public new IFacultyContext Context => (IFacultyContext)base.Context;
+    public IDean Dean { get; } = dean ?? throw new ArgumentNullException(nameof(dean));
+}
+
+public sealed class FederationFaculty(IFacultyContext context, IDean dean)
+    : InstitutionBase(context), IFederationFaculty
 {
     public new IFacultyContext Context => (IFacultyContext)base.Context;
     public IDean Dean { get; } = dean ?? throw new ArgumentNullException(nameof(dean));

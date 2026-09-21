@@ -25,6 +25,7 @@ using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Authorities;
 using AethericForge.Runtime.Abstractions.Interfaces.Faculty.Services;
+using AethericForge.Runtime.Abstractions.Interfaces.Governance.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Lifecycle;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Provisioning;
 using AethericForge.Runtime.Abstractions.Interfaces.Identity.Services;
@@ -33,7 +34,6 @@ using AethericForge.Runtime.Abstractions.Interfaces.Knowledge.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Library.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.IssueReports.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Security.Services;
-using AethericForge.Runtime.Abstractions.Interfaces.Maintenance.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Post.Services;
 using AethericForge.Runtime.Abstractions.Interfaces.Staging.Providers;
@@ -46,10 +46,10 @@ using AethericForge.Runtime.Institutions.Abstractions.Primitives;
 using AethericForge.Runtime.Institutions.Archive;
 using AethericForge.Runtime.Institutions.Campus;
 using AethericForge.Runtime.Institutions.Faculty;
+using AethericForge.Runtime.Institutions.Governance;
 using AethericForge.Runtime.Institutions.Library;
 using AethericForge.Runtime.Institutions.IssueReports;
 using AethericForge.Runtime.Institutions.Security;
-using AethericForge.Runtime.Institutions.Maintenance;
 using AethericForge.Runtime.Institutions.PostOffice;
 using AethericForge.Runtime.Institutions.Registry;
 using AethericForge.Runtime.Institutions.Workbench;
@@ -63,13 +63,13 @@ using AethericForge.Runtime.Providers.Post.RabbitMq;
 using AethericForge.Runtime.Providers.Staging.Redis;
 using AethericForge.Runtime.Services.Archive;
 using AethericForge.Runtime.Services.Faculty;
+using AethericForge.Runtime.Services.Governance;
 using AethericForge.Runtime.Services.Identity;
 using AethericForge.Runtime.Services.Identity.Lifecycle;
 using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Library;
 using AethericForge.Runtime.Services.IssueReports;
 using AethericForge.Runtime.Services.Security;
-using AethericForge.Runtime.Services.Maintenance;
 using AethericForge.Runtime.Services.Post;
 using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
@@ -80,6 +80,8 @@ using AethericForge.Web.Services;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using Forge.Primitives.MongoDb;
+using Forge.Primitives.Redis;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using ParallelYou.Abstractions;
@@ -96,6 +98,11 @@ using ParallelYou.Services.Plan;
 using ParallelYou.Services.Recommendation;
 using ParallelYou.Services.Reflection;
 using ParallelYou.Services.Tracking;
+using TalentCampus.Core.Personas;
+using TalentCampus.Core.Recruitment;
+using TalentCampus.Core.Roles;
+using TalentCampus.Institutions.Talent;
+using TalentCampus.Providers.MongoDb;
 
 namespace AethericForge.Web.Hosting;
 
@@ -105,37 +112,6 @@ public static class ForgeCampusExtensions
     private const string DecisionsKnowledgeScheme = "adr-campus";
     private const string DecisionsWorkbenchStage = "adr-campus-workbench";
     private const string DecisionsMaintenanceDomain = "adr-campus-maintenance";
-
-    internal static string BuildMongoUri(IConfiguration configuration)
-    {
-        var host = GetRequiredSetting(configuration, "MongoDb:Host");
-        var username = GetRequiredSetting(configuration, "MongoDb:Username");
-        var password = GetRequiredSetting(configuration, "MongoDb:Password");
-        var databaseName = GetRequiredSetting(configuration, "MongoDb:DatabaseName");
-        var authenticationDatabase = GetRequiredSetting(
-            configuration,
-            "MongoDb:AuthenticationDatabase");
-
-        var port = configuration.GetValue<int?>("MongoDb:Port")
-                   ?? throw new InvalidOperationException("MongoDb:Port is required.");
-
-        var builder = new MongoUrlBuilder
-        {
-            Server = new MongoServerAddress(host, port),
-            Username = username,
-            Password = password,
-            DatabaseName = databaseName,
-            AuthenticationSource = authenticationDatabase,
-            AuthenticationMechanism = configuration.GetValue<string>(
-                "MongoDb:AuthenticationMechanism",
-                "SCRAM-SHA-256"),
-            DirectConnection = configuration.GetValue(
-                "MongoDb:DirectConnection",
-                true)
-        };
-
-        return builder.ToMongoUrl().ToString();
-    }
 
     internal static string BuildRabbitMqUrl(IConfiguration configuration)
     {
@@ -167,24 +143,23 @@ public static class ForgeCampusExtensions
             : throw new InvalidOperationException($"{key} is required.");
     }
 
-    private static TFaculty RegisterFaculty<TFaculty>(
+    private static TGovernanceBoard RegisterGovernanceBoard<TGovernanceBoard>(
         Campus campus,
         InstitutionTemplate campusTemplate,
         IServiceProvider serviceProvider,
         string name,
-        string deanTitle,
-        Func<IFacultyContext, IDean, TFaculty> factory)
-        where TFaculty : class, IFaculty
+        Func<IGovernanceContext, ICouncil, TGovernanceBoard> factory)
+        where TGovernanceBoard : class, IGovernanceBoard
     {
         var template = campusTemplate with
         {
-            Descriptor = new InstitutionDescriptor(name, campusTemplate.Descriptor.Version, $"{name} faculty")
+            Descriptor = new InstitutionDescriptor(name, campusTemplate.Descriptor.Version, $"{name} board")
         };
-        var context = new FacultyContext(template, serviceProvider, campus);
-        var dean = new Dean(deanTitle, new Team<IFacultyClerk>(Array.Empty<IFacultyClerk>()));
-        var faculty = factory(context, dean);
-        campus.Register<TFaculty>(faculty);
-        return faculty;
+        var context = new GovernanceContext(template, serviceProvider, campus);
+        var council = new Council(new Team<ICouncilMember>(Array.Empty<ICouncilMember>()));
+        var board = factory(context, council);
+        campus.Register<TGovernanceBoard>(board);
+        return board;
     }
     
     internal static AmazonS3Config BuildS3Config(IConfiguration configuration)
@@ -216,10 +191,11 @@ public static class ForgeCampusExtensions
             services.AddKeyedSingleton<IAmazonS3>(institution, (sp, _) => BuildS3Client(
                 InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "S3")));
 
-        foreach (var institution in new[] { "Library", "ParallelYou", "Decisions" })
+        foreach (var institution in new[] { "Library", "ParallelYou", "Decisions", "Talent" })
         {
-            services.AddKeyedSingleton<IMongoClient>(institution, (sp, _) => new MongoClient(BuildMongoUri(
-                InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb"))));
+            services.AddKeyedSingleton<IMongoClient>(institution, (sp, _) => new MongoClient(
+                InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb")
+                    .GetSection("MongoDb").Get<MongoOptions>()!.ToConnectionString()));
             services.AddKeyedSingleton<IMongoDatabase>(institution, (sp, _) =>
                 sp.GetRequiredKeyedService<IMongoClient>(institution).GetDatabase(GetRequiredSetting(
                     InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb"),
@@ -228,17 +204,10 @@ public static class ForgeCampusExtensions
 
         services.AddKeyedSingleton<IConnectionMultiplexer>("Workbench", (sp, _) =>
         {
-            var configuration = InstitutionServiceConfiguration.Resolve(
-                sp.GetRequiredService<IConfiguration>(), "Workbench", "Redis");
-            return ConnectionMultiplexer.Connect(new ConfigurationOptions
-            {
-                EndPoints = { { GetRequiredSetting(configuration, "Redis:Host"), configuration.GetValue<int?>("Redis:Port") ?? 6379 } },
-                User = configuration["Redis:User"],
-                Password = configuration["Redis:Password"],
-                Ssl = configuration.GetValue<bool>("Redis:Ssl"),
-                DefaultDatabase = configuration.GetValue<int?>("Redis:Database") ?? 0,
-                AbortOnConnectFail = false
-            });
+            var options = InstitutionServiceConfiguration.Resolve(
+                    sp.GetRequiredService<IConfiguration>(), "Workbench", "Redis")
+                .GetSection("Redis").Get<RedisOptions>()!;
+            return ConnectionMultiplexer.Connect(options.ToConfigurationOptions());
         });
 
         services.AddInstitutionTemplate(builder =>
@@ -285,8 +254,6 @@ public static class ForgeCampusExtensions
                 .With<IArchiveService, ArchiveService>()
                 .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
                 .With<IArchivist, Archivist>()
-                .With<ITeam<IMaintenanceClerk>>(_ => new Team<IMaintenanceClerk>(Array.Empty<IMaintenanceClerk>()))
-                .With<ICaretaker, Caretaker>()
                 .With<ITeam<IIssueReportsClerk>>(_ => new Team<IIssueReportsClerk>(Array.Empty<IIssueReportsClerk>()))
                 .With<IWarden, Warden>()
                 .With<ITeam<ISecurityClerk>>(_ => new Team<ISecurityClerk>(Array.Empty<ISecurityClerk>()))
@@ -359,7 +326,15 @@ public static class ForgeCampusExtensions
                 .With<ITrackingService, TrackingService>()
                 .With<IIntentionService, IntentionService>()
                 .With<IPlanningService, PlanningService>()
-                .With<IRecommendationService, RecommendationService>();
+                .With<IRecommendationService, RecommendationService>()
+                .With<ITalentSteward>(sp => new MongoTalentSteward(sp.GetRequiredKeyedService<IMongoDatabase>("Talent")))
+                .With<IPersonaDirectory>(sp => new MongoPersonaDirectory(sp.GetRequiredKeyedService<IMongoDatabase>("Talent")))
+                .With<IRecruitmentOffice>(sp => new MongoRecruitmentOffice(
+                    sp.GetRequiredKeyedService<IMongoDatabase>("Talent"),
+                    sp.GetRequiredService<ITalentSteward>(),
+                    sp.GetRequiredService<IPersonaDirectory>(),
+                    sp.GetRequiredService<IConfiguration>()
+                        .GetSection("Talent:Recruitment:DecisionsOffices").Get<DecisionsDestination[]>() ?? []));
         });
 
         services.AddSingleton<ICampus>(serviceProvider =>
@@ -369,22 +344,25 @@ public static class ForgeCampusExtensions
 
             var campus = new Campus(campusContext);
 
-            var registryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Registry", campusTemplate.Descriptor.Version, "Registry institution") };
-            campus.Register<IRegistry>(ActivatorUtilities.CreateInstance<Registry>(serviceProvider, new RegistryContext(registryTemplate, serviceProvider, campus)));
-            
-            var archiveTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Archive", campusTemplate.Descriptor.Version, "Archive institution") };
-            campus.Register<IArchive>(ActivatorUtilities.CreateInstance<Archive>(serviceProvider, new ArchiveContext(archiveTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IRegistry, Registry, RegistryContext>(
+                campusTemplate, serviceProvider, "Registry",
+                static (template, sp, parent) => new RegistryContext(template, sp, parent));
 
-            var libraryTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Library", campusTemplate.Descriptor.Version, "Library institution") };
-            campus.Register<ILibrary>(ActivatorUtilities.CreateInstance<global::AethericForge.Runtime.Institutions.Library.Library>(
-                serviceProvider,
-                new LibraryContext(libraryTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IArchive, Archive, ArchiveContext>(
+                campusTemplate, serviceProvider, "Archive",
+                static (template, sp, parent) => new ArchiveContext(template, sp, parent));
 
-            var postOfficeTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("PostOffice", campusTemplate.Descriptor.Version, "Post Office institution") };
-            campus.Register<IPostOffice>(ActivatorUtilities.CreateInstance<PostOffice>(serviceProvider, new PostOfficeContext(postOfficeTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<ILibrary, global::AethericForge.Runtime.Institutions.Library.Library, LibraryContext>(
+                campusTemplate, serviceProvider, "Library",
+                static (template, sp, parent) => new LibraryContext(template, sp, parent));
 
-            var workbenchTemplate = campusTemplate with { Descriptor = new InstitutionDescriptor("Workbench", campusTemplate.Descriptor.Version, "Workbench institution") };
-            campus.Register<IWorkbench>(ActivatorUtilities.CreateInstance<Workbench>(serviceProvider, new WorkbenchContext(workbenchTemplate, serviceProvider, campus)));
+            campus.RegisterInstitution<IPostOffice, PostOffice, PostOfficeContext>(
+                campusTemplate, serviceProvider, "PostOffice",
+                static (template, sp, parent) => new PostOfficeContext(template, sp, parent));
+
+            campus.RegisterInstitution<IWorkbench, Workbench, WorkbenchContext>(
+                campusTemplate, serviceProvider, "Workbench",
+                static (template, sp, parent) => new WorkbenchContext(template, sp, parent));
 
             var parallelYouTemplate = campusTemplate with
             {
@@ -397,8 +375,8 @@ public static class ForgeCampusExtensions
                 serviceProvider,
                 new ParallelYouContext(parallelYouTemplate, serviceProvider, campus)));
 
-            var architectureFaculty = RegisterFaculty<IArchitectureFaculty>(
-                campus, campusTemplate, serviceProvider, "Architecture", "Principal Architect",
+            var architectureFaculty = campus.RegisterFaculty<IArchitectureFaculty>(
+                campusTemplate, serviceProvider, "Architecture", "Principal Architect",
                 static (context, dean) => new ArchitectureFaculty(context, dean));
 
             var decisionsTemplate = campusTemplate with
@@ -411,32 +389,42 @@ public static class ForgeCampusExtensions
             architectureFaculty.Register<IDecisions>(new DecisionsInstitution(
                 new DecisionsContext(decisionsTemplate, serviceProvider, architectureFaculty)));
 
-            RegisterFaculty<IDesignFaculty>(
-                campus, campusTemplate, serviceProvider, "Design", "Director",
+            var designFaculty = campus.RegisterFaculty<IDesignFaculty>(
+                campusTemplate, serviceProvider, "Design", "Director",
                 static (context, dean) => new DesignFaculty(context, dean));
-            RegisterFaculty<IEngineeringFaculty>(
-                campus, campusTemplate, serviceProvider, "Engineering", "Chief Engineer",
-                static (context, dean) => new EngineeringFaculty(context, dean));
-            RegisterFaculty<IManufacturingFaculty>(
-                campus, campusTemplate, serviceProvider, "Manufacturing", "Chief Fabricator",
-                static (context, dean) => new ManufacturingFaculty(context, dean));
-            var operations = RegisterFaculty<IOperationsFaculty>(
-                campus, campusTemplate, serviceProvider, "Operations", "Quartermaster",
-                static (context, dean) => new OperationsFaculty(context, dean));
 
-            // The first institution actually nested under a Faculty rather than sitting flat on
-            // Campus - Context.Parent is `operations`, not `campus`, and it's registered on
-            // `operations`, so it resolves via the parent-chain walk InstitutionBase already
-            // provides (proven generically by AethericForge.Runtime.Tests.Faculty.FacultyTests).
-            var maintenanceTemplate = campusTemplate with
+            var talentTemplate = campusTemplate with
             {
-                Descriptor = new InstitutionDescriptor("Maintenance", campusTemplate.Descriptor.Version, "Maintenance institution")
+                Descriptor = new InstitutionDescriptor(
+                    "Talent",
+                    new Version(0, 1, 0),
+                    "Defines roles and stewards evidence-based talent lifecycles.")
             };
-            var maintenanceContext = new MaintenanceContext(maintenanceTemplate, serviceProvider, operations);
-            operations.Register<IMaintenance>(
-                ActivatorUtilities.CreateInstance<global::AethericForge.Runtime.Institutions.Maintenance.Maintenance>(
-                    serviceProvider,
-                    maintenanceContext));
+            designFaculty.Register<ITalent>(new global::TalentCampus.Institutions.Talent.Talent(
+                new TalentContext(talentTemplate, serviceProvider, designFaculty),
+                serviceProvider.GetRequiredService<ITalentSteward>()));
+
+            campus.RegisterFaculty<IEngineeringFaculty>(
+                campusTemplate, serviceProvider, "Engineering", "Chief Engineer",
+                static (context, dean) => new EngineeringFaculty(context, dean));
+            campus.RegisterFaculty<IManufacturingFaculty>(
+                campusTemplate, serviceProvider, "Manufacturing", "Chief Fabricator",
+                static (context, dean) => new ManufacturingFaculty(context, dean));
+            var operations = campus.RegisterFaculty<IOperationsFaculty>(
+                campusTemplate, serviceProvider, "Operations", "Quartermaster",
+                static (context, dean) => new OperationsFaculty(context, dean));
+            campus.RegisterFaculty<IFinanceFaculty>(
+                campusTemplate, serviceProvider, "Finance", "Chief Accountant",
+                static (context, dean) => new FinanceFaculty(context, dean));
+            campus.RegisterFaculty<IInsuranceFaculty>(
+                campusTemplate, serviceProvider, "Insurance", "Chief Underwriter",
+                static (context, dean) => new InsuranceFaculty(context, dean));
+            campus.RegisterFaculty<IFederationFaculty>(
+                campusTemplate, serviceProvider, "Federation", "Envoy",
+                static (context, dean) => new FederationFaculty(context, dean));
+            RegisterGovernanceBoard<IGovernanceBoard>(
+                campus, campusTemplate, serviceProvider, "Governance",
+                static (context, council) => new GovernanceBoard(context, council));
 
             var issueReportsTemplate = campusTemplate with
             {
@@ -571,16 +559,6 @@ public static class ForgeCampusExtensions
                         FacultyStatus(campus.Resolve<IManufacturingFaculty>()),
                         FacultyStatus(campus.Resolve<IOperationsFaculty>())
                     },
-                    maintenance = new
-                    {
-                        // Nested under Operations rather than a direct Campus child, so it's
-                        // resolved from the Faculty instance, not the Campus - Resolve<T> only
-                        // walks up the parent chain from the caller, never down into children.
-                        name = campus.Resolve<IOperationsFaculty>().Resolve<IMaintenance>()
-                            .Context.Template.Descriptor.Name,
-                        version = campus.Resolve<IOperationsFaculty>().Resolve<IMaintenance>()
-                            .Context.Template.Descriptor.Version.ToString()
-                    },
                     issueReports = new
                     {
                         name = campus.Resolve<IOperationsFaculty>().Resolve<IIssueReports>()
@@ -605,8 +583,11 @@ public static class ForgeCampusExtensions
         name = faculty.Context.Template.Descriptor.Name,
         version = faculty.Context.Template.Descriptor.Version.ToString(),
         dean = faculty.Dean.Title,
-        institutions = faculty is IArchitectureFaculty
-            ? new[] { faculty.Resolve<IDecisions>().Context.Template.Descriptor.Name }
-            : []
+        institutions = faculty switch
+        {
+            IArchitectureFaculty => new[] { faculty.Resolve<IDecisions>().Context.Template.Descriptor.Name },
+            IDesignFaculty => new[] { faculty.Resolve<ITalent>().Context.Template.Descriptor.Name },
+            _ => []
+        }
     };
 }
