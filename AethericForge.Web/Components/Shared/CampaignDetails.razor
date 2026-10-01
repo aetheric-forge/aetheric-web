@@ -1,0 +1,10 @@
+@using AethericForge.Web.Marketing
+@if (Content is { } campaign)
+{
+    <section class="campaign-details" aria-label="Campaign information">
+        @if (campaign.HeroImage is { } image) { <img src="@image.Url" alt="@image.AlternativeText" /> }
+        @if (!string.IsNullOrWhiteSpace(campaign.Body)) { <p class="campaign-body">@campaign.Body</p> }
+        @if (campaign.CallToAction is { } action) { <a href="@action.Href">@action.Label <span aria-hidden="true">↗</span></a> }
+    </section>
+}
+@code { [Parameter] public CampaignPageContent? Content { get; set; } }

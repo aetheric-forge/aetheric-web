@@ -1,8 +1,33 @@
 @page "/projects"
+@using AethericForge.Web.Marketing
+@inject ICampaignCatalog CampaignCatalog
 
-<PageTitle>Projects | Aetheric Forge</PageTitle>
+<CampaignHead Content="campaign" BaselineTitle="Projects | Aetheric Forge"
+    BaselineDescription="Open projects, reference designs, and learning environments from Aetheric Forge." />
 
 <div class="projects-page">
+    @if (campaign is not null)
+    {
+        <header class="projects-hero">
+            <p class="projects-hero__eyebrow">Projects and Initiatives</p>
+            <h1>@campaign.Headline</h1><p class="projects-hero__lede">@campaign.Summary</p>
+        </header>
+        <CampaignDetails Content="campaign" />
+        @if (campaignOfferings.Count > 0)
+        {
+            <section class="campaign-offerings" aria-label="Featured offerings">
+                @foreach (var offering in campaignOfferings)
+                {
+                    <article><h2>@offering.Name</h2><p>@offering.Summary</p>
+                        @if (offering.Deliverables.Count > 0)
+                        { <ul>@foreach (var item in offering.Deliverables) { <li>@item</li> }</ul> }
+                    </article>
+                }
+            </section>
+        }
+    }
+    else
+    {
     <header class="projects-hero">
         <p class="projects-hero__eyebrow">Projects and Initiatives</p>
         <h1>Ideas become useful when they survive contact with reality.</h1>
@@ -18,6 +43,7 @@
             Browse all repositories
         </a>
     </header>
+    }
 
     <main class="projects-list" aria-label="Aetheric Forge projects">
         <article id="aetheric-runtime" class="project">
@@ -122,3 +148,14 @@
 
     <Footer />
 </div>
+
+@code {
+    private CampaignPageContent? campaign;
+    private IReadOnlyList<CampaignFeaturedOffering> campaignOfferings = [];
+    protected override async Task OnInitializedAsync()
+    {
+        campaign = await CampaignCatalog.GetActiveAsync("/projects");
+        if (campaign?.OfferingIds is { Count: > 0 } ids)
+            campaignOfferings = await CampaignCatalog.GetFeaturedOfferingsAsync(ids);
+    }
+}

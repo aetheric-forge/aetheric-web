@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>
+    <RootNamespace>AethericForge.Web</RootNamespace><IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="MongoDB.Driver" Version="3.11.2" />
+    <Using Include="Xunit" />
+    <ProjectReference Include="../../primitives/src/Primitives.MongoDb/Primitives.MongoDb.csproj" />
+    <Compile Include="../../AethericForge.Web/Marketing/*.cs" Link="Marketing/%(Filename)%(Extension)" />
+    <RazorComponent Include="../../AethericForge.Web/Components/Shared/CampaignHead.razor" Link="Components/Shared/CampaignHead.razor" />
+    <RazorComponent Include="../../AethericForge.Web/Components/Shared/CampaignDetails.razor" Link="Components/Shared/CampaignDetails.razor" />
+    <RazorComponent Include="../../AethericForge.Web/Components/Layout/Footer.razor" Link="Components/Layout/Footer.razor" />
+    <RazorComponent Include="../../AethericForge.Web/Components/Pages/Projects.razor" Link="Components/Pages/Projects.razor" />
+  </ItemGroup>
+</Project>

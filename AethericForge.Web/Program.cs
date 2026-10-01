@@ -1,3 +1,4 @@
+using AethericForge.Web.Marketing;
 using AdrCampus.Web.Members;
 using AethericContracts.Membership;
 using AethericForge.Web.Components;
@@ -85,6 +86,15 @@ if (!publicOnly)
     builder.Services.AddScoped<MembershipReviewService>();
     builder.Services.AddForgeCampus();
 }
+
+// Marketing stays optional in public-only mode and owns its Mongo credentials.
+var marketingOptions = builder.Configuration.GetSection("Marketing:MongoDb").Exists()
+    ? InstitutionServiceConfiguration.Resolve(builder.Configuration, "Marketing", "MongoDb").GetSection("MongoDb").Get<MongoOptions>()
+    : null;
+if (!string.IsNullOrWhiteSpace(marketingOptions?.Host))
+    builder.Services.AddSingleton<ICampaignCatalog>(new MongoCampaignCatalog(marketingOptions));
+else
+    builder.Services.AddSingleton<ICampaignCatalog, EmptyCampaignCatalog>();
 
 var app = builder.Build();
 
