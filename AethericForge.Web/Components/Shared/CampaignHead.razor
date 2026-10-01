@@ -1,0 +1,42 @@
+@using AethericForge.Web.Marketing
+@using System.Text.Json
+@inject NavigationManager Navigation
+<PageTitle>@(Content?.Seo?.Title ?? BaselineTitle)</PageTitle>
+<HeadContent>
+    <meta name="description" content="@(Content?.Seo?.Description ?? BaselineDescription)" />
+    @if (Content?.Seo is { } seo)
+    {
+        <meta property="og:title" content="@(seo.SocialTitle ?? seo.Title)" />
+        <meta property="og:description" content="@(seo.SocialDescription ?? seo.Description)" />
+        <meta name="twitter:card" content="@(seo.SocialImage is null ? "summary" : "summary_large_image")" />
+        <meta name="twitter:title" content="@(seo.SocialTitle ?? seo.Title)" />
+        <meta name="twitter:description" content="@(seo.SocialDescription ?? seo.Description)" />
+        @if (seo.SocialImage is { } image)
+        {
+            <meta property="og:image" content="@Navigation.ToAbsoluteUri(image.Url)" />
+            <meta property="og:image:alt" content="@image.AlternativeText" />
+            <meta name="twitter:image" content="@Navigation.ToAbsoluteUri(image.Url)" />
+        }
+        @if (SafeStructuredData(seo.StructuredDataJson) is { } json)
+        {
+            <script type="application/ld+json">@((MarkupString)json)</script>
+        }
+    }
+</HeadContent>
+@code {
+    [Parameter] public CampaignPageContent? Content { get; set; }
+    [Parameter] public string BaselineTitle { get; set; } = "";
+    [Parameter] public string BaselineDescription { get; set; } = "";
+    public static string? SafeStructuredData(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        try
+        {
+            using var document = JsonDocument.Parse(value);
+            if (document.RootElement.ValueKind is not (JsonValueKind.Object or JsonValueKind.Array)) return null;
+            // Default JSON encoder escapes HTML characters, including a malicious closing script tag.
+            return JsonSerializer.Serialize(document.RootElement);
+        }
+        catch (JsonException) { return null; }
+    }
+}

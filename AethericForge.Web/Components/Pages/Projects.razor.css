@@ -112,3 +112,5 @@
     .project { grid-template-columns: 1fr; gap: 1rem; }
     .projects-invitation { grid-template-columns: 1fr; align-items: start; }
 }
+
+.campaign-offerings { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 2rem; margin: 2rem 0; }
