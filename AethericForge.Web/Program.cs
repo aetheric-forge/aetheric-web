@@ -23,6 +23,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Redis, and the Membership Mongo connection are configured and ready to come back online - the
 // full campus/membership/authentication wiring below is unchanged, just conditional now.
 var publicOnly = builder.Configuration.GetValue("PublicSite:Enabled", true);
+var publicSignIn = publicOnly && builder.Configuration.GetValue<bool>("PublicSite:SignInEnabled");
+var authenticationEnabled = !publicOnly || publicSignIn;
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -47,6 +49,18 @@ builder.Services.AddSingleton<MemberRosterService>();
 builder.Services.AddScoped<IHomePageService, HomePageService>();
 builder.Services.AddSingleton(TimeProvider.System);
 
+if (authenticationEnabled)
+    builder.Services.AddForgeCampusAuthentication(builder.Configuration, registerCampusIdentity: !publicOnly);
+
+if (publicSignIn)
+{
+    var keyDirectory = builder.Configuration["PublicSite:ProtectionKeyDirectory"]
+        ?? throw new InvalidOperationException("Public sign-in requires a persistent PublicSite:ProtectionKeyDirectory.");
+    builder.Services.AddDataProtection()
+        .SetApplicationName("AethericForge.Web.Public")
+        .PersistKeysToFileSystem(new DirectoryInfo(keyDirectory));
+}
+
 if (!publicOnly)
 {
     // The default Data Protection key ring is per-process, in-memory-or-local-disk only. Any login mid-
@@ -70,8 +84,6 @@ if (!publicOnly)
         .PersistKeysToStackExchangeRedis(
             () => dataProtectionRedis.Value.GetDatabase(),
             "DataProtection-Keys");
-
-    builder.Services.AddForgeCampusAuthentication(builder.Configuration);
 
     // Shared with aetheric-admin via the aetheric-contracts submodule - this app creates applications
     // through the public Join Campus form, aetheric-admin reads/flags them (StaleMembershipApplicationsWorker).
@@ -108,7 +120,7 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
-if (!publicOnly)
+if (authenticationEnabled)
 {
     app.UseAuthentication();
     app.UseAuthorization();
@@ -119,8 +131,9 @@ app.MapStaticAssets();
 if (!publicOnly)
 {
     app.MapForgeCampusDiagnostics();
-    app.MapForgeCampusAuthentication();
 }
+if (authenticationEnabled)
+    app.MapForgeCampusAuthentication();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
