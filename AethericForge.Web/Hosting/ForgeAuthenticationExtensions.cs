@@ -18,7 +18,7 @@ public static class ForgeAuthenticationExtensions
 
     public static IServiceCollection AddForgeCampusAuthentication(
         this IServiceCollection services,
-        IConfiguration configuration)
+        IConfiguration configuration, bool registerCampusIdentity = true)
     {
         var keycloakSection = InstitutionServiceConfiguration.Resolve(configuration, "Registry", "Keycloak").GetRequiredSection("Keycloak");
         var authority = keycloakSection["Authority"];
@@ -61,11 +61,15 @@ public static class ForgeAuthenticationExtensions
                     NameClaimType = "preferred_username",
                     RoleClaimType = ClaimTypes.Role
                 };
-                options.Events.OnTokenValidated = RegisterPrincipalAsync;
+                if (registerCampusIdentity)
+                    options.Events.OnTokenValidated = RegisterPrincipalAsync;
             });
 
-        services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
-        services.AddScoped<ICurrentPersonAccessor, CurrentPersonAccessor>();
+        if (registerCampusIdentity)
+        {
+            services.AddScoped<ICurrentIdentityAccessor, CurrentIdentityAccessor>();
+            services.AddScoped<ICurrentPersonAccessor, CurrentPersonAccessor>();
+        }
 
         return services;
     }
