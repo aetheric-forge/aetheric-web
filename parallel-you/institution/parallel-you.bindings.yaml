@@ -3,7 +3,7 @@
 institution: parallel-you
 version: 1.0.0
 deployment:
-  name: forge-parallel-you
+  name: production
 bindings:
   library:
     provider: mongodb

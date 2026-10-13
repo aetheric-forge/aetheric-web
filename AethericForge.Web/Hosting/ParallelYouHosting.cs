@@ -39,9 +39,17 @@ public static class ParallelYouHosting
         services.AddKeyedSingleton<IMongoDatabase>("ParallelYou", (sp, _) =>
             sp.GetRequiredKeyedService<IMongoClient>("ParallelYou").GetDatabase(mongo.DatabaseName));
         services.AddKeyedSingleton<IConnectionMultiplexer>("Workbench", (_, _) =>
-            ConnectionMultiplexer.Connect(redis.ToConfigurationOptions()));
+        {
+            var options = redis.ToConfigurationOptions();
+            options.ConfigurationChannel = "";
+            options.TieBreaker = "";
+            options.CommandMap = CommandMap.Create(new HashSet<string> { "CONFIG", "CLUSTER" }, available: false);
+            return ConnectionMultiplexer.Connect(options);
+        });
         services.AddParallelYouModule(sp => Create(sp, new ParallelYouContext(
-            ParallelYouModule.CreateTemplate(), sp)));
+            ParallelYouModule.CreateTemplate(configuration["ParallelYou:Institution:Name"] ?? "ParallelYou",
+                configuration["ParallelYou:Institution:Version"] ?? "1.0.0",
+                configuration["ParallelYou:Institution:Description"] ?? "A private practice for preserving observations, reflection, and chosen direction."), sp)));
         services.AddParallelYouAccessors();
         return services;
     }
