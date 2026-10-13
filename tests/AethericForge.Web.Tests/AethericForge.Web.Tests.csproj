@@ -5,5 +5,9 @@
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5"><PrivateAssets>all</PrivateAssets></PackageReference>
     <ProjectReference Include="../../AethericForge.Web/AethericForge.Web.csproj" />
+    <ProjectReference Include="../../runtime/src/Provisioning/Aetheric.Provisioning.Definitions/Aetheric.Provisioning.Definitions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="../../parallel-you/institution/*.yaml" Link="institution/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

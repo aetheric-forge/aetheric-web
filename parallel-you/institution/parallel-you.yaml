@@ -1,0 +1,25 @@
+# WHAT the institution requires. Deployment choices belong in the bindings file.
+descriptor:
+  id: parallel-you
+  name: Parallel You
+  version: 1.0.0
+  description: A private practice for preserving observations, reflection, and chosen direction.
+dependencies:
+  - contract: IRegistrar
+    reason: Authoritative identity supplied by the parent institution.
+  - contract: IWorkbench
+    reason: Staging supplied by the parent Workbench.
+domains: []
+organizations: []
+roles: []
+capabilities: []
+resources:
+  - id: library
+    name: Personal Library
+    description: Durable personal artifacts and their representations.
+    type: knowledge
+    ownership: owned
+workflows: []
+policies: []
+initialState:
+  configuration: {}

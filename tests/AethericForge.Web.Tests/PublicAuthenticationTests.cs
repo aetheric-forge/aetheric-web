@@ -4,6 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Xunit;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 
 namespace AethericForge.Web.Tests;
 
@@ -40,5 +43,41 @@ public class PublicAuthenticationTests
         services.AddForgeCampusAuthentication(Configuration());
         Assert.Contains(services, x => x.ServiceType.Name == "ICurrentPersonAccessor");
         Assert.Contains(services, x => x.ServiceType.Name == "ICurrentIdentityAccessor");
+    }
+
+    [Fact]
+    public async Task Standalone_module_uses_validated_oidc_subject_without_resolving_a_campus()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddForgeCampusAuthentication(Configuration(), registerCampusIdentity: false, registerParallelYouIdentity: true);
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(OpenIdConnectDefaults.AuthenticationScheme);
+        var identity = new ClaimsIdentity(new[]
+        {
+            new Claim("sub", "validated-subject"),
+            new Claim(ClaimTypes.NameIdentifier, "untrusted-alias"),
+            new Claim("forge:identity-scheme", "Local")
+        }, "oidc");
+        var context = new TokenValidatedContext(new DefaultHttpContext(),
+            new AuthenticationScheme("oidc", "oidc", typeof(OpenIdConnectHandler)), options, new ClaimsPrincipal(identity), new AuthenticationProperties());
+        await options.Events.OnTokenValidated(context);
+        Assert.Equal("validated-subject", identity.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+        Assert.Equal("OpenIdConnect", Assert.Single(identity.FindAll("forge:identity-scheme")).Value);
+        Assert.Null(context.Result);
+    }
+
+    [Fact]
+    public async Task Standalone_module_rejects_a_principal_without_a_subject()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddForgeCampusAuthentication(Configuration(), registerCampusIdentity: false, registerParallelYouIdentity: true);
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(OpenIdConnectDefaults.AuthenticationScheme);
+        var context = new TokenValidatedContext(new DefaultHttpContext(),
+            new AuthenticationScheme("oidc", "oidc", typeof(OpenIdConnectHandler)), options, new ClaimsPrincipal(new ClaimsIdentity("oidc")), new AuthenticationProperties());
+        await options.Events.OnTokenValidated(context);
+        Assert.NotNull(context.Result?.Failure);
     }
 }

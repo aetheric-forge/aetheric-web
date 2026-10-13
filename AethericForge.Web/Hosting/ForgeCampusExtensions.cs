@@ -85,19 +85,7 @@ using Forge.Primitives.Redis;
 using MongoDB.Driver;
 using StackExchange.Redis;
 using ParallelYou.Abstractions;
-using ParallelYou.Abstractions.Capture;
-using ParallelYou.Abstractions.Intention;
-using ParallelYou.Abstractions.Plan;
-using ParallelYou.Abstractions.Recommendation;
-using ParallelYou.Abstractions.Reflection;
-using ParallelYou.Abstractions.Tracking;
 using ParallelYou.Services;
-using ParallelYou.Services.Capture;
-using ParallelYou.Services.Intention;
-using ParallelYou.Services.Plan;
-using ParallelYou.Services.Recommendation;
-using ParallelYou.Services.Reflection;
-using ParallelYou.Services.Tracking;
 using TalentCampus.Core.Personas;
 using TalentCampus.Core.Recruitment;
 using TalentCampus.Core.Roles;
@@ -204,9 +192,11 @@ public static class ForgeCampusExtensions
 
         services.AddKeyedSingleton<IConnectionMultiplexer>("Workbench", (sp, _) =>
         {
-            var options = InstitutionServiceConfiguration.Resolve(
+            var redisSection = InstitutionServiceConfiguration.Resolve(
                     sp.GetRequiredService<IConfiguration>(), "Workbench", "Redis")
-                .GetSection("Redis").Get<RedisOptions>()!;
+                .GetSection("Redis");
+            var options = redisSection.Get<RedisOptions>()!;
+            options.DefaultDatabase = redisSection.GetValue("Database", 0);
             return ConnectionMultiplexer.Connect(options.ToConfigurationOptions());
         });
 
@@ -319,14 +309,6 @@ public static class ForgeCampusExtensions
                 .With<IArtificer, Artificer>()
                 .With<IWorkbenchContext, WorkbenchContext>()
                 .With<IWorkbench, Workbench>()
-                .With<global::ParallelYou.Abstractions.Person.IPersonService,
-                    global::ParallelYou.Services.Person.PersonService>()
-                .With<ICaptureService, CaptureService>()
-                .With<IReflectionService, ReflectionService>()
-                .With<ITrackingService, TrackingService>()
-                .With<IIntentionService, IntentionService>()
-                .With<IPlanningService, PlanningService>()
-                .With<IRecommendationService, RecommendationService>()
                 .With<ITalentSteward>(sp => new MongoTalentSteward(sp.GetRequiredKeyedService<IMongoDatabase>("Talent")))
                 .With<IPersonaDirectory>(sp => new MongoPersonaDirectory(sp.GetRequiredKeyedService<IMongoDatabase>("Talent")))
                 .With<IRecruitmentOffice>(sp => new MongoRecruitmentOffice(
@@ -364,15 +346,8 @@ public static class ForgeCampusExtensions
                 campusTemplate, serviceProvider, "Workbench",
                 static (template, sp, parent) => new WorkbenchContext(template, sp, parent));
 
-            var parallelYouTemplate = campusTemplate with
-            {
-                Descriptor = new InstitutionDescriptor(
-                    "ParallelYou",
-                    new Version(1, 0, 0),
-                    "A private practice for preserving observations, reflection, and chosen direction.")
-            };
-            campus.Register<IParallelYou>(ActivatorUtilities.CreateInstance<ParallelYouInstitution>(
-                serviceProvider,
+            var parallelYouTemplate = ParallelYouModule.CreateTemplate();
+            campus.Register<IParallelYou>(ParallelYouHosting.Create(serviceProvider,
                 new ParallelYouContext(parallelYouTemplate, serviceProvider, campus)));
 
             var architectureFaculty = campus.RegisterFaculty<IArchitectureFaculty>(
@@ -448,6 +423,9 @@ public static class ForgeCampusExtensions
 
             return campus;
         });
+
+        services.AddParallelYouModule(sp => sp.GetRequiredService<ICampus>().Resolve<IParallelYou>());
+        services.AddParallelYouAccessors();
 
         services.AddSingleton<ForgeCampusHost>();
         services.AddHostedService<ForgeCampusHost>(serviceProvider =>
