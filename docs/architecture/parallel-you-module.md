@@ -41,7 +41,7 @@ provisioning definition format. The institution owns a personal Library and inhe
 and Workbench. The example uses the existing Mongo provider to create a database-scoped user.
 It is an example deployment, not evidence that an institution has been provisioned.
 
-The next integration is in the provisioning service, rather than another bootstrap wizard:
+The provisioning service owns these integration steps:
 
 1. Load a pinned definition and bindings revision, verify the selected parent's capabilities,
    and execute the existing provisioning plan.
@@ -58,10 +58,19 @@ The next integration is in the provisioning service, rather than another bootstr
    authenticated configuration endpoint. The web host should not mount admin's root credential
    or encryption-key directories. Restart the host when a new configuration revision is applied.
 
-The current module host still consumes configuration sections; the automatic provisioning-to-host
-handoff and durable institution inventory are not implemented in this change. The module accepts
-an externally supplied institution context so that the later adapter can use the provisioned
-definition instead of reconstructing the full campus template.
+The provisioning worker now records executed institutions in a durable catalog and exports a
+Parallel You consumer configuration after creating scoped Mongo, Redis and browser OIDC grants.
+It can deliver the artifact to a private file or a named Kubernetes Secret. The module host loads
+it with `ParallelYou:ProvisionedConfigurationPath`, verifies the expected `ParallelYou:DeploymentId`
+and `ParallelYou:Environment`, and builds its context with the provisioned name/version.
+Missing artifacts or incomplete settings fail startup. This artifact is for standalone module
+hosting (`PublicSite:Enabled=true`), because its browser client has no Registry management roles.
+The full-campus host continues to use its institution configuration.
+
+See `runtime/docs/provisioning/institution-catalog.md` for the inventory query, worker settings,
+consumer Secret RBAC example and mount configuration. Operator deployment and existing-data
+migration are separate from creating the configuration artifact. Connection and OIDC settings
+require a host restart after delivery.
 
 ## Later admin interface
 

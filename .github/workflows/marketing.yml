@@ -20,3 +20,4 @@ jobs:
         with:
           dotnet-version: '10.0.x'
       - run: dotnet test tests/Marketing.PublicSite.Tests --configuration Release --nologo
+      - run: dotnet test tests/AethericForge.Web.Tests --configuration Release --nologo

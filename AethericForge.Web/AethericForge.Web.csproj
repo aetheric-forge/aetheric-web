@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\runtime\src\Provisioning\Aetheric.Provisioning.Engine\Aetheric.Provisioning.Engine.csproj" />
     <ProjectReference Include="..\primitives\src\Primitives.MongoDb\Primitives.MongoDb.csproj" />
     <ProjectReference Include="..\primitives\src\Primitives.Redis\Primitives.Redis.csproj" />
     <ProjectReference Include="..\contracts\src\AethericContracts.Membership\AethericContracts.Membership.csproj" />

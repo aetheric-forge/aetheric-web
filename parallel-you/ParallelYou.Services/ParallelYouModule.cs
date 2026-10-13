@@ -25,9 +25,9 @@ namespace ParallelYou.Services;
 /// <summary>Composes the institution using capabilities supplied by its deployment host.</summary>
 public static class ParallelYouModule
 {
-    public static IInstitutionTemplate CreateTemplate() => InstitutionTemplateBuilder.Create()
-        .WithDescriptor("ParallelYou", new Version(1, 0, 0),
-            "A private practice for preserving observations, reflection, and chosen direction.")
+    public static IInstitutionTemplate CreateTemplate(string name = "ParallelYou", string version = "1.0.0",
+        string description = "A private practice for preserving observations, reflection, and chosen direction.") => InstitutionTemplateBuilder.Create()
+        .WithDescriptor(name, Version.Parse(version), description)
         .AddResource(new ResourceDefinition("Personal Library", "knowledge", "Durable personal artifacts and their representations."))
         .Build();
 

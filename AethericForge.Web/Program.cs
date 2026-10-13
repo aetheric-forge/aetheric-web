@@ -17,6 +17,7 @@ using StackExchange.Redis;
 MongoBsonSetup.EnsureGuidRepresentationRegistered();
 
 var builder = WebApplication.CreateBuilder(args);
+ProvisionedParallelYouConfiguration.Apply(builder.Configuration);
 
 // Defaults to public content only (Home/Projects/About/Articles/Videos - no /campus/* member or
 // admin routes) with no external infrastructure required at all. Flip to false once Keycloak,
