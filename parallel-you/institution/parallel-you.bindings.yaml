@@ -1,0 +1,14 @@
+# Example deployment: replace the database and parent sources for the selected campus.
+# Credentials are resolved by the provisioning host, never included in this document.
+institution: parallel-you
+version: 1.0.0
+deployment:
+  name: forge-parallel-you
+bindings:
+  library:
+    provider: mongodb
+    database: parallel-you
+  IRegistrar:
+    source: campus.registrar
+  IWorkbench:
+    source: campus.workbench

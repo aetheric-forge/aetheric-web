@@ -8,5 +8,5 @@ namespace ParallelYou.Services;
 public sealed class ParallelYouContext(
     IInstitutionTemplate template,
     IServiceProvider services,
-    IInstitution parent)
+    IInstitution? parent = null)
     : InstitutionContext(template, services, parent), IParallelYouContext;

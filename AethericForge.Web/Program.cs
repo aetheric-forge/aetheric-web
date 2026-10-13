@@ -24,7 +24,8 @@ var builder = WebApplication.CreateBuilder(args);
 // full campus/membership/authentication wiring below is unchanged, just conditional now.
 var publicOnly = builder.Configuration.GetValue("PublicSite:Enabled", true);
 var publicSignIn = publicOnly && builder.Configuration.GetValue<bool>("PublicSite:SignInEnabled");
-var authenticationEnabled = !publicOnly || publicSignIn;
+var parallelYouEnabled = !publicOnly || builder.Configuration.GetValue<bool>("ParallelYou:Enabled");
+var authenticationEnabled = !publicOnly || publicSignIn || parallelYouEnabled;
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -50,9 +51,9 @@ builder.Services.AddScoped<IHomePageService, HomePageService>();
 builder.Services.AddSingleton(TimeProvider.System);
 
 if (authenticationEnabled)
-    builder.Services.AddForgeCampusAuthentication(builder.Configuration, registerCampusIdentity: !publicOnly);
+    builder.Services.AddForgeCampusAuthentication(builder.Configuration, registerCampusIdentity: !publicOnly, registerParallelYouIdentity: parallelYouEnabled);
 
-if (publicSignIn)
+if (publicOnly && authenticationEnabled)
 {
     var keyDirectory = builder.Configuration["PublicSite:ProtectionKeyDirectory"]
         ?? throw new InvalidOperationException("Public sign-in requires a persistent PublicSite:ProtectionKeyDirectory.");
@@ -99,6 +100,9 @@ if (!publicOnly)
     builder.Services.AddForgeCampus();
 }
 
+if (publicOnly && parallelYouEnabled)
+    builder.Services.AddStandaloneParallelYou(builder.Configuration);
+
 // Marketing stays optional in public-only mode and owns its Mongo credentials.
 var marketingOptions = builder.Configuration.GetSection("Marketing:MongoDb").Exists()
     ? InstitutionServiceConfiguration.Resolve(builder.Configuration, "Marketing", "MongoDb").GetSection("MongoDb").Get<MongoOptions>()
@@ -120,11 +124,23 @@ if (!app.Environment.IsDevelopment())
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 
+app.Use(async (context, next) =>
+{
+    if (!parallelYouEnabled && context.Request.Path.StartsWithSegments("/parallel-you"))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+    await next(context);
+});
+
 if (authenticationEnabled)
 {
     app.UseAuthentication();
-    app.UseAuthorization();
 }
+// Explicit placement prevents ASP.NET Core from inserting authorization before
+// the disabled-module gate when authentication is turned off in public mode.
+app.UseAuthorization();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
