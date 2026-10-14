@@ -5,7 +5,10 @@ WORKDIR /src
 
 COPY . .
 
-RUN test -f AethericForge.Web/modules/parallel-you/module.json
+RUN test -f AethericForge.Web/modules/parallel-you/module.json \
+    && test -f AethericForge.Web/modules/library/module.json \
+    && test -f AethericForge.Web/modules/archive/module.json \
+    && test -f AethericForge.Web/modules/decisions/module.json
 RUN dotnet restore AethericForge.Web/AethericForge.Web.csproj
 RUN dotnet publish AethericForge.Web/AethericForge.Web.csproj \
     -c Release \

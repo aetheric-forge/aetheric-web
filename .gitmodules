@@ -11,3 +11,12 @@
 [submodule "institutions/parallel-you"]
 	path = institutions/parallel-you
 	url = https://github.com/aetheric-forge/parallel-you.git
+[submodule "institutions/library"]
+	path = institutions/library
+	url = https://github.com/aetheric-forge/library.git
+[submodule "institutions/archive"]
+	path = institutions/archive
+	url = https://github.com/aetheric-forge/archive.git
+[submodule "institutions/decisions"]
+	path = institutions/decisions
+	url = https://github.com/aetheric-forge/adr-campus.git

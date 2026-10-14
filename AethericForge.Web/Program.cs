@@ -1,8 +1,8 @@
+using AethericForge.Runtime.Institutions.Faculty;
 using AethericForge.Runtime.Institutions.Campus;
 using Aetheric.Provisioning.Definitions;
 using AethericForge.Web.Hosting.Modules;
 using AethericForge.Web.Marketing;
-using AdrCampus.Web.Members;
 using AethericContracts.Membership;
 using AethericForge.Web.Components;
 using AethericForge.Web.Hosting;
@@ -28,19 +28,27 @@ ProvisionedParallelYouConfiguration.Apply(builder.Configuration);
 // full campus/membership/authentication wiring below is unchanged, just conditional now.
 var publicOnly = builder.Configuration.GetValue("PublicSite:Enabled", true);
 var publicSignIn = publicOnly && builder.Configuration.GetValue<bool>("PublicSite:SignInEnabled");
-var parallelYouEnabled = !publicOnly || builder.Configuration.GetValue<bool>("ParallelYou:Enabled");
-GitInstitutionWebModule? parallelYouModule = null;
-if (parallelYouEnabled)
+var modules = new List<GitInstitutionWebModule>();
+var specs = new[] { (Id: "parallel-you", Section: "ParallelYou"), (Id: "library", Section: "Library"),
+    (Id: "archive", Section: "Archive"), (Id: "decisions", Section: "Decisions") };
+foreach (var spec in specs)
 {
+    if (publicOnly && !builder.Configuration.GetValue<bool>(spec.Section + ":Enabled")) continue;
+    if (publicOnly && spec.Id == "decisions")
+        throw new InvalidOperationException("Decisions must be mounted under an existing owning institution. Enable full campus hosting to supply its Library and Workbench.");
     using var gitHttp = PublicGitHubSource.CreateHttpClient();
-    var bundle = builder.Configuration["ParallelYou:Module:BundlePath"]
-        ?? Path.Combine(builder.Environment.ContentRootPath, "modules", "parallel-you", "module.json");
-    parallelYouModule = await GitInstitutionWebModule.LoadAsync(bundle, new PublicGitHubSource(gitHttp));
-    parallelYouModule.ConfigureServices(builder.Services, builder.Configuration,
-        sp => publicOnly ? null : sp.GetRequiredService<ICampus>());
+    var bundle = builder.Configuration[spec.Section + ":Module:BundlePath"]
+        ?? Path.Combine(builder.Environment.ContentRootPath, "modules", spec.Id, "module.json");
+    var module = await GitInstitutionWebModule.LoadAsync(bundle, new PublicGitHubSource(gitHttp));
+    if (module.Source.Id != spec.Id || module.Source.ConfigurationSection != spec.Section)
+        throw new InvalidDataException("The module bundle does not match its configured shell slot.");
+    module.ConfigureServices(builder.Services, builder.Configuration, sp => publicOnly ? null
+        : spec.Id == "decisions" ? sp.GetRequiredService<ICampus>().Resolve<IArchitectureFaculty>()
+        : sp.GetRequiredService<ICampus>());
+    modules.Add(module);
 }
-
-var authenticationEnabled = !publicOnly || publicSignIn || parallelYouEnabled;
+var enabledModuleIds = modules.Select(module => module.Source.Id).ToHashSet(StringComparer.Ordinal);
+var authenticationEnabled = !publicOnly || publicSignIn || modules.Count != 0;
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -54,19 +62,11 @@ builder.Services.AddRazorComponents()
 // page, so it has to exist even when nothing can ever satisfy it.
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddForgeAuthorization(builder.Environment, builder.Configuration);
-// ActiveMemberAuthorizationHandler/ActiveMaintainerAuthorizationHandler (registered by
-// AddForgeAuthorization above) depend on this - ASP.NET Core validates the whole DI graph at
-// Build() time in Development, so it has to exist even though only /campus/* routes ever
-// actually trigger those two policies. Only makes live calls when actually invoked, not at
-// construction, so it's harmless to always register.
-builder.Services.AddHttpClient(MemberRosterService.HttpClientName);
-builder.Services.AddSingleton<MemberRosterService>();
-
 builder.Services.AddScoped<IHomePageService, HomePageService>();
 builder.Services.AddSingleton(TimeProvider.System);
 
 if (authenticationEnabled)
-    builder.Services.AddForgeCampusAuthentication(builder.Configuration, registerCampusIdentity: !publicOnly, registerParallelYouIdentity: parallelYouEnabled);
+    builder.Services.AddForgeCampusAuthentication(builder.Configuration, registerCampusIdentity: !publicOnly, registerModuleIdentity: modules.Count != 0);
 
 if (publicOnly && authenticationEnabled)
 {
@@ -139,7 +139,7 @@ app.UseHttpsRedirection();
 
 app.Use(async (context, next) =>
 {
-    if (!parallelYouEnabled && context.Request.Path.StartsWithSegments("/parallel-you"))
+    if (specs.Any(spec => !enabledModuleIds.Contains(spec.Id) && context.Request.Path.StartsWithSegments("/" + spec.Id)))
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
         return;
@@ -156,7 +156,7 @@ if (authenticationEnabled)
 app.UseAuthorization();
 app.UseAntiforgery();
 
-parallelYouModule?.MapAssets(app);
+foreach (var module in modules) module.MapAssets(app);
 app.MapStaticAssets();
 if (!publicOnly)
 {
@@ -165,6 +165,6 @@ if (!publicOnly)
 if (authenticationEnabled)
     app.MapForgeCampusAuthentication();
 var components = app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
-if (parallelYouModule is not null) components.AddAdditionalAssemblies(parallelYouModule.WebAssembly);
+foreach (var module in modules) components.AddAdditionalAssemblies(module.WebAssembly);
 
 app.Run();

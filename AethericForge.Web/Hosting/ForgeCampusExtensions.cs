@@ -1,24 +1,4 @@
-using AdrCampus.Application.Administration;
-using AdrCampus.Application.Discovery;
-using AdrCampus.Application.Drafts;
-using AdrCampus.Application.Identity;
-using AdrCampus.Application.Maintenance;
-using AdrCampus.Application.Membership;
-using AdrCampus.Application.Proposals;
-using AdrCampus.Core.Administration;
-using AdrCampus.Core.Discovery;
-using AdrCampus.Core.Domain;
-using AdrCampus.Core.Drafts;
-using AdrCampus.Core.Maintenance;
-using AdrCampus.Core.Membership;
-using AdrCampus.Core.Proposals;
-using AdrCampus.Providers.Archive;
-using AdrCampus.Providers.Drafts.Workbench;
-using AdrCampus.Providers.Library;
-using AdrCampus.Providers.PostOffice;
-using AdrCampus.Web.Drafts;
-using AdrCampus.Web.Maintenance;
-using AdrCampus.Web.Members;
+using AethericForge.Runtime.Abstractions.Interfaces.Institutions;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Primitives;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Providers;
 using AethericForge.Runtime.Abstractions.Interfaces.Archive.Serialization;
@@ -75,7 +55,6 @@ using AethericForge.Runtime.Services.Registry;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
 using AethericForge.Web.Abstractions.Person;
-using AethericForge.Web.Decisions.Institution;
 using AethericForge.Web.Services;
 using Amazon;
 using Amazon.Runtime;
@@ -174,11 +153,11 @@ public static class ForgeCampusExtensions
     
     public static IServiceCollection AddForgeCampus(this IServiceCollection services)
     {
-        foreach (var institution in new[] { "Archive", "ParallelYou", "Decisions" })
+        foreach (var institution in new[] { "ParallelYou" })
             services.AddKeyedSingleton<IAmazonS3>(institution, (sp, _) => BuildS3Client(
                 InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "S3")));
 
-        foreach (var institution in new[] { "Library", "ParallelYou", "Decisions", "Talent" })
+        foreach (var institution in new[] { "Talent" })
         {
             services.AddKeyedSingleton<IMongoClient>(institution, (sp, _) => new MongoClient(
                 InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), institution, "MongoDb")
@@ -219,68 +198,19 @@ public static class ForgeCampusExtensions
                 .With<IRegistrar, Registrar>()
                 .With<IRegistryContext, RegistryContext>()
                 .With<IRegistry, Registry>()
-                .With<IArchiveSerializer, JsonArchiveSerializer>()
-                .With<IArchiveProvider>(sp => new S3ArchiveProvider(
-                    sp.GetRequiredKeyedService<IAmazonS3>("Archive"),
-                    "MinIO",
-                    InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "Archive", "S3").GetValue(
-                        "S3:BucketName",
-                        "forge-campus-archive")))
-                .With<IArchiveProvider>(sp => new S3ArchiveProvider(
-                    sp.GetRequiredKeyedService<IAmazonS3>("ParallelYou"),
-                    "ParallelYou",
-                    InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "ParallelYou", "S3").GetValue(
-                        "S3:BucketName",
-                        "forge-campus-archive"),
-                    "parallel-you"))
-                .With<IArchiveProvider>(sp => new S3ArchiveProvider(
-                    sp.GetRequiredKeyedService<IAmazonS3>("Decisions"),
-                    DecisionsArchiveStore,
-                    InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "Decisions", "S3").GetValue(
-                        "S3:BucketName",
-                        "forge-campus-archive"),
-                    "adr-campus"))
-                .With<IArchiveService, ArchiveService>()
-                .With<ITeam<IArchiveClerk>>(_ => new Team<IArchiveClerk>(Array.Empty<IArchiveClerk>()))
-                .With<IArchivist, Archivist>()
+                .With<IArchiveService>(sp => sp.GetRequiredKeyedService<IArchiveService>("Archive"))
+                .With<IArchivist>(sp => sp.GetRequiredKeyedService<IArchivist>("Archive"))
                 .With<ITeam<IIssueReportsClerk>>(_ => new Team<IIssueReportsClerk>(Array.Empty<IIssueReportsClerk>()))
                 .With<IWarden, Warden>()
                 .With<ITeam<ISecurityClerk>>(_ => new Team<ISecurityClerk>(Array.Empty<ISecurityClerk>()))
                 .With<ISentinel, Sentinel>()
-                .With<IArchiveVault, ArchiveVault>()
-                .With<IArchiveContext, ArchiveContext>()
-                .With<IArchive, Archive>()
-                .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
-                    sp.GetRequiredKeyedService<IMongoDatabase>("Library"), "ForgeCampus", "knowledge"))
-                .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
-                    sp.GetRequiredKeyedService<IMongoDatabase>("ParallelYou"), "parallel-you", "knowledge"))
-                .With<IKnowledgeProvider>(sp => new MongoDbKnowledgeProvider(
-                    sp.GetRequiredKeyedService<IMongoDatabase>("Decisions"),
-                    DecisionsKnowledgeScheme,
-                    "knowledge"))
-                .With<IKnowledgeService, KnowledgeService>()
+                .With<IArchiveVault>(sp => sp.GetRequiredKeyedService<IArchiveVault>("Archive"))
+                .With<IKnowledgeService>(sp => sp.GetRequiredKeyedService<IKnowledgeService>("Library"))
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
                 .With<ICurator, Curator>()
                 .With<ILibraryService, LibraryService>()
-                .With(_ => new ArticleLibraryOptions
-                {
-                    KnowledgeScheme = "ForgeCampus",
-                    Authority = new InstitutionReference
-                    {
-                        Id = "forge-library",
-                        Name = "Library"
-                    },
-                    DefaultOrigin = new InstitutionReference
-                    {
-                        Id = "forge-campus",
-                        Name = "Forge Campus"
-                    }
-                })
-                .With<IArticleLibrary, ArticleLibrary>()
                 .With<ITeam<ILibraryClerk>>(_ => new Team<ILibraryClerk>(Array.Empty<ILibraryClerk>()))
                 .With<ILibrarian, Librarian>()
-                .With<ILibraryContext, LibraryContext>()
-                .With<ILibrary, global::AethericForge.Runtime.Institutions.Library.Library>()
                 .With<IPostProvider>(sp => new RabbitMqPostProvider( "ForgeCampus", 
                     BuildRabbitMqUrl(
                        InstitutionServiceConfiguration.Resolve(sp.GetRequiredService<IConfiguration>(), "PostOffice", "RabbitMq"))))
@@ -329,13 +259,8 @@ public static class ForgeCampusExtensions
                 campusTemplate, serviceProvider, "Registry",
                 static (template, sp, parent) => new RegistryContext(template, sp, parent));
 
-            campus.RegisterInstitution<IArchive, Archive, ArchiveContext>(
-                campusTemplate, serviceProvider, "Archive",
-                static (template, sp, parent) => new ArchiveContext(template, sp, parent));
-
-            campus.RegisterInstitution<ILibrary, global::AethericForge.Runtime.Institutions.Library.Library, LibraryContext>(
-                campusTemplate, serviceProvider, "Library",
-                static (template, sp, parent) => new LibraryContext(template, sp, parent));
+            serviceProvider.GetRequiredKeyedService<GitInstitutionWebModule>("library").Register(campus, serviceProvider);
+            serviceProvider.GetRequiredKeyedService<GitInstitutionWebModule>("archive").Register(campus, serviceProvider);
 
             campus.RegisterInstitution<IPostOffice, PostOffice, PostOfficeContext>(
                 campusTemplate, serviceProvider, "PostOffice",
@@ -345,21 +270,13 @@ public static class ForgeCampusExtensions
                 campusTemplate, serviceProvider, "Workbench",
                 static (template, sp, parent) => new WorkbenchContext(template, sp, parent));
 
-            serviceProvider.GetRequiredService<GitInstitutionWebModule>().Register(campus, serviceProvider);
+            serviceProvider.GetRequiredKeyedService<GitInstitutionWebModule>("parallel-you").Register(campus, serviceProvider);
 
             var architectureFaculty = campus.RegisterFaculty<IArchitectureFaculty>(
                 campusTemplate, serviceProvider, "Architecture", "Principal Architect",
                 static (context, dean) => new ArchitectureFaculty(context, dean));
 
-            var decisionsTemplate = campusTemplate with
-            {
-                Descriptor = new InstitutionDescriptor(
-                    "Decisions",
-                    new Version(1, 0, 0),
-                    "Shared architectural decision records.")
-            };
-            architectureFaculty.Register<IDecisions>(new DecisionsInstitution(
-                new DecisionsContext(decisionsTemplate, serviceProvider, architectureFaculty)));
+            serviceProvider.GetRequiredKeyedService<GitInstitutionWebModule>("decisions").Register(architectureFaculty, serviceProvider);
 
             var designFaculty = campus.RegisterFaculty<IDesignFaculty>(
                 campusTemplate, serviceProvider, "Design", "Director",
@@ -426,64 +343,6 @@ public static class ForgeCampusExtensions
         services.AddHostedService<ForgeCampusHost>(serviceProvider =>
             serviceProvider.GetRequiredService<ForgeCampusHost>());
 
-        services.AddSingleton<IDraftRepository, WorkbenchDraftRepository>();
-        services.AddSingleton<IDraftRecoveryRepository>(serviceProvider =>
-            (WorkbenchDraftRepository)serviceProvider.GetRequiredService<IDraftRepository>());
-        services.AddSingleton<IExpiredDraftPurgeRepository>(serviceProvider =>
-            (WorkbenchDraftRepository)serviceProvider.GetRequiredService<IDraftRepository>());
-
-        services.AddSingleton<LibraryProposalRepository>(serviceProvider => new LibraryProposalRepository(
-            serviceProvider.GetRequiredService<ICampus>().Library,
-            serviceProvider.GetRequiredService<IDraftRepository>()));
-        services.AddSingleton<IProposalRepository>(serviceProvider =>
-            serviceProvider.GetRequiredService<LibraryProposalRepository>());
-        services.AddSingleton<ISharedRecordRepository>(serviceProvider =>
-            serviceProvider.GetRequiredService<LibraryProposalRepository>());
-
-        services.AddSingleton<IOrganizationAdministrationRepository, ArchiveOrganizationAdministrationRepository>();
-        services.AddSingleton<IMembershipRepository, ArchiveMembershipRepository>();
-        services.AddSingleton<IMaintenancePostOffice>(serviceProvider =>
-            new PostOfficeMaintenanceDispatcher(serviceProvider.GetRequiredService<ICampus>().PostOffice));
-
-        services.AddScoped<DraftApplicationService>();
-        services.AddScoped<ProposalApplicationService>();
-        services.AddScoped<DiscoveryApplicationService>();
-        services.AddScoped<OrganizationAdministrationService>();
-        services.AddScoped<DraftRecoveryApplicationService>();
-        services.AddScoped<IDraftRecoveryCoordinator>(serviceProvider =>
-            serviceProvider.GetRequiredService<DraftRecoveryApplicationService>());
-        services.AddScoped<MaintenanceApplicationService>();
-        services.AddScoped<AdministrationHistoryService>();
-        services.AddScoped<MembershipObservationService>();
-        services.AddHttpClient(MemberRosterService.HttpClientName);
-        services.AddSingleton<MemberRosterService>();
-        services.AddScoped<IMemberAuthority, KeycloakMemberAuthority>();
-        services.AddScoped<IMemberDisplayNameDirectory, KeycloakMemberDisplayNameDirectory>();
-        services.AddScoped<IDirectoryRosterSource, KeycloakDirectoryRosterSource>();
-        services.AddScoped<IOrganizationBootstrapVerifier, KeycloakOrganizationBootstrapVerifier>();
-        services.AddSingleton(serviceProvider => new CurrentOrganization(new OrganizationId(
-            GetRequiredSetting(
-                serviceProvider.GetRequiredService<IConfiguration>(),
-                "Organization:Id"))));
-        services.AddSingleton(serviceProvider =>
-        {
-            var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-            return new OrganizationBootstrapConfiguration(
-                new OrganizationId(GetRequiredSetting(configuration, "Organization:Id")),
-                GetRequiredSetting(configuration, "Organization:DisplayName"),
-                GetRequiredSetting(InstitutionServiceConfiguration.Resolve(configuration, "Registry", "Keycloak"), "Keycloak:Authority"),
-                GetRequiredSetting(configuration, "Organization:MemberGroupId"),
-                GetRequiredSetting(configuration, "Organization:MaintainerGroupId"));
-        });
-        services.AddSingleton<OrganizationBootstrapHealth>();
-        services.AddScoped<OrganizationDisplayState>();
-        services.AddSingleton(TimeProvider.System);
-        services.AddSingleton<AdrCampus.Core.Maintenance.IMaintenanceWorker,
-            ExpiredDraftPurgeWorker>();
-        services.AddHostedService<OrganizationBootstrapHostedService>();
-        services.AddHostedService<MembershipSyncBackgroundService>();
-        services.AddHostedService<MaintenanceDispatchService>();
-        
         return services;
     }
 
@@ -492,7 +351,7 @@ public static class ForgeCampusExtensions
     {
         endpoints.MapGet(
             "/api/status",
-            (ICampus campus, ForgeCampusHost host, GitInstitutionWebModule module) =>
+            (ICampus campus, ForgeCampusHost host, [FromKeyedServices("parallel-you")] GitInstitutionWebModule module) =>
                 Results.Ok(new
                 {
                     institution = campus.Context.Template.Descriptor.Name,
@@ -558,7 +417,7 @@ public static class ForgeCampusExtensions
         dean = faculty.Dean.Title,
         institutions = faculty switch
         {
-            IArchitectureFaculty => new[] { faculty.Resolve<IDecisions>().Context.Template.Descriptor.Name },
+            IArchitectureFaculty => new[] { faculty.ResolveOrganization<IOrganization>("decisions").Context.Template.Descriptor.Name },
             IDesignFaculty => new[] { faculty.Resolve<ITalent>().Context.Template.Descriptor.Name },
             _ => []
         }

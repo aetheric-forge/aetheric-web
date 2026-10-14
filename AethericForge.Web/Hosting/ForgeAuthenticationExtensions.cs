@@ -18,7 +18,7 @@ public static class ForgeAuthenticationExtensions
 
     public static IServiceCollection AddForgeCampusAuthentication(
         this IServiceCollection services,
-        IConfiguration configuration, bool registerCampusIdentity = true, bool registerParallelYouIdentity = false)
+        IConfiguration configuration, bool registerCampusIdentity = true, bool registerModuleIdentity = false)
     {
         var keycloakSection = InstitutionServiceConfiguration.Resolve(configuration, "Registry", "Keycloak").GetRequiredSection("Keycloak");
         var authority = keycloakSection["Authority"];
@@ -63,8 +63,8 @@ public static class ForgeAuthenticationExtensions
                 };
                 if (registerCampusIdentity)
                     options.Events.OnTokenValidated = RegisterPrincipalAsync;
-                else if (registerParallelYouIdentity)
-                    options.Events.OnTokenValidated = RegisterParallelYouPrincipalAsync;
+                else if (registerModuleIdentity)
+                    options.Events.OnTokenValidated = RegisterModulePrincipalAsync;
             });
 
         if (registerCampusIdentity)
@@ -216,10 +216,10 @@ public static class ForgeAuthenticationExtensions
         }
     }
 
-    private static Task RegisterParallelYouPrincipalAsync(TokenValidatedContext context)
+    private static Task RegisterModulePrincipalAsync(TokenValidatedContext context)
     {
         // OIDC has already validated the issuer, signature, audience, nonce, and expiry.
-        // The standalone module needs the validated subject, without a campus Registry call.
+        // Public-shell modules need the validated subject without a campus Registry call.
         var subject = context.Principal?.FindFirst("sub")?.Value;
         if (context.Principal?.Identity is not ClaimsIdentity identity || string.IsNullOrWhiteSpace(subject))
         {
