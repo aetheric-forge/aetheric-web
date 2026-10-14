@@ -1,0 +1,16 @@
+{
+  "Modules": [
+    {
+      "Id": "parallel-you",
+      "Repository": "https://github.com/aetheric-forge/parallel-you",
+      "Revision": "b673d269257a4c826a053a733dbca320c1906921",
+      "SourcePath": "institutions/parallel-you",
+      "Project": "ParallelYou.Web/ParallelYou.Web.csproj",
+      "AssetHost": "ParallelYou.Host/ParallelYou.Host.csproj",
+      "Assembly": "ParallelYou.Web.dll",
+      "DefinitionPath": "institution/parallel-you.yaml",
+      "BindingsPath": "institution/parallel-you.bindings.yaml",
+      "Stylesheets": ["_content/ParallelYou.Web/app.css", "_content/ParallelYou.Web/ParallelYou.Web.bundle.scp.css"]
+    }
+  ]
+}

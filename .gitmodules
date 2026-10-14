@@ -8,3 +8,6 @@
 [submodule "primitives"]
 	path = primitives
 	url = https://github.com/aetheric-forge/primitives.git
+[submodule "institutions/parallel-you"]
+	path = institutions/parallel-you
+	url = https://github.com/aetheric-forge/parallel-you.git

@@ -1,4 +1,6 @@
-<Router AppAssembly="@typeof(Program).Assembly">
+@using AethericForge.Web.Hosting.Modules
+@inject IEnumerable<GitInstitutionWebModule> InstitutionModules
+<Router AppAssembly="@typeof(Program).Assembly" AdditionalAssemblies="@InstitutionModules.Select(module => module.WebAssembly)">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(AethericForge.Web.Components.Layout.MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />

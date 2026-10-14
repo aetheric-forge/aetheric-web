@@ -19,5 +19,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - run: python3 scripts/build-institution-modules.py
       - run: dotnet test tests/Marketing.PublicSite.Tests --configuration Release --nologo
       - run: dotnet test tests/AethericForge.Web.Tests --configuration Release --nologo

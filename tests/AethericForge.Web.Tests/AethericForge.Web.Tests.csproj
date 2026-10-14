@@ -4,10 +4,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <ProjectReference Include="../../runtime/src/Providers/AethericForge.Runtime.Providers.Staging.InMemory/AethericForge.Runtime.Providers.Staging.InMemory.csproj" />
     <ProjectReference Include="../../AethericForge.Web/AethericForge.Web.csproj" />
     <ProjectReference Include="../../runtime/src/Provisioning/Aetheric.Provisioning.Definitions/Aetheric.Provisioning.Definitions.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="../../parallel-you/institution/*.yaml" Link="institution/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../AethericForge.Web/modules/**/*" Link="modules/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

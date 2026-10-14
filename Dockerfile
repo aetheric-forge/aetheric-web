@@ -5,8 +5,9 @@ WORKDIR /src
 
 COPY . .
 
-RUN dotnet restore
-RUN dotnet publish \
+RUN test -f AethericForge.Web/modules/parallel-you/module.json
+RUN dotnet restore AethericForge.Web/AethericForge.Web.csproj
+RUN dotnet publish AethericForge.Web/AethericForge.Web.csproj \
     -c Release \
     -o /app/publish \
     --no-restore

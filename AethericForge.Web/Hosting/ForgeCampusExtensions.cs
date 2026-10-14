@@ -84,8 +84,7 @@ using Forge.Primitives.MongoDb;
 using Forge.Primitives.Redis;
 using MongoDB.Driver;
 using StackExchange.Redis;
-using ParallelYou.Abstractions;
-using ParallelYou.Services;
+using AethericForge.Web.Hosting.Modules;
 using TalentCampus.Core.Personas;
 using TalentCampus.Core.Recruitment;
 using TalentCampus.Core.Roles;
@@ -346,9 +345,7 @@ public static class ForgeCampusExtensions
                 campusTemplate, serviceProvider, "Workbench",
                 static (template, sp, parent) => new WorkbenchContext(template, sp, parent));
 
-            var parallelYouTemplate = ParallelYouModule.CreateTemplate();
-            campus.Register<IParallelYou>(ParallelYouHosting.Create(serviceProvider,
-                new ParallelYouContext(parallelYouTemplate, serviceProvider, campus)));
+            serviceProvider.GetRequiredService<GitInstitutionWebModule>().Register(campus, serviceProvider);
 
             var architectureFaculty = campus.RegisterFaculty<IArchitectureFaculty>(
                 campusTemplate, serviceProvider, "Architecture", "Principal Architect",
@@ -424,8 +421,6 @@ public static class ForgeCampusExtensions
             return campus;
         });
 
-        services.AddParallelYouModule(sp => sp.GetRequiredService<ICampus>().Resolve<IParallelYou>());
-        services.AddParallelYouAccessors();
 
         services.AddSingleton<ForgeCampusHost>();
         services.AddHostedService<ForgeCampusHost>(serviceProvider =>
@@ -497,7 +492,7 @@ public static class ForgeCampusExtensions
     {
         endpoints.MapGet(
             "/api/status",
-            (ICampus campus, ForgeCampusHost host) =>
+            (ICampus campus, ForgeCampusHost host, GitInstitutionWebModule module) =>
                 Results.Ok(new
                 {
                     institution = campus.Context.Template.Descriptor.Name,
@@ -526,8 +521,8 @@ public static class ForgeCampusExtensions
                     },
                     parallelYou = new
                     {
-                        name = campus.Resolve<IParallelYou>().Context.Template.Descriptor.Name,
-                        version = campus.Resolve<IParallelYou>().Context.Template.Descriptor.Version.ToString()
+                        name = module.Resolve(campus).Context.Template.Descriptor.Name,
+                        version = module.Resolve(campus).Context.Template.Descriptor.Version.ToString()
                     },
                     faculties = new[]
                     {

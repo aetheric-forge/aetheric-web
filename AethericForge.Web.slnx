@@ -2,11 +2,6 @@
   <Folder Name="/Application/">
     <Project Path="AethericForge.Web/AethericForge.Web.csproj" />
   </Folder>
-  <Folder Name="/Application/ParallelYou/">
-    <Project Path="parallel-you/ParallelYou.Abstractions/ParallelYou.Abstractions.csproj" />
-    <Project Path="parallel-you/ParallelYou.Models/ParallelYou.Models.csproj" />
-    <Project Path="parallel-you/ParallelYou.Services/ParallelYou.Services.csproj" />
-  </Folder>
   <Folder Name="/Application/Talent/">
     <Project Path="talent-campus/TalentCampus.Core/TalentCampus.Core.csproj" />
     <Project Path="talent-campus/TalentCampus.Institutions.Talent/TalentCampus.Institutions.Talent.csproj" />
