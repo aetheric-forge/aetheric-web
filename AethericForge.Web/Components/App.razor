@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+@using AethericForge.Web.Hosting.Modules
+@inject IEnumerable<GitInstitutionWebModule> InstitutionModules
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -12,7 +14,10 @@
     <link rel="icon" type="image/png" href="favicon.png" />
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="parallel-you/app.css" />
+    @foreach (var stylesheet in InstitutionModules.SelectMany(module => module.Stylesheets))
+    {
+        <link rel="stylesheet" href="@stylesheet" />
+    }
     <link rel="stylesheet" href="AethericForge.Web.styles.css" />
 
     <HeadOutlet />

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,6 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../runtime/src/Institutions/AethericForge.Runtime.Institutions.Plugins/AethericForge.Runtime.Institutions.Plugins.csproj" />
+    <ProjectReference Include="../runtime/src/Provisioning/Aetheric.Provisioning.Definitions/Aetheric.Provisioning.Definitions.csproj" />
     <ProjectReference Include="..\runtime\src\Provisioning\Aetheric.Provisioning.Engine\Aetheric.Provisioning.Engine.csproj" />
     <ProjectReference Include="..\primitives\src\Primitives.MongoDb\Primitives.MongoDb.csproj" />
     <ProjectReference Include="..\primitives\src\Primitives.Redis\Primitives.Redis.csproj" />
@@ -19,9 +21,6 @@
     <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Drafts.Workbench\AdrCampus.Providers.Drafts.Workbench.csproj" />
     <ProjectReference Include="..\adr-campus\AdrCampus.Providers.Library\AdrCampus.Providers.Library.csproj" />
     <ProjectReference Include="..\adr-campus\AdrCampus.Providers.PostOffice\AdrCampus.Providers.PostOffice.csproj" />
-    <ProjectReference Include="..\parallel-you\ParallelYou.Abstractions\ParallelYou.Abstractions.csproj" />
-    <ProjectReference Include="..\parallel-you\ParallelYou.Models\ParallelYou.Models.csproj" />
-    <ProjectReference Include="..\parallel-you\ParallelYou.Services\ParallelYou.Services.csproj" />
     <ProjectReference Include="..\talent-campus\TalentCampus.Core\TalentCampus.Core.csproj" />
     <ProjectReference Include="..\talent-campus\TalentCampus.Institutions.Talent\TalentCampus.Institutions.Talent.csproj" />
     <ProjectReference Include="..\talent-campus\TalentCampus.Providers.MongoDb\TalentCampus.Providers.MongoDb.csproj" />
@@ -63,4 +62,16 @@
     <PackageReference Include="StackExchange.Redis" Version="2.8.24" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="modules/**" />
+    <None Remove="modules/**" />
+    <InstitutionModuleFile Include="modules/**/*" />
+  </ItemGroup>
+  <!-- Plugin assets are opaque output, not Razor inputs of this shell. -->
+  <Target Name="CopyInstitutionModuleOutput" AfterTargets="Build">
+    <Copy SourceFiles="@(InstitutionModuleFile)" DestinationFiles="@(InstitutionModuleFile->'$(OutDir)modules/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="PublishInstitutionModules" AfterTargets="Publish">
+    <Copy SourceFiles="@(InstitutionModuleFile)" DestinationFiles="@(InstitutionModuleFile->'$(PublishDir)modules/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

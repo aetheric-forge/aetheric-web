@@ -7,3 +7,6 @@ bin/
 .env*
 !.env.example
 .certificates/
+
+.module-build/
+AethericForge.Web/modules/

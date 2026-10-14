@@ -1,3 +1,6 @@
+using AethericForge.Runtime.Institutions.Campus;
+using Aetheric.Provisioning.Definitions;
+using AethericForge.Web.Hosting.Modules;
 using AethericForge.Web.Marketing;
 using AdrCampus.Web.Members;
 using AethericContracts.Membership;
@@ -26,6 +29,17 @@ ProvisionedParallelYouConfiguration.Apply(builder.Configuration);
 var publicOnly = builder.Configuration.GetValue("PublicSite:Enabled", true);
 var publicSignIn = publicOnly && builder.Configuration.GetValue<bool>("PublicSite:SignInEnabled");
 var parallelYouEnabled = !publicOnly || builder.Configuration.GetValue<bool>("ParallelYou:Enabled");
+GitInstitutionWebModule? parallelYouModule = null;
+if (parallelYouEnabled)
+{
+    using var gitHttp = PublicGitHubSource.CreateHttpClient();
+    var bundle = builder.Configuration["ParallelYou:Module:BundlePath"]
+        ?? Path.Combine(builder.Environment.ContentRootPath, "modules", "parallel-you", "module.json");
+    parallelYouModule = await GitInstitutionWebModule.LoadAsync(bundle, new PublicGitHubSource(gitHttp));
+    parallelYouModule.ConfigureServices(builder.Services, builder.Configuration,
+        sp => publicOnly ? null : sp.GetRequiredService<ICampus>());
+}
+
 var authenticationEnabled = !publicOnly || publicSignIn || parallelYouEnabled;
 
 // Add services to the container.
@@ -101,8 +115,6 @@ if (!publicOnly)
     builder.Services.AddForgeCampus();
 }
 
-if (publicOnly && parallelYouEnabled)
-    builder.Services.AddStandaloneParallelYou(builder.Configuration);
 
 // Marketing stays optional in public-only mode and owns its Mongo credentials.
 var marketingOptions = builder.Configuration.GetSection("Marketing:MongoDb").Exists()
@@ -144,6 +156,7 @@ if (authenticationEnabled)
 app.UseAuthorization();
 app.UseAntiforgery();
 
+parallelYouModule?.MapAssets(app);
 app.MapStaticAssets();
 if (!publicOnly)
 {
@@ -151,7 +164,7 @@ if (!publicOnly)
 }
 if (authenticationEnabled)
     app.MapForgeCampusAuthentication();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+var components = app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+if (parallelYouModule is not null) components.AddAdditionalAssemblies(parallelYouModule.WebAssembly);
 
 app.Run();
