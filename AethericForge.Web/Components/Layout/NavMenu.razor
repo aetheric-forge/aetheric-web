@@ -1,4 +1,7 @@
-﻿<nav class="sidebar-nav" aria-label="Primary navigation">
+﻿@using AethericForge.Web.Hosting
+@inject ShellNavigation Shell
+
+<nav class="sidebar-nav" aria-label="Primary navigation">
     @if (IsAdministrator && !ViewAsUser)
     {
         <div class="sidebar-nav__banner">Administrator mode</div>
@@ -21,11 +24,20 @@
         <div class="sidebar-nav__section">
             <span class="sidebar-nav__heading">Institutions</span>
             <span class="sidebar-nav__subheading">Architecture &middot; Principal Architect</span>
-            <a href="/library">Library</a>
-            <a href="/decisions">Decisions</a>
+            @if (Shell.HasModule("library"))
+            {
+                <a href="/library">Library</a>
+            }
+            @if (Shell.HasModule("decisions"))
+            {
+                <a href="/decisions">Decisions</a>
+            }
 
             <span class="sidebar-nav__subheading">Design &middot; Director</span>
-            <a href="/talent">Talent</a>
+            @if (Shell.FullCampus)
+            {
+                <a href="/talent">Talent</a>
+            }
             <span class="sidebar-nav__subheading">Engineering &middot; Chief Engineer</span>
             <span class="sidebar-nav__subheading">Manufacturing &middot; Chief Fabricator</span>
             <span class="sidebar-nav__subheading">Operations &middot; Quartermaster</span>
@@ -34,12 +46,18 @@
             <span class="sidebar-nav__subheading">Federation &middot; Envoy</span>
             <span class="sidebar-nav__subheading">Governance &middot; Council</span>
 
-            <a href="/parallel-you">Parallel You</a>
+            @if (Shell.HasModule("parallel-you"))
+            {
+                <a href="/parallel-you">Parallel You</a>
+            }
         </div>
 
         <div class="sidebar-nav__section">
             <span class="sidebar-nav__heading">Campus</span>
-            <a href="/campus/apply">Join Campus</a>
+            @if (Shell.FullCampus)
+            {
+                <a href="/campus/apply">Join Campus</a>
+            }
             <a href="https://github.com/aetheric-forge" target="_blank" rel="noreferrer">GitHub ↗</a>
         </div>
 

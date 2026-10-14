@@ -54,6 +54,7 @@ foreach (var spec in specs)
 }
 var enabledModuleIds = modules.Select(module => module.Source.Id).ToHashSet(StringComparer.Ordinal);
 var authenticationEnabled = !publicOnly || publicSignIn || modules.Count != 0;
+builder.Services.AddSingleton(new ShellNavigation(!publicOnly, enabledModuleIds));
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
