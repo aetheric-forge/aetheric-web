@@ -21,6 +21,11 @@ MongoBsonSetup.EnsureGuidRepresentationRegistered();
 
 var builder = WebApplication.CreateBuilder(args);
 ProvisionedParallelYouConfiguration.Apply(builder.Configuration);
+var consumerRevisions = ProvisionedWebModuleConfiguration.Apply(builder.Configuration);
+if (consumerRevisions.Count > 0)
+    builder.Services.AddHostedService(sp => new ConsumerConfigurationReloadService(
+        sp.GetRequiredService<IHostApplicationLifetime>(), consumerRevisions,
+        sp.GetRequiredService<ILogger<ConsumerConfigurationReloadService>>()));
 
 // Defaults to public content only (Home/Projects/About/Articles/Videos - no /campus/* member or
 // admin routes) with no external infrastructure required at all. Flip to false once Keycloak,

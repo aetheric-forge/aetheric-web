@@ -66,10 +66,33 @@ public-only mode is rejected before module loading. Use the existing full-campus
 with its Library/Workbench and organization-directory configuration. This integration
 neither creates a new owning campus nor provisions infrastructure or changes production
 module flags. Decisions continues using `Organization:*`, `Decisions:MongoDb`,
-`Decisions:S3`, `Decisions:RabbitMq`, `Workbench:Redis`, and `Registry:Keycloak` settings.
+`Decisions:S3`, `Decisions:RabbitMq`, and its owner's `Workbench:Redis` settings. Its
+provisioned directory client uses `Decisions:Directory:Keycloak`; the existing
+`Registry:Keycloak` configuration remains a fallback for older installations.
 
 The existing deployment-managed Parallel You consumer configuration and OIDC client are
 unchanged. No root provisioning credentials or public binding secrets are introduced.
+
+## Provisioning handoff
+
+Library, Archive, and Decisions now receive complete, private consumer artifacts from
+the provisioning worker after a successful institution deployment. The shell reads
+`Provisioning:Consumers:Directory/{library|archive|decisions}/configuration.json` and
+checks the module, canonical repository deployment identity, environment, plan, and
+exact profile settings. Missing files in empty Secret slots leave modules disabled.
+Changed projected Secrets trigger a graceful host restart to apply a complete revision.
+
+Library receives its scoped Mongo credentials. Archive uses SeaweedFS bucket-scoped
+credentials; the legacy archive reference store key is preserved for existing records.
+Decisions requires its catalog-backed owner and existing membership groups. Its
+directory service account has read-only query roles and does not replace shell sign-in.
+The host must already run in full-campus mode, with
+`Decisions:ExpectedOwnerDeploymentId` matching the selected owner and that owner's
+Workbench settings configured. Provisioning does not create a sovereign Decisions campus.
+
+See [the worker contract](../../runtime/docs/provisioning/web-module-consumers.md) for
+request settings, Secret targets, readiness recording, and SeaweedFS IAM requirements.
+Shipping the handoff does not itself submit provisioning requests or migrate data.
 
 ## Existing records
 
