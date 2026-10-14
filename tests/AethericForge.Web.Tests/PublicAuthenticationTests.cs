@@ -50,7 +50,7 @@ public class PublicAuthenticationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddForgeCampusAuthentication(Configuration(), registerCampusIdentity: false, registerParallelYouIdentity: true);
+        services.AddForgeCampusAuthentication(Configuration(), registerCampusIdentity: false, registerModuleIdentity: true);
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(OpenIdConnectDefaults.AuthenticationScheme);
         var identity = new ClaimsIdentity(new[]
@@ -72,7 +72,7 @@ public class PublicAuthenticationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddForgeCampusAuthentication(Configuration(), registerCampusIdentity: false, registerParallelYouIdentity: true);
+        services.AddForgeCampusAuthentication(Configuration(), registerCampusIdentity: false, registerModuleIdentity: true);
         using var provider = services.BuildServiceProvider();
         var options = provider.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(OpenIdConnectDefaults.AuthenticationScheme);
         var context = new TokenValidatedContext(new DefaultHttpContext(),

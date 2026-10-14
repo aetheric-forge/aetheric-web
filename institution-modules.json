@@ -13,6 +13,62 @@
       "Stylesheets": [
         "_content/ParallelYou.Web/app.css",
         "_content/ParallelYou.Web/ParallelYou.Web.bundle.scp.css"
+      ],
+      "ConfigurationSection": "ParallelYou"
+    },
+    {
+      "Id": "library",
+      "Repository": "https://github.com/aetheric-forge/library",
+      "Revision": "e09433f55ad82bec2416c4f10ec14ee6f78a7493",
+      "SourcePath": "institutions/library",
+      "ConfigurationSection": "Library",
+      "Project": "Library.Web/Library.Web.csproj",
+      "Assembly": "Library.Web.dll",
+      "DefinitionPath": "institution/library.yaml",
+      "BindingsPath": "institution/library.bindings.yaml",
+      "Stylesheets": [
+        "_content/Library.Web/Library.Web.bundle.scp.css"
+      ],
+      "SharedAssemblies": [
+        "AethericForge.Runtime.Institutions.Library"
+      ]
+    },
+    {
+      "Id": "archive",
+      "Repository": "https://github.com/aetheric-forge/archive",
+      "Revision": "93291a01eeb7014d6ae6b1b895d73395f3321ba1",
+      "SourcePath": "institutions/archive",
+      "ConfigurationSection": "Archive",
+      "Project": "Archive.Web/Archive.Web.csproj",
+      "Assembly": "Archive.Web.dll",
+      "DefinitionPath": "institution/archive.yaml",
+      "BindingsPath": "institution/archive.bindings.yaml",
+      "Stylesheets": [],
+      "SharedAssemblies": [
+        "AethericForge.Runtime.Institutions.Archive"
+      ]
+    },
+    {
+      "Id": "decisions",
+      "Repository": "https://github.com/aetheric-forge/adr-campus",
+      "Revision": "1cb73720170b2fc027cf410b5b08b50422e5ef6d",
+      "SourcePath": "institutions/decisions",
+      "ConfigurationSection": "Decisions",
+      "Project": "src/AdrCampus.Web.Module/AdrCampus.Web.Module.csproj",
+      "AssetHost": "src/AdrCampus.Web/AdrCampus.Web.csproj",
+      "Assembly": "AdrCampus.Web.Module.dll",
+      "DefinitionPath": "institution/provisioning/decisions.yaml",
+      "BindingsPath": "institution/provisioning/decisions.bindings.yaml",
+      "Stylesheets": [
+        "_content/AdrCampus.Web.Module/app.css",
+        "_content/AdrCampus.Web.Module/AdrCampus.Web.Module.bundle.scp.css"
+      ],
+      "SharedAssemblies": [
+        "AethericForge.Runtime.Institutions.Library",
+        "AethericForge.Runtime.Institutions.Archive",
+        "AethericForge.Runtime.Institutions.Workbench",
+        "AethericForge.Runtime.Institutions.PostOffice",
+        "AethericForge.Runtime.Institutions.Decisions"
       ]
     }
   ]

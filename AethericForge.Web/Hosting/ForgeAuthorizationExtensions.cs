@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using AdrCampus.Web.Identity;
 using Microsoft.AspNetCore.Authorization;
 
 namespace AethericForge.Web.Hosting;
@@ -21,20 +20,7 @@ public static class ForgeAuthorizationExtensions
         services.AddAuthorizationBuilder()
             .AddPolicy(AdministratorPolicy, policy => policy.RequireAssertion(context =>
                 HasAdministratorGroup(context.User) ||
-                IsDevelopmentAdministrator(context.User, developmentAdministrators)))
-            .AddPolicy(IdentityPolicies.ActiveMember, policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new ActiveMemberRequirement());
-            })
-            .AddPolicy(IdentityPolicies.ActiveMaintainer, policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new ActiveMaintainerRequirement());
-            });
-
-        services.AddScoped<IAuthorizationHandler, ActiveMemberAuthorizationHandler>();
-        services.AddScoped<IAuthorizationHandler, ActiveMaintainerAuthorizationHandler>();
+                IsDevelopmentAdministrator(context.User, developmentAdministrators)));
 
         return services;
     }

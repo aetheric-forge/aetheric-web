@@ -77,25 +77,16 @@ public class InstitutionServiceConfigurationTests
         Assert.DoesNotContain("sensitive", error.Message);
     }
     [Fact]
-    public void CampusRegistersSeparateMongoClientsForApplicationInstitutions()
+    public void CampusDoesNotReplaceTheModulesScopedMongoClients()
     {
-        var configuration = Config(
-            ("MongoDb:Host", "localhost"), ("MongoDb:Port", "27017"),
-            ("MongoDb:DatabaseName", "default"), ("MongoDb:AuthenticationDatabase", "admin"),
-            ("ParallelYou:MongoDb:Username", "parallel"), ("ParallelYou:MongoDb:Password", "one"),
-            ("Decisions:MongoDb:Username", "decisions"), ("Decisions:MongoDb:Password", "two"),
-            ("Decisions:MongoDb:DatabaseName", "decisions-db"));
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
-        services.AddSingleton<IConfiguration>(configuration);
         services.AddForgeCampus();
-        using var provider = services.BuildServiceProvider();
-        var parallel = provider.GetRequiredKeyedService<MongoDB.Driver.IMongoClient>("ParallelYou");
-        var decisions = provider.GetRequiredKeyedService<MongoDB.Driver.IMongoClient>("Decisions");
-        Assert.NotSame(parallel, decisions);
-        Assert.Equal("parallel", parallel.Settings.Credential.Username);
-        Assert.Equal("decisions", decisions.Settings.Credential.Username);
-        Assert.Equal("decisions-db", provider.GetRequiredKeyedService<MongoDB.Driver.IMongoDatabase>("Decisions").DatabaseNamespace.DatabaseName);
-        Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<MongoDB.Driver.IMongoClient>());
+        foreach (var module in new[] { "Library", "ParallelYou", "Decisions" })
+            Assert.DoesNotContain(services, descriptor => descriptor.IsKeyedService
+                && Equals(descriptor.ServiceKey, module)
+                && descriptor.ServiceType == typeof(MongoDB.Driver.IMongoClient));
+        Assert.DoesNotContain(services, descriptor => !descriptor.IsKeyedService
+            && descriptor.ServiceType == typeof(MongoDB.Driver.IMongoClient));
     }
 
     [Fact]

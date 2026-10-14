@@ -16,9 +16,9 @@ public sealed class GitInstitutionWebModule
 {
     public sealed record Bundle(string Id, string Repository, string Revision, string Assembly,
         string DefinitionPath, string BindingsPath, string DefinitionHash, string BindingsHash,
-        string[] Stylesheets, Dictionary<string, string> Files);
+        string[] Stylesheets, Dictionary<string, string> Files, string? ConfigurationSection = null);
 
-    private readonly IInstitutionFactory _factory;
+    private readonly object _factory;
     private readonly MethodInfo _configure;
     private readonly string _directory;
     // Keep the collectible context alive while services and Razor components use its assemblies.
@@ -29,7 +29,7 @@ public sealed class GitInstitutionWebModule
     public IEnumerable<string> Stylesheets => Source.Stylesheets;
 
     private GitInstitutionWebModule(Bundle source, LoadedInstitution definition,
-        IInstitutionFactory factory, MethodInfo configure, string directory) =>
+        object factory, MethodInfo configure, string directory) =>
         (Source, Definition, _factory, _configure, _directory, _loadContext) =
             (source, definition, factory, configure, directory, AssemblyLoadContext.GetLoadContext(factory.GetType().Assembly)!);
 
@@ -73,14 +73,20 @@ public sealed class GitInstitutionWebModule
             throw new InvalidDataException("Git definitions do not match the compiled institution revision.");
         var parsed = new InstitutionYamlReader().Read(git);
         if (parsed.Institution is null || parsed.Issues.Length != 0 || parsed.Institution.Requirements.Id != bundle.Id)
-            throw new InvalidDataException("Invalid institution definition for this module.");
+            throw new InvalidDataException("Invalid institution definition for this module: " +
+                string.Join(", ", parsed.Issues.Select(issue => issue.Code)));
 
         var plugins = new InstitutionPluginLoader().LoadDirectory(directory);
         var plugin = plugins.SingleOrDefault(x => x.AssemblyPath == Path.Combine(directory, bundle.Assembly));
-        var factory = plugin?.Factories.SingleOrDefault()
-            ?? throw new InvalidDataException("Required institution plugin could not be loaded.");
-        if (factory.Manifest.Version.ToString() != parsed.Institution.Requirements.Version)
-            throw new InvalidDataException("Institution plugin version differs from its Git definition.");
+        if (plugin is null || plugin.Factories.Count + plugin.OrganizationFactories.Count != 1)
+            throw new InvalidDataException("Required module must expose exactly one institution or organization factory.");
+        object factory = plugin.Factories.Count == 1 ? plugin.Factories.Single() : plugin.OrganizationFactories.Single();
+        var manifest = factory is IInstitutionFactory institutionFactory
+            ? institutionFactory.Manifest : ((IOrganizationFactory)factory).Manifest;
+        if (factory is IOrganizationFactory organizationFactory && organizationFactory.OrganizationId != bundle.Id)
+            throw new InvalidDataException("Organization factory identity differs from its Git definition.");
+        if (manifest.Version.ToString() != parsed.Institution.Requirements.Version)
+            throw new InvalidDataException("Module version differs from its Git definition.");
         var configure = factory.GetType().GetMethod("ConfigureWebServices", [typeof(IServiceCollection),
             typeof(IConfiguration), typeof(Func<IServiceProvider, IInstitution>)])
             ?? throw new InvalidDataException("Institution plugin does not expose a compatible web host adapter.");
@@ -92,27 +98,42 @@ public sealed class GitInstitutionWebModule
     {
         // The consumer artifact remains authoritative for deployment identity, resource credentials
         // and OIDC. The Git definition supplies the implementation's institutional contract.
-        var version = configuration["ParallelYou:Institution:Version"];
-        if (Source.Id == "parallel-you" && version is not null && version != Definition.Requirements.Version)
+        var section = Source.ConfigurationSection ?? "ParallelYou";
+        var version = configuration[$"{section}:Institution:Version"];
+        if (version is not null && version != Definition.Requirements.Version)
             throw new InvalidDataException("Provisioned institution version differs from the loaded Git module.");
         _configure.Invoke(_factory, [services, configuration, parent]);
         services.AddSingleton(this);
+        services.AddKeyedSingleton(Source.Id, this);
     }
 
     public void Register(IInstitution parent, IServiceProvider services)
     {
-        var instance = _factory.Create(parent, services);
-        typeof(IInstitution).GetMethod(nameof(IInstitution.Register))!.MakeGenericMethod(_factory.ContractType)
-            .Invoke(parent, [instance]);
+        if (_factory is IOrganizationFactory organization)
+            parent.RegisterOrganization(organization.OrganizationId, organization.Create(parent, services));
+        else
+        {
+            var factory = (IInstitutionFactory)_factory;
+            var instance = factory.Create(parent, services);
+            typeof(IInstitution).GetMethod(nameof(IInstitution.Register))!.MakeGenericMethod(factory.ContractType)
+                .Invoke(parent, [instance]);
+        }
     }
 
-    public IInstitution Resolve(IInstitution parent) => (IInstitution)typeof(IInstitution)
-        .GetMethod(nameof(IInstitution.Resolve))!.MakeGenericMethod(_factory.ContractType).Invoke(parent, null)!;
-
-    public void MapAssets(WebApplication app) => app.UseStaticFiles(new StaticFileOptions
+    public IInstitution Resolve(IInstitution parent)
     {
-        FileProvider = new PhysicalFileProvider(Path.Combine(_directory, "wwwroot"))
-    });
+        if (_factory is not IInstitutionFactory factory)
+            throw new InvalidOperationException("An organization is resolved through its owning institution.");
+        return (IInstitution)typeof(IInstitution).GetMethod(nameof(IInstitution.Resolve))!
+            .MakeGenericMethod(factory.ContractType).Invoke(parent, null)!;
+    }
+
+    public void MapAssets(WebApplication app)
+    {
+        var assets = Path.Combine(_directory, "wwwroot");
+        if (Directory.Exists(assets))
+            app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(assets) });
+    }
 
     private static string ContainedPath(string directory, string name)
     {

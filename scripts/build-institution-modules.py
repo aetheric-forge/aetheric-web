@@ -22,7 +22,9 @@ for spec in json.loads((root / "institution-modules.json").read_text())["Modules
         raise SystemExit("Initialize the institution's pinned submodules before building.")
     working = root / ".module-build" / spec["Id"]
     code, assets = working / "code", working / "assets"
-    for project, output in [(spec["Project"], code), (spec["AssetHost"], assets)]:
+    outputs = [(spec["Project"], code)]
+    if spec.get("AssetHost"): outputs.append((spec["AssetHost"], assets))
+    for project, output in outputs:
         if output.exists(): shutil.rmtree(output)
         subprocess.run(["dotnet", "publish", str(source / project), "--configuration", "Release", "--output", str(output), "--nologo", "-m:1", "-p:UseAppHost=false"], check=True)
     bundle = root / "AethericForge.Web" / "modules" / spec["Id"]
@@ -31,11 +33,21 @@ for spec in json.loads((root / "institution-modules.json").read_text())["Modules
     # Framework and institution contract assemblies bind to the shell's copies. Implementation
     # dependencies (including Mongo/Redis providers) remain private to the plugin load context.
     for path in bundle.rglob("*.dll"):
-        if path.stem in shared or path.name.startswith(("Microsoft.", "System.")):
+        if path.stem in shared.union(spec.get("SharedAssemblies", [])) or path.name.startswith(("Microsoft.", "System.")):
             path.unlink()
     if (bundle / "wwwroot").exists(): shutil.rmtree(bundle / "wwwroot")
-    content = assets / "wwwroot" / "_content"
-    shutil.copytree(content, bundle / "wwwroot" / "_content", dirs_exist_ok=True)
+    if spec.get("AssetHost"):
+        content = assets / "wwwroot" / "_content"
+        shutil.copytree(content, bundle / "wwwroot" / "_content", dirs_exist_ok=True)
+    else:
+        project = source / spec["Project"]
+        content = bundle / "wwwroot" / "_content" / project.stem
+        if (project.parent / "wwwroot").exists():
+            shutil.copytree(project.parent / "wwwroot", content, dirs_exist_ok=True)
+        scoped = project.parent / "obj" / "Release" / "net10.0" / "scopedcss" / "projectbundle" / (project.stem + ".bundle.scp.css")
+        if scoped.exists():
+            content.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(scoped, content / scoped.name)
     stylesheets = []
     for stylesheet in spec["Stylesheets"]:
         asset = bundle / "wwwroot" / stylesheet
@@ -51,6 +63,7 @@ for spec in json.loads((root / "institution-modules.json").read_text())["Modules
     def digest(path): return hashlib.sha256(path.read_bytes()).hexdigest()
     metadata = {key: spec[key] for key in ["Id", "Repository", "Revision", "Assembly", "DefinitionPath", "BindingsPath", "Stylesheets"]}
     metadata["Stylesheets"] = stylesheets
+    metadata["ConfigurationSection"] = spec.get("ConfigurationSection", "ParallelYou")
     metadata["DefinitionHash"] = digest(bundle / spec["DefinitionPath"])
     metadata["BindingsHash"] = digest(bundle / spec["BindingsPath"])
     metadata["Files"] = {p.relative_to(bundle).as_posix(): digest(p) for p in sorted(bundle.rglob("*")) if p.is_file()}

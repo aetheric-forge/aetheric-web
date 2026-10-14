@@ -12,3 +12,6 @@ docker build -t aethericforge-web:local .
 ```
 
 The module bundle must be built before running or publishing the shell with Parallel You enabled.
+
+Library, Archive, and Decisions also use pinned Git-backed modules. See
+[the module registry, ownership, and configuration](docs/architecture/git-institution-modules.md).
