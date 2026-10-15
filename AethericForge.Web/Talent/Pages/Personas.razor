@@ -1,9 +1,15 @@
 @page "/talent/personas"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using AethericForge.Web.Hosting
+@attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
 @using TalentCampus.Core.Personas
 @inject IPersonaDirectory Directory
 @inject ILogger<Personas> Logger
 
+<AdminOnlyView>
+<main class="container py-5">
+<p><a href="/talent">Talent</a></p>
 <PageTitle>AI Persona Development — Talent</PageTitle>
 <h1>AI Persona Development</h1>
 <p>Describe AI talent that may be considered for different roles. Saving a persona does not create or run an agent.</p>
@@ -56,23 +62,29 @@
     </article>
 }
 
+</main>
+</AdminOnlyView>
+
 @code {
     private string name = "", purpose = "", workingStyle = "", strengths = "", boundaries = "";
     private string? error, notice;
     private IReadOnlyCollection<PersonaDefinition> personas = [];
 
+    [CascadingParameter(Name = "ViewAsUser")] public bool ViewAsUser { get; set; }
     protected override void OnInitialized()
     {
+        if (ViewAsUser) return;
         try { personas = Directory.List(); }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Unable to load personas");
-            error = "Personas could not be loaded. Check storage before continuing.";
+            error = "Personas could not be loaded. Please try again.";
         }
     }
 
     private void Save()
     {
+        if (ViewAsUser) return;
         error = notice = null;
         try
         {
@@ -85,7 +97,7 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Unable to save persona");
-            error = "The persona could not be saved. Check storage access and try again. Your entries have been kept.";
+            error = "The persona could not be saved. Please try again. Your entries have been kept.";
         }
     }
 }

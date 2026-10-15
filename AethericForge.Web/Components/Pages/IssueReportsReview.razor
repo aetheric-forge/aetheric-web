@@ -1,29 +1,88 @@
+@page "/operations/issue-reports"
 @page "/campus/admin/issue-reports"
 @rendermode InteractiveServer
-@using AethericForge.Runtime.Institutions.Campus
-@using AethericForge.Runtime.Institutions.IssueReports
+@using AethericForge.Runtime.Abstractions.Interfaces.IssueReports.Primitives
 @using AethericForge.Web.Hosting
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
-@inject ICampus Campus
+@inject OperationsWorkspace Workspace
+@inject ILogger<IssueReportsReview> Logger
 
 <PageTitle>Issue Reports</PageTitle>
-
 <AdminOnlyView>
 <main class="container py-5">
-    <p class="text-uppercase">Operations Faculty</p>
-    <h1>Issue Reports</h1>
-
-    <div class="alert alert-secondary mt-4">
-        The Issue Reports institution is wired up, but there's no way to submit or review a report
-        yet - this page is a placeholder until that comes together.
-    </div>
+    <p><a href="/operations">Operations</a></p><h1>Issue Reports</h1>
+    @if (error is not null) { <p role="alert" class="alert alert-danger">@error</p> }
+    @if (notice is not null) { <p role="status" class="alert alert-success">@notice</p> }
+    <form @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+        <fieldset disabled="@busy">
+            <legend>Submit an issue</legend>
+            <label for="issue-title">Title</label><input id="issue-title" class="form-control mb-3" @bind="title" required />
+            <label for="issue-description">Description</label><textarea id="issue-description" class="form-control mb-3" @bind="description" required></textarea>
+            <button class="btn btn-primary" type="submit">Submit issue</button>
+        </fieldset>
+    </form>
+    <h2 class="mt-4">Campus issues</h2>
+    <button class="btn btn-outline-secondary mb-3" disabled="@busy" @onclick="ReloadAsync">Refresh</button>
+    @if (issues is null) { <p>Issues have not loaded.</p> }
+    else if (issues.Count == 0) { <p>No issues reported yet.</p> }
+    else
+    {
+        @foreach (var issue in issues.OrderByDescending(item => item.SubmittedAt))
+        {
+            <article class="card p-3 mb-3" @key="issue.Id">
+                <h3>@issue.Title</h3><p style="white-space:pre-wrap">@issue.Description</p>
+                <p>@issue.Status · @issue.SubmittedAt.ToString("u") · @issue.ReporterId</p>
+                @if (issue.ResolvedAt is { } resolved) { <p>Resolved @resolved.ToString("u")</p> }
+                @if (!string.IsNullOrWhiteSpace(issue.ResolutionNote)) { <p style="white-space:pre-wrap">@issue.ResolutionNote</p> }
+                <fieldset disabled="@busy">
+                    <label for="issue-status-@issue.Id">Status</label>
+                    <select id="issue-status-@issue.Id" class="form-select mb-3" @bind="statuses[issue.Id]">
+                        @foreach (var status in Enum.GetValues<IssueStatus>()) { <option value="@status">@status</option> }
+                    </select>
+                    <label for="issue-note-@issue.Id">Resolution or review note</label>
+                    <textarea id="issue-note-@issue.Id" class="form-control mb-3" @bind="notes[issue.Id]"></textarea>
+                    <button class="btn btn-primary" @onclick="() => UpdateAsync(issue.Id)">Save status</button>
+                </fieldset>
+            </article>
+        }
+    }
 </main>
 </AdminOnlyView>
 
 @code {
-    // Confirms the institution resolves correctly (throws if the wiring ever regresses) without
-    // rendering anything from it yet - there's nothing to submit or review until a real UI lands.
-    protected override void OnInitialized() =>
-        _ = Campus.Resolve<IOperationsFaculty>().Resolve<IIssueReports>();
+    [CascadingParameter(Name = "ViewAsUser")] public bool ViewAsUser { get; set; }
+    private string title = "", description = "";
+    private string? error, notice;
+    private bool busy;
+    private IReadOnlyList<IssueReport>? issues;
+    private readonly Dictionary<Guid, IssueStatus> statuses = new();
+    private readonly Dictionary<Guid, string?> notes = new();
+    protected override async Task OnInitializedAsync() { if (!ViewAsUser) await ReloadAsync(); }
+    private async Task LoadAsync()
+    {
+        issues = await Workspace.ListIssuesAsync();
+        foreach (var issue in issues) { statuses[issue.Id] = issue.Status; notes[issue.Id] = issue.ResolutionNote; }
+    }
+    private Task ReloadAsync() => RunAsync(LoadAsync);
+    private Task SubmitAsync() => RunAsync(async () =>
+    {
+        await Workspace.SubmitIssueAsync(title, description);
+        title = description = ""; notice = "Issue submitted.";
+        await LoadAsync();
+    });
+    private Task UpdateAsync(Guid id) => RunAsync(async () =>
+    {
+        await Workspace.UpdateIssueAsync(id, statuses[id], notes[id]); notice = "Issue updated.";
+        await LoadAsync();
+    });
+    private async Task RunAsync(Func<Task> action)
+    {
+        if (busy || ViewAsUser) return;
+        busy = true; error = notice = null;
+        try { await action(); }
+        catch (ArgumentException) { error = "Provide a title and description, and select a valid status."; }
+        catch (Exception ex) { Logger.LogError(ex, "Issue report operation failed"); error = "The operation could not be completed. Refresh to check the latest state before trying again."; }
+        finally { busy = false; }
+    }
 }

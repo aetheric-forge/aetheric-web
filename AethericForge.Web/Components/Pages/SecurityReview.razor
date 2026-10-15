@@ -1,29 +1,116 @@
+@page "/operations/security"
 @page "/campus/admin/security"
 @rendermode InteractiveServer
-@using AethericForge.Runtime.Institutions.Campus
-@using AethericForge.Runtime.Institutions.Security
+@using AethericForge.Runtime.Abstractions.Interfaces.Security.Primitives
 @using AethericForge.Web.Hosting
 @using Microsoft.AspNetCore.Authorization
 @attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
-@inject ICampus Campus
+@inject OperationsWorkspace Workspace
+@inject ILogger<SecurityReview> Logger
 
 <PageTitle>Security</PageTitle>
-
 <AdminOnlyView>
 <main class="container py-5">
-    <p class="text-uppercase">Operations Faculty</p>
-    <h1>Security</h1>
-
-    <div class="alert alert-secondary mt-4">
-        The Security institution is wired up, but there's no way to raise or review an incident or
-        audit finding yet - this page is a placeholder until that comes together.
-    </div>
+    <p><a href="/operations">Operations</a></p><h1>Security</h1>
+    @if (error is not null) { <p role="alert" class="alert alert-danger">@error</p> }
+    @if (notice is not null) { <p role="status" class="alert alert-success">@notice</p> }
+    <form @onsubmit="RaiseAsync" @onsubmit:preventDefault>
+        <fieldset disabled="@busy">
+            <legend>Record an incident or audit finding</legend>
+            <label for="security-kind">Kind</label>
+            <select id="security-kind" class="form-select mb-3" @bind="kind">
+                @foreach (var value in Enum.GetValues<SecurityRecordKind>()) { <option value="@value">@value</option> }
+            </select>
+            <label for="security-severity">Severity</label>
+            <select id="security-severity" class="form-select mb-3" @bind="severity">
+                @foreach (var value in Enum.GetValues<SecuritySeverity>()) { <option value="@value">@value</option> }
+            </select>
+            <label for="security-title">Title</label><input id="security-title" class="form-control mb-3" @bind="title" required />
+            <label for="security-description">Description</label><textarea id="security-description" class="form-control mb-3" @bind="description" required></textarea>
+            <button class="btn btn-primary" type="submit">Record finding</button>
+        </fieldset>
+    </form>
+    <h2 class="mt-4">Incidents and audit findings</h2>
+    <button class="btn btn-outline-secondary mb-3" disabled="@busy" @onclick="ReloadAsync">Refresh</button>
+    @if (records is null) { <p>Security records have not loaded.</p> }
+    else if (records.Count == 0) { <p>No security records yet.</p> }
+    else
+    {
+        @foreach (var record in records.OrderByDescending(item => item.RaisedAt))
+        {
+            <article class="card p-3 mb-3" @key="record.Id">
+                <h3>@record.Title</h3><p style="white-space:pre-wrap">@record.Description</p>
+                <p>@record.Kind · @record.Severity · @record.Status</p>
+                <p>Raised @record.RaisedAt.ToString("u") · @record.ReporterId</p>
+                @if (record.ResolvedAt is { } resolved) { <p>Resolved @resolved.ToString("u")</p> }
+                @if (!string.IsNullOrWhiteSpace(record.ResolutionNote)) { <p style="white-space:pre-wrap">@record.ResolutionNote</p> }
+                <fieldset disabled="@busy">
+                    <label for="security-status-@record.Id">Status</label>
+                    <select id="security-status-@record.Id" class="form-select mb-3" @bind="statuses[record.Id]">
+                        @foreach (var status in Enum.GetValues<SecurityStatus>()) { <option value="@status">@status</option> }
+                    </select>
+                    <label for="security-note-@record.Id">Investigation or resolution note</label>
+                    <textarea id="security-note-@record.Id" class="form-control mb-3" @bind="notes[record.Id]"></textarea>
+                    <button class="btn btn-primary" @onclick="() => UpdateAsync(record.Id)">Save status</button>
+                    <button class="btn btn-outline-secondary" @onclick="() => HistoryAsync(record.Id)">Load history</button>
+                </fieldset>
+                @if (histories.TryGetValue(record.Id, out var history))
+                {
+                    <h4 class="mt-3">Audit history</h4>
+                    <ol>
+                        @foreach (var entry in history.OrderBy(item => item.OccurredAt))
+                        {
+                            <li>@entry.OccurredAt.ToString("u") · @entry.ActorId · @(entry.PreviousStatus?.ToString() ?? "Raised") → @entry.NewStatus
+                                <p style="white-space:pre-wrap">@entry.Note</p>
+                            </li>
+                        }
+                    </ol>
+                }
+            </article>
+        }
+    }
 </main>
 </AdminOnlyView>
 
 @code {
-    // Confirms the institution resolves correctly (throws if the wiring ever regresses) without
-    // rendering anything from it yet - there's nothing to raise or review until a real UI lands.
-    protected override void OnInitialized() =>
-        _ = Campus.Resolve<IOperationsFaculty>().Resolve<ISecurity>();
+    [CascadingParameter(Name = "ViewAsUser")] public bool ViewAsUser { get; set; }
+    private string title = "", description = "";
+    private string? error, notice;
+    private bool busy;
+    private SecurityRecordKind kind;
+    private SecuritySeverity severity = SecuritySeverity.Medium;
+    private IReadOnlyList<SecurityRecord>? records;
+    private readonly Dictionary<Guid, SecurityStatus> statuses = new();
+    private readonly Dictionary<Guid, string?> notes = new();
+    private readonly Dictionary<Guid, IReadOnlyList<SecurityRecordEvent>> histories = new();
+    protected override async Task OnInitializedAsync() { if (!ViewAsUser) await ReloadAsync(); }
+    private async Task LoadAsync()
+    {
+        records = await Workspace.ListSecurityAsync();
+        foreach (var record in records) { statuses[record.Id] = record.Status; notes[record.Id] = record.ResolutionNote; }
+        histories.Clear();
+    }
+    private Task ReloadAsync() => RunAsync(LoadAsync);
+    private Task RaiseAsync() => RunAsync(async () =>
+    {
+        await Workspace.RaiseSecurityAsync(kind, title, description, severity);
+        title = description = ""; notice = "Security record saved.";
+        await LoadAsync();
+    });
+    private Task UpdateAsync(Guid id) => RunAsync(async () =>
+    {
+        await Workspace.UpdateSecurityAsync(id, statuses[id], notes[id]); notice = "Security status updated.";
+        await LoadAsync();
+        histories[id] = await Workspace.HistoryAsync(id);
+    });
+    private Task HistoryAsync(Guid id) => RunAsync(async () => histories[id] = await Workspace.HistoryAsync(id));
+    private async Task RunAsync(Func<Task> action)
+    {
+        if (busy || ViewAsUser) return;
+        busy = true; error = notice = null;
+        try { await action(); }
+        catch (ArgumentException) { error = "Provide a title and description, and select a valid kind, severity, and status."; }
+        catch (Exception ex) { Logger.LogError(ex, "Security operation failed"); error = "The operation could not be completed. Refresh to check the latest state before trying again."; }
+        finally { busy = false; }
+    }
 }

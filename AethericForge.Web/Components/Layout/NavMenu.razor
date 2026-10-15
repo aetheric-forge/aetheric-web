@@ -1,4 +1,4 @@
-﻿@using AethericForge.Web.Hosting
+@using AethericForge.Web.Hosting
 @inject ShellNavigation Shell
 
 <nav class="sidebar-nav" aria-label="Primary navigation">
@@ -35,13 +35,17 @@
             }
 
             <span class="sidebar-nav__subheading">Design &middot; Director</span>
-            @if (Shell.FullCampus)
+            @if (Shell.FullCampus && IsAdministrator && !ViewAsUser)
             {
                 <a href="/talent">Talent</a>
             }
             <span class="sidebar-nav__subheading">Engineering &middot; Chief Engineer</span>
             <span class="sidebar-nav__subheading">Manufacturing &middot; Chief Fabricator</span>
             <span class="sidebar-nav__subheading">Operations &middot; Quartermaster</span>
+            @if (Shell.FullCampus && IsAdministrator && !ViewAsUser)
+            {
+                <a href="/operations">Operations</a>
+            }
             <span class="sidebar-nav__subheading">Finance &middot; Chief Accountant</span>
             <span class="sidebar-nav__subheading">Insurance &middot; Chief Underwriter</span>
             <span class="sidebar-nav__subheading">Federation &middot; Envoy</span>

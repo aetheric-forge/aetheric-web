@@ -1,0 +1,14 @@
+@page "/operations"
+@using Microsoft.AspNetCore.Authorization
+@using AethericForge.Web.Hosting
+@attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
+<PageTitle>Operations</PageTitle>
+<AdminOnlyView>
+<main class="container py-5">
+    <p>Operations Faculty · Quartermaster</p><h1>Operations</h1>
+    <ul>
+        <li><a href="/operations/issue-reports">Issue Reports</a> — submit, track, and resolve campus issues.</li>
+        <li><a href="/operations/security">Security</a> — record incidents and audit findings, track investigations, and review their history.</li>
+    </ul>
+</main>
+</AdminOnlyView>
