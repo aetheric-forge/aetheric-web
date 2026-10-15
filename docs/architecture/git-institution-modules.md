@@ -9,7 +9,7 @@ uses `InstitutionPluginLoader` to discover the package's factory and web adapter
 | Parallel You | `aetheric-forge/parallel-you` | Institution | `/parallel-you/*` |
 | Library | `aetheric-forge/library` | Institution | `/library`, `/library/articles/*` |
 | Archive | `aetheric-forge/archive` | Backend institution | None |
-| Decisions | `aetheric-forge/adr-campus` | Organization under the Architecture faculty | `/decisions/*` |
+| Decisions | `aetheric-forge/adr-campus` | Organization under the Administration faculty | `/decisions/*` |
 
 `institution-modules.json` and the matching `institutions/*` Git submodules identify
 exact source revisions. The build script verifies those checkouts and builds opaque
@@ -50,7 +50,7 @@ policies. It is not replaced with a sovereign Decisions institution.
 ## Hosting and configuration
 
 Full campus mode (`PublicSite:Enabled=false`) loads all four modules and mounts Decisions
-under the Architecture faculty. Library and Archive replace their direct campus
+under the Administration faculty. Library and Archive replace their direct campus
 composition; the copied Library pages and ADR implementation have been removed from
 the shell. The remaining Post Office and Workbench composition supplies Decisions'
 existing maintenance and staging capabilities.
@@ -111,3 +111,6 @@ and draft creation/proposal publication across the loaded Decisions plugin and i
 owner's Workbench and Library. Container checks exercise live Git loading, assets,
 and anonymous SSO redirects. Interactive authenticated production workflows are verified
 after source review and deployment.
+
+For the existing Administration owner and production activation prerequisites, see
+[Decisions activation](decisions-activation.md).

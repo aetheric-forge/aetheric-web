@@ -48,7 +48,7 @@ foreach (var spec in specs)
     if (module.Source.Id != spec.Id || module.Source.ConfigurationSection != spec.Section)
         throw new InvalidDataException("The module bundle does not match its configured shell slot.");
     module.ConfigureServices(builder.Services, builder.Configuration, sp => publicOnly ? null
-        : spec.Id == "decisions" ? sp.GetRequiredService<ICampus>().Resolve<IArchitectureFaculty>()
+        : spec.Id == "decisions" ? sp.GetRequiredService<ICampus>().Resolve<IAdministrationFaculty>()
         : sp.GetRequiredService<ICampus>());
     modules.Add(module);
 }
