@@ -51,7 +51,7 @@
     {
       "Id": "decisions",
       "Repository": "https://github.com/aetheric-forge/adr-campus",
-      "Revision": "61f1b99f0a281888e178b160d3396f2dff1d67ce",
+      "Revision": "44f096d745215ceb339754df9cddc94ce9a56e88",
       "SourcePath": "institutions/decisions",
       "ConfigurationSection": "Decisions",
       "Project": "src/AdrCampus.Web.Module/AdrCampus.Web.Module.csproj",

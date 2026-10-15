@@ -1,0 +1,18 @@
+{
+  "Repository": "https://github.com/aetheric-forge/adr-campus",
+  "Revision": "44f096d745215ceb339754df9cddc94ce9a56e88",
+  "DefinitionPath": "institution/provisioning/decisions.yaml",
+  "BindingsPath": "institution/provisioning/decisions.production.bindings.yaml",
+  "Parent": {
+    "Repository": "https://forms.aetheric-forge.internal/administration-faculty",
+    "Revision": "0000000000000000000000000000000000000000",
+    "DeploymentId": "585a1b4fc7d725844c4a1b82f51412f5b372acbf182bac9edb0072bffcdd24a5",
+    "ResourceLocations": {}
+  },
+  "DecisionsConsumer": {
+    "OrganizationId": "administration-decisions",
+    "DisplayName": "Administration Decisions",
+    "MemberGroupId": "6f0f5163-0e9e-418e-9525-9248a9f627b3",
+    "MaintainerGroupId": "bb673f44-117f-4480-83d1-2132d9394201"
+  }
+}
