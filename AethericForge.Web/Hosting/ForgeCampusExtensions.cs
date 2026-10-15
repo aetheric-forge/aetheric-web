@@ -193,6 +193,7 @@ public static class ForgeCampusExtensions
                     sp.GetRequiredService<IConfiguration>(), "Registry", "Keycloak")
                     .GetSection("Keycloak").Get<KeycloakOptions>()!)
                 .With<IIdentityProvider, KeycloakIdentityProvider>()
+                .With<IRegistryClerk, KeycloakRegistryClerk>()
                 .With<IRegistryService, RegistryService>()
                 .With<ITeam<IRegistryClerk>>(_ => new Team<IRegistryClerk>(Array.Empty<IRegistryClerk>()))
                 .With<IRegistrar, Registrar>()
