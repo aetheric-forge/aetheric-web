@@ -145,7 +145,11 @@ app.UseHttpsRedirection();
 
 app.Use(async (context, next) =>
 {
-    if (specs.Any(spec => !enabledModuleIds.Contains(spec.Id) && context.Request.Path.StartsWithSegments("/" + spec.Id)))
+    if ((publicOnly && (context.Request.Path.StartsWithSegments("/talent")
+        || context.Request.Path.StartsWithSegments("/operations")
+        || context.Request.Path.StartsWithSegments("/campus/admin/issue-reports")
+        || context.Request.Path.StartsWithSegments("/campus/admin/security")))
+        || specs.Any(spec => !enabledModuleIds.Contains(spec.Id) && context.Request.Path.StartsWithSegments("/" + spec.Id)))
     {
         context.Response.StatusCode = StatusCodes.Status404NotFound;
         return;

@@ -15,3 +15,6 @@ The module bundle must be built before running or publishing the shell with Para
 
 Library, Archive, and Decisions also use pinned Git-backed modules. See
 [the module registry, ownership, and configuration](docs/architecture/git-institution-modules.md).
+
+Operations and Talent management workspaces use the existing campus institutions. See
+[their routes, access, and persistence](docs/architecture/operations-talent.md).

@@ -1,5 +1,8 @@
 @page "/talent/recruitment"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using AethericForge.Web.Hosting
+@attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
 @using TalentCampus.Core.Recruitment
 @using TalentCampus.Core.Roles
 @using TalentCampus.Core.Personas
@@ -8,6 +11,9 @@
 @inject IPersonaDirectory Personas
 @inject ILogger<Recruitment> Logger
 
+<AdminOnlyView>
+<main class="container py-5">
+<p><a href="/talent">Talent</a></p>
 <PageTitle>Recruitment Office — Talent</PageTitle>
 <h1>Recruitment Office</h1>
 <p>Register human candidates or consider an existing AI persona for a role.</p>
@@ -83,6 +89,9 @@
         </details>
     </article>
 }
+</main>
+</AdminOnlyView>
+
 @code {
     private string name = "", background = "", roleId = "", participantId = "", evidence = "", recommendation = "", destination = "";
     private ParticipantKind kind;
@@ -92,8 +101,10 @@
     private IReadOnlyCollection<PersonaDefinition> personas = [];
     private IReadOnlyCollection<DecisionsDestination> destinations = [];
     private IReadOnlyCollection<Consideration> considerations = [];
+    [CascadingParameter(Name = "ViewAsUser")] public bool ViewAsUser { get; set; }
     protected override void OnInitialized()
     {
+        if (ViewAsUser) return;
         try
         {
             humans = Office.ListHumans(); considerations = Office.ListConsiderations();
@@ -104,6 +115,7 @@
     private void ClearParticipant() => participantId = "";
     private void Register()
     {
+        if (ViewAsUser) return;
         error = notice = null;
         try
         {
@@ -116,6 +128,7 @@
     }
     private void Prepare()
     {
+        if (ViewAsUser) return;
         error = notice = null;
         try
         {
@@ -132,6 +145,6 @@
     private void Failure(Exception ex)
     {
         Logger.LogError(ex, "Recruitment storage operation failed");
-        error = "Recruitment data could not be loaded or saved. Check local storage and reload the page. Your entries have been kept.";
+        error = "Recruitment data could not be loaded or saved. Please reload the page and try again. Your entries have been kept.";
     }
 }

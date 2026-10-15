@@ -202,9 +202,14 @@ public static class ForgeCampusExtensions
                 .With<IArchiveService>(sp => sp.GetRequiredKeyedService<IArchiveService>("Archive"))
                 .With<IArchivist>(sp => sp.GetRequiredKeyedService<IArchivist>("Archive"))
                 .With<ITeam<IIssueReportsClerk>>(_ => new Team<IIssueReportsClerk>(Array.Empty<IIssueReportsClerk>()))
-                .With<IWarden, Warden>()
+                .With<OperationsLedgerStore>(sp => new OperationsLedgerStore(
+                    sp.GetRequiredService<IStagingService>(),
+                    sp.GetRequiredService<IConfiguration>()["Decisions:Workbench:Stage"] ?? DecisionsWorkbenchStage))
+                .With<IWarden>(sp => new Warden(sp.GetRequiredService<OperationsLedgerStore>(),
+                    sp.GetRequiredService<ITeam<IIssueReportsClerk>>()))
                 .With<ITeam<ISecurityClerk>>(_ => new Team<ISecurityClerk>(Array.Empty<ISecurityClerk>()))
-                .With<ISentinel, Sentinel>()
+                .With<ISentinel>(sp => new Sentinel(sp.GetRequiredService<OperationsLedgerStore>(),
+                    sp.GetRequiredService<ITeam<ISecurityClerk>>()))
                 .With<IArchiveVault>(sp => sp.GetRequiredKeyedService<IArchiveVault>("Archive"))
                 .With<IKnowledgeService>(sp => sp.GetRequiredKeyedService<IKnowledgeService>("Library"))
                 .With<ITeam<ICuratorClerk>>(_ => new Team<ICuratorClerk>(Array.Empty<ICuratorClerk>()))
@@ -343,6 +348,16 @@ public static class ForgeCampusExtensions
             return campus;
         });
 
+
+        services.AddScoped<OperationsWorkspace>(sp =>
+        {
+            var operations = sp.GetRequiredService<ICampus>().Resolve<IOperationsFaculty>();
+            return new OperationsWorkspace(
+                operations.Resolve<IIssueReports>().Warden,
+                operations.Resolve<ISecurity>().Sentinel,
+                sp.GetRequiredService<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(),
+                sp.GetRequiredService<Microsoft.AspNetCore.Authorization.IAuthorizationService>());
+        });
 
         services.AddSingleton<ForgeCampusHost>();
         services.AddHostedService<ForgeCampusHost>(serviceProvider =>

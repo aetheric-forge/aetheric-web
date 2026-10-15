@@ -1,21 +1,16 @@
 @page "/talent"
-@using TalentCampus.Core.Roles
-@inject ITalentSteward Steward
-
+@using Microsoft.AspNetCore.Authorization
+@using AethericForge.Web.Hosting
+@attribute [Authorize(Policy = ForgeAuthorizationExtensions.AdministratorPolicy)]
 <PageTitle>Talent</PageTitle>
-
-<h1>Talent</h1>
-
-<p>Define the roles the Campus needs and steward the human and artificial talent trusted to fill them.</p>
-
-<section>
-    <dl>
-        <dt>Defined roles</dt>
-        <dd>@Steward.ListRoles().Count</dd>
-    </dl>
-</section>
-
-<p><a href="/talent/roles">Open Role Designer</a></p>
-<p><a href="/talent/personas">Develop AI personas</a></p>
-<p><a href="/talent/recruitment">Open Recruitment Office</a></p>
-<p>Coming next: PostOffice delivery and Decisions.</p>
+<AdminOnlyView>
+<main class="container py-5">
+    <p>Design Faculty</p><h1>Talent</h1>
+    <p>Define the work, develop AI personas, and prepare candidates for consideration.</p>
+    <ul>
+        <li><a href="/talent/roles">Role Designer</a> — define responsibilities, capabilities, and success criteria.</li>
+        <li><a href="/talent/personas">AI Persona Development</a> — describe purpose, strengths, and boundaries.</li>
+        <li><a href="/talent/recruitment">Recruitment Office</a> — register candidates and prepare considerations.</li>
+    </ul>
+</main>
+</AdminOnlyView>
