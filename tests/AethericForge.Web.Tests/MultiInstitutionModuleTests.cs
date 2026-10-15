@@ -72,7 +72,8 @@ public sealed class MultiInstitutionModuleTests
         ["Registry:Keycloak:ClientId"]="directory", ["Registry:Keycloak:ClientSecret"]="directory-test",
         ["Organization:Id"]="existing-organization", ["Organization:DisplayName"]="Existing organization",
         ["Organization:MemberGroupId"]="existing-members", ["Organization:MaintainerGroupId"]="existing-maintainers",
-        ["Decisions:BackgroundServicesEnabled"]="false"
+        ["Decisions:BackgroundServicesEnabled"]="false",
+        ["Decisions:Workbench:Stage"]="orchard-sky-workbench"
     }).Build();
 
     [Theory]
@@ -122,7 +123,7 @@ public sealed class MultiInstitutionModuleTests
         owner = new Campus(new CampusContext(template, provider));
         library.Register(owner, provider);
         archive.Register(owner, provider);
-        var staging = new StagingService([new InMemoryStagingProvider("adr-campus-workbench")]);
+        var staging = new StagingService([new InMemoryStagingProvider("orchard-sky-workbench")]);
         owner.Register<IWorkbench>(new Workbench(new WorkbenchContext(template, provider, owner),
             new Artificer(staging, new Team<IWorkbenchWorker>([])), new WorkbenchService()));
         administration = ((Campus)owner).RegisterFaculty<IAdministrationFaculty>(

@@ -19,16 +19,13 @@ Registry. These are existing catalog identities, not new deployment requests.
 
 ## Remaining activation work
 
-1. Reconcile the existing form-backed Decisions source identity with the canonical
-   `https://github.com/aetheric-forge/adr-campus` identity required by consumer delivery.
-   Confirm the approved definition's resources against the existing deployment before
-   adopting or migrating it. A fresh canonical request is a different deployment identity;
-   do not assume it updates the existing office or preserves all resource routing.
-2. Resolve the existing organization ID and member/maintainer group IDs. Preserve these
-   IDs and existing draft/catalog keys. Provisioning requires all four
-   `DecisionsConsumer` fields, including display name.
-3. Validate production bindings against the existing Administration ancestry. The ADR
-   package's generated `example` bindings are not production bindings.
+1. Use the newly selected canonical ADR office described below. Retain the older
+   form-backed deployment and its private workspace; this is a new office, not a
+   migration or identity rewrite.
+2. Use the verified new organization and group IDs recorded below. Provisioning
+   requires all four `DecisionsConsumer` fields, including display name.
+3. Use the pinned production bindings and validate them against the existing
+   Administration ancestry. The generated `example` bindings are not production bindings.
 4. Prepare the full-campus host configuration, including scoped Registry, Post Office,
    Workbench, campus Data Protection, Membership, and Talent settings consumed by that
    mode. Configure `Decisions:ExpectedOwnerDeploymentId` to the Administration identity
@@ -43,6 +40,69 @@ Registry. These are existing catalog identities, not new deployment requests.
 7. After rollout, verify SSO, directory bootstrap, member draft creation and proposal,
    maintainer review, parent resource routing, and existing Library/Parallel You behavior.
 
-This source change corrects ownership. It does not migrate catalog entries, publish a
-consumer artifact, change production hosting mode, or claim authenticated live workflow
+Ownership was corrected in web PR #52. This follow-up prepares the new office and
+parent workspace routing. It does not migrate catalog entries, publish a consumer
+artifact, change production hosting mode, or claim authenticated live workflow
 verification. See [module configuration](git-institution-modules.md).
+
+## New office selected (2026-10-15)
+
+The operator selected a new office under the existing Administration faculty and
+`brian@aethericforge.ca` as its initial maintainer. The legacy deployment and its
+`decisions-decisions-workspace` stage remain separate. No legacy data is adopted.
+
+The new organization is `administration-decisions` (Administration Decisions).
+Its canonical production deployment ID is
+`acd89aae84c4757e04128aa135bd5fbddaa609396ef4fbbec1646f99e0b1023f`.
+The member group is `6f0f5163-0e9e-418e-9525-9248a9f627b3`; the maintainer group is
+`bb673f44-117f-4480-83d1-2132d9394201`. Both groups were created in
+`int.aethericforge.ca`, tagged with the canonical deployment and organization IDs,
+and Brian's existing enabled account was verified as a member of both. No user
+account was created and no realm-wide administrator roles were granted.
+
+[The request parameters](decisions-production-request.json) pin the production
+bindings and existing Administration parent. They deliberately omit `RequestId`,
+`RequestedAtUtc`, and `RootCredentials`: construct those in the trusted submitting
+operator, using the existing encrypted credential store. The file is not a complete
+message to publish directly. Catalog parent resolution supplies resource locations
+from the actual ancestry rather than trusting this file to select a different owner.
+
+The campus Workbench resource uses `orchard-sky-workbench`. Set
+`Decisions:Workbench:Stage=orchard-sky-workbench` and configure `Workbench:Redis`
+against that resource's endpoint and database. Both the plugin draft repository and
+the shell staging provider use this setting, including locks, recovery, and writes.
+The default `adr-campus-workbench` is retained for previously configured hosts.
+Selecting a stage does not register a workspace or move existing drafts.
+
+The plugin contributes its Decisions Mongo scheme to the parent's Library and its
+Decisions S3 scheme to the parent's Archive; those scoped settings come from the
+campus ancestry. The separately provisioned Library's own settings must stay intact.
+Different databases for these two schemes are supported; matching them is not an
+activation prerequisite.
+
+**Do not submit the production request yet.** The current worker writes its consumer
+artifact into the mounted production Decisions Secret. A public-mode shell rejects
+that artifact, and its Secret watcher restarts the host after a change. Prepare and
+validate the complete campus image/configuration and coordinate consumer delivery
+with that rollout before publishing. Creating groups alone does not activate routes.
+The full-campus credentials and authenticated end-to-end verification listed above
+remain required.
+
+## Membership setup tool
+
+`tools/Decisions.Activation` runs alongside the admin's existing encrypted root store.
+Publish it with `dotnet publish tools/Decisions.Activation -c Release -o <output>`.
+On that trusted host, run:
+
+```sh
+dotnet Decisions.Activation.dll inspect brian@aethericforge.ca
+dotnet Decisions.Activation.dll prepare brian@aethericforge.ca
+```
+
+`inspect` only reads identity information. `prepare` creates the two office groups
+and adds the selected existing enabled user to both. It refuses to reuse matching
+group names without the exact office ownership attributes and verifies membership
+after writing. Repeating it preserves group IDs. The output contains IDs and setup
+status, never credentials or tokens. `RootCredentials__Directory` and
+`RootCredentials__KeyDirectory` override the default admin store paths.
+Neither command submits a provisioning request or changes web hosting mode.

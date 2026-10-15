@@ -232,7 +232,7 @@ public static class ForgeCampusExtensions
                 .With<IStagingService, StagingService>()
                 .With<IStagingProvider>(sp => new RedisStagingProvider(
                     sp.GetRequiredKeyedService<IConnectionMultiplexer>("Workbench"),
-                    DecisionsWorkbenchStage))
+                    sp.GetRequiredService<IConfiguration>()["Decisions:Workbench:Stage"] ?? DecisionsWorkbenchStage))
                 .With<IWorkbenchService, WorkbenchService>()
                 .With<ITeam<IWorkbenchWorker>>(_ => new Team<IWorkbenchWorker>(Array.Empty<IWorkbenchWorker>()))
                 .With<IArtificer, Artificer>()
