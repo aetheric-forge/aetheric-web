@@ -9,6 +9,7 @@ namespace AethericForge.Web.Hosting;
 // comment in the Runtime. Faculty itself is sealed, so each division gets a tiny concrete type of
 // its own rather than subclassing it; for now these are pure org/nav groupings with no children.
 
+public interface IAdministrationFaculty : IFaculty;
 public interface IArchitectureFaculty : IFaculty;
 public interface IDesignFaculty : IFaculty;
 public interface IEngineeringFaculty : IFaculty;
@@ -17,6 +18,13 @@ public interface IOperationsFaculty : IFaculty;
 public interface IFinanceFaculty : IFaculty;
 public interface IInsuranceFaculty : IFaculty;
 public interface IFederationFaculty : IFaculty;
+
+public sealed class AdministrationFaculty(IFacultyContext context, IDean dean)
+    : InstitutionBase(context), IAdministrationFaculty
+{
+    public new IFacultyContext Context => (IFacultyContext)base.Context;
+    public IDean Dean { get; } = dean ?? throw new ArgumentNullException(nameof(dean));
+}
 
 public sealed class ArchitectureFaculty(IFacultyContext context, IDean dean)
     : InstitutionBase(context), IArchitectureFaculty

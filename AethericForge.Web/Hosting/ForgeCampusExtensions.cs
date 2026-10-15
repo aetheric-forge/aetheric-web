@@ -272,11 +272,15 @@ public static class ForgeCampusExtensions
 
             serviceProvider.GetRequiredKeyedService<GitInstitutionWebModule>("parallel-you").Register(campus, serviceProvider);
 
-            var architectureFaculty = campus.RegisterFaculty<IArchitectureFaculty>(
+            campus.RegisterFaculty<IArchitectureFaculty>(
                 campusTemplate, serviceProvider, "Architecture", "Principal Architect",
                 static (context, dean) => new ArchitectureFaculty(context, dean));
 
-            serviceProvider.GetRequiredKeyedService<GitInstitutionWebModule>("decisions").Register(architectureFaculty, serviceProvider);
+            var administrationFaculty = campus.RegisterFaculty<IAdministrationFaculty>(
+                campusTemplate, serviceProvider, "Administration", "Administrator",
+                static (context, dean) => new AdministrationFaculty(context, dean));
+
+            serviceProvider.GetRequiredKeyedService<GitInstitutionWebModule>("decisions").Register(administrationFaculty, serviceProvider);
 
             var designFaculty = campus.RegisterFaculty<IDesignFaculty>(
                 campusTemplate, serviceProvider, "Design", "Director",
@@ -385,6 +389,7 @@ public static class ForgeCampusExtensions
                     },
                     faculties = new[]
                     {
+                        FacultyStatus(campus.Resolve<IAdministrationFaculty>()),
                         FacultyStatus(campus.Resolve<IArchitectureFaculty>()),
                         FacultyStatus(campus.Resolve<IDesignFaculty>()),
                         FacultyStatus(campus.Resolve<IEngineeringFaculty>()),
@@ -417,7 +422,7 @@ public static class ForgeCampusExtensions
         dean = faculty.Dean.Title,
         institutions = faculty switch
         {
-            IArchitectureFaculty => new[] { faculty.ResolveOrganization<IOrganization>("decisions").Context.Template.Descriptor.Name },
+            IAdministrationFaculty => new[] { faculty.ResolveOrganization<IOrganization>("decisions").Context.Template.Descriptor.Name },
             IDesignFaculty => new[] { faculty.Resolve<ITalent>().Context.Template.Descriptor.Name },
             _ => []
         }

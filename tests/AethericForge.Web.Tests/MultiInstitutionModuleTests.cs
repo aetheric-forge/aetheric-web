@@ -24,6 +24,7 @@ using AethericForge.Runtime.Services.Knowledge;
 using AethericForge.Runtime.Services.Staging;
 using AethericForge.Runtime.Services.Workbench;
 using AethericForge.Web.Hosting.Modules;
+using AethericForge.Web.Hosting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -105,7 +106,9 @@ public sealed class MultiInstitutionModuleTests
         var untouched = new KnowledgeService([new InMemoryKnowledgeProvider("unrelated")], new Team<ICuratorClerk>([]));
         services.AddSingleton<IKnowledgeService>(untouched);
         ICampus? owner = null;
-        foreach (var module in new[] { library, archive, decisions }) module.ConfigureServices(services, configuration, _ => owner);
+        IAdministrationFaculty? administration = null;
+        foreach (var module in new[] { library, archive, decisions })
+            module.ConfigureServices(services, configuration, _ => module == decisions ? administration : owner);
         services.RemoveAllKeyed<IKnowledgeProvider>("Library");
         services.AddKeyedSingleton<IKnowledgeProvider>("Library", new InMemoryKnowledgeProvider("ForgeCampus"));
         services.AddKeyedSingleton<IKnowledgeProvider>("Library", new InMemoryKnowledgeProvider("adr-campus"));
@@ -122,10 +125,13 @@ public sealed class MultiInstitutionModuleTests
         var staging = new StagingService([new InMemoryStagingProvider("adr-campus-workbench")]);
         owner.Register<IWorkbench>(new Workbench(new WorkbenchContext(template, provider, owner),
             new Artificer(staging, new Team<IWorkbenchWorker>([])), new WorkbenchService()));
-        decisions.Register(owner, provider);
+        administration = ((Campus)owner).RegisterFaculty<IAdministrationFaculty>(
+            (InstitutionTemplate)template, provider, "Administration", "Administrator",
+            static (context, dean) => new AdministrationFaculty(context, dean));
+        decisions.Register(administration, provider);
         Assert.Same(owner, owner.Library.Context.Parent);
         Assert.Same(owner, owner.Archive.Context.Parent);
-        Assert.Same(owner, owner.ResolveOrganization<IDecisions>("decisions").Context.Owner);
+        Assert.Same(administration, administration.ResolveOrganization<IDecisions>("decisions").Context.Owner);
         Assert.Same(untouched, provider.GetRequiredService<IKnowledgeService>());
         Assert.Same(provider.GetRequiredKeyedService<IKnowledgeService>("Library"), ((ILibraryContext)owner.Library.Context).Knowledge);
         using var content = await owner.Archive.RetrieveAsync(new ArchiveReference("MinIO", "existing/catalog-v1"));
@@ -137,7 +143,7 @@ public sealed class MultiInstitutionModuleTests
         using var scope = provider.CreateScope();
         var drafts = services.Single(descriptor => !descriptor.IsKeyedService && descriptor.ServiceType.FullName == "AdrCampus.Core.Drafts.IDraftRepository");
         var draftRepository = scope.ServiceProvider.GetRequiredService(drafts.ServiceType);
-        Assert.NotNull(owner.ResolveOrganization<IDecisions>("decisions").Recorder);
+        Assert.NotNull(administration.ResolveOrganization<IDecisions>("decisions").Recorder);
         var core = AssemblyLoadContext.GetLoadContext(decisions.WebAssembly)!
             .LoadFromAssemblyName(new AssemblyName("AdrCampus.Core"));
         object Value(string type, params object?[] args) => Activator.CreateInstance(core.GetType("AdrCampus.Core.Domain." + type)!, args)!;
